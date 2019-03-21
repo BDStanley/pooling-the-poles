@@ -8,7 +8,7 @@ library(maptools); library(rgeos); library(gpclib); library(reshape2); library(p
 library(gridExtra); library(grid); library(cowplot); library(scales)
 gpclibPermit()
 
-#text change
+#text change now
 
 # d'Hondt function
 countN <- function (v) {return (Reduce(function (x, y) x + y, ifelse(is.na(v), 0, 1)))}
