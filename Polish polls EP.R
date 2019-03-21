@@ -282,7 +282,7 @@ seatsEP <- add_row(seatsEP, const = "Głosy (%)", distribKE = pooledframe$means_
 colnames(seatsEP) <- c("", "KE", "PiS", "Wiosna", "Kukiz'15", "Konf.", "Razem")
 hlines <- c(-1, 0, 2, nrow(seatsEP))
 print(xtable(seatsEP, type = "latex", digits=0, align=c("p{1cm}","p{5.5cm}","c","c","c","c","c","c")), hline.after=hlines, booktabs=TRUE,
-      include.rownames=FALSE, file='~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/seatsEP.tex')
+      include.rownames=FALSE, caption = '@BDStanley', file='~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/seatsEP.tex')
 
 #plot trend
 # colours for plots
