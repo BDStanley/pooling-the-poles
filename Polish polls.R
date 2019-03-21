@@ -5,7 +5,7 @@ library(tidyverse); library(rjags); library(R2jags); library(R2WinBUGS); library
 library(grid); library(foreign); library(memisc); library(MCMCpack); library(repmis); 
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
 library(maptools); library(rgeos); library(gpclib); library(reshape2); library(plyr);
-library(gridExtra); library(grid); library(cowplot)
+library(gridExtra); library(grid); library(cowplot); library(scales)
 gpclibPermit()
 
 # d'Hondt function
