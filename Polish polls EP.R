@@ -297,7 +297,7 @@ levels(pdatl$variable) <- c("KE", "PiS", "Wiosna", "Kukiz15", "KP", "Razem", "Ot
 pdatl$variable <- factor(pdatl$variable, levels = c("KE", "PiS", "Wiosna", "Kukiz15", "KP", "Razem", "Other"))
 
 datl_KE <- datl[!(datl$variable %in% c("Other")),]
-ggplot(datl_KE, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
+p <- ggplot(datl_KE, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
   geom_abline(intercept=5, slope=0, colour="black", linetype=3) +
   #geom_ribbon(data=subset(datl, variable=="PiS"),aes(ymin=PiSlow, ymax=PiShigh), colour=NA, fill="blue4", alpha=0.3) +
   #geom_ribbon(data=subset(datl, variable=="KE"),aes(ymin=KElow, ymax=KEhigh), colour=NA, fill="orange", alpha=0.3) +
@@ -314,11 +314,14 @@ ggplot(datl_KE, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
   scale_x_date(labels=date_format("%d.%m"))+
   scale_colour_manual(name="", values=pcols, breaks=c("PiS", "KE", "Wiosna", "Kukiz15", "KP", "Razem"), 
                       labels=c("PiS", "KE", "Wiosna", "Kukiz'15", "KP", "Razem")) + 
-  guides(color=guide_legend(override.aes=list(fill=NA)))
-ggsave('~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/EP_trends.png')
+  labs(x="", y="% of vote", title="Pooled poll results for parties and coalitions (EP election, Poland)", caption = "@BDStanley")+
+  guides(color=guide_legend(override.aes=list(fill=NA))) +
+theme_minimal()
+ggsave(p, file = "~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/EP_trends.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.25)
 
 datl_KE_maj <- datl[!(datl$variable %in% c("Other", "Wiosna", "Kukiz15", "KP", "Razem")),]
-ggplot(datl_KE_maj, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
+p <- ggplot(datl_KE_maj, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
   geom_abline(intercept=5, slope=0, colour="black", linetype=3) +
   geom_ribbon(data=subset(datl, variable=="PiS"),aes(ymin=PiSlow, ymax=PiShigh), colour=NA, fill="blue4", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="KE"),aes(ymin=KElow, ymax=KEhigh), colour=NA, fill="orange", alpha=0.3) +
@@ -331,5 +334,8 @@ ggplot(datl_KE_maj, aes(x=date, y=value, colour=factor(variable))) + geom_line()
   scale_x_date(labels=date_format("%d.%m"))+
   scale_colour_manual(name="", values=pcols, breaks=c("PiS", "KE"), 
                       labels=c("PiS", "KE")) + 
-  guides(color=guide_legend(override.aes=list(fill=NA)))
-ggsave('~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/EP_trends_PiS_KE.png')
+  labs(x="", y="% of vote", title="Pooled poll results for PiS and KE (EP election, Poland)", caption = "@BDStanley")+
+  guides(color=guide_legend(override.aes=list(fill=NA))) +
+  theme_minimal()
+ggsave(p, file = "~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/EP_trends_PiS_KE.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.25)
