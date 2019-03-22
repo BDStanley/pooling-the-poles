@@ -287,7 +287,7 @@ print(xtable(seatsEP, type = "latex", digits=0, align=c("p{1cm}","p{5.5cm}","c",
 
 #plot trend
 # colours for plots
-pcols <- c("KE"="orange", "PiS"="blue4", "Kukiz15"="black", "Wiosna" = "maroon", "KP" = "deepskyblue", "Razem"="magenta")
+pcols <- c("KE"="orange", "PiS"="blue4", "Kukiz15"="black", "Wiosna" = "maroon", "KP" = "deepskyblue", "Razem"="magenta", "Other"="grey")
 
 datl <- melt(plotdata, measure.vars=c("KEmean","PiSmean","Wiosnamean","Kukiz15mean","KPmean", "Razemmean", "Othermean"))
 levels(datl$variable) <- c("KE", "PiS", "Wiosna", "Kukiz15", "KP", "Razem", "Other")
@@ -320,7 +320,7 @@ p <- ggplot(datl_KE, aes(x=date, y=value, colour=factor(variable))) + geom_line(
 theme_minimal() +
   theme_ipsum_rc()
 ggsave(p, file = "~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/EP_trends.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.25)
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.5)
 
 datl_KE_maj <- datl[!(datl$variable %in% c("Other", "Wiosna", "Kukiz15", "KP", "Razem")),]
 p <- ggplot(datl_KE_maj, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
@@ -338,6 +338,42 @@ p <- ggplot(datl_KE_maj, aes(x=date, y=value, colour=factor(variable))) + geom_l
                       labels=c("PiS", "KE")) + 
   labs(x="", y="% of vote", title="Pooled poll results for PiS and KE (EP election, Poland)", caption = "@BDStanley")+
   guides(color=guide_legend(override.aes=list(fill=NA))) +
-  theme_minimal()
+  theme_minimal() +
+  theme_ipsum_rc()
 ggsave(p, file = "~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/EP_trends_PiS_KE.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.25)
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.5)
+
+levels(posfrmelt$variable)[levels(posfrmelt$variable)=="Kukiz15"] <- "Kukiz'15"
+levels(posfrmelt$variable)[levels(posfrmelt$variable)=="KP"] <- "Konf."
+levels(pooledframe$party)[levels(pooledframe$party)=="Kukiz15"] <- "Kukiz'15"
+levels(pooledframe$party)[levels(pooledframe$party)=="KP"] <- "Konf."
+prcols <- c("KE"="orange", "PiS"="blue4", "Kukiz'15"="black", "Wiosna" = "maroon", "Konf." = "deepskyblue", "Razem"="magenta", "Other"="grey")
+p <- ggplot(data=posfrmelt, aes(variable, value)) +
+  geom_boxplot(aes(fill=variable, color=variable), outlier.shape=NA, show.legend = F, fatten=0) +
+  stat_summary(geom = "crossbar", width=0.65, fatten=0, color="white", 
+               fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x))) })+
+  coord_flip() +
+  geom_hline(aes(yintercept=0.05), colour="black", linetype="dashed") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="KE"]),0)), 
+            x="KE", y=mean(posfrmelt$value[posfrmelt$variable=="KE"]), size=3.5, hjust = "center", vjust=-3) +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PiS"]),0)), 
+           x="PiS", y=mean(posfrmelt$value[posfrmelt$variable=="PiS"]), size=3.5, hjust = "center", vjust=-3) +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Wiosna"]),0)), 
+            x="Wiosna", y=mean(posfrmelt$value[posfrmelt$variable=="Wiosna"]), size=3.5, hjust = "center", vjust=-3) +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Kukiz'15"]),0)), 
+            x="Kukiz'15", y=mean(posfrmelt$value[posfrmelt$variable=="Kukiz'15"]), size=3.5, hjust = "center", vjust=-3) +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Konf."]),0)), 
+            x="Konf.", y=mean(posfrmelt$value[posfrmelt$variable=="Konf."]), size=3.5, hjust = "center", vjust=-3) +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Razem"]),0)), 
+            x="Razem", y=mean(posfrmelt$value[posfrmelt$variable=="Razem"]), size=3.5, hjust = "center", vjust=-3) +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Other"]),0)), 
+            x="Other", y=mean(posfrmelt$value[posfrmelt$variable=="Other"]), size=3.5, hjust = "center", vjust=-3) +
+  scale_x_discrete(name=" ", limits=rev(pooledframe$party)) +
+  scale_y_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  scale_fill_manual(values=prcols) +
+  scale_color_manual(values=prcols) +
+  labs(caption="@BDStanley", y="", title="Latest poll estimates (EP elections, Poland)")
+ggsave(p, file = "~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/EP_latest.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.5)
