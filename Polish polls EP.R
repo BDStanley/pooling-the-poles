@@ -5,10 +5,9 @@ library(tidyverse); library(rjags); library(R2jags); library(R2WinBUGS); library
 library(grid); library(foreign); library(memisc); library(MCMCpack); library(repmis); 
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
 library(maptools); library(rgeos); library(gpclib); library(reshape2); library(plyr);
-library(gridExtra); library(grid); library(cowplot); library(coalitions); library(xtable)
+library(gridExtra); library(grid); library(cowplot); library(coalitions); library(xtable);
+library(hrbrthemes)
 gpclibPermit()
-
-#test text
 
 # d'Hondt function
 countN <- function (v) {return (Reduce(function (x, y) x + y, ifelse(is.na(v), 0, 1)))}
@@ -318,7 +317,8 @@ p <- ggplot(datl_KE, aes(x=date, y=value, colour=factor(variable))) + geom_line(
                       labels=c("PiS", "KE", "Wiosna", "Kukiz'15", "KP", "Razem")) + 
   labs(x="", y="% of vote", title="Pooled poll results for parties and coalitions (EP election, Poland)", caption = "@BDStanley")+
   guides(color=guide_legend(override.aes=list(fill=NA))) +
-theme_minimal()
+theme_minimal() +
+  theme_ipsum_rc()
 ggsave(p, file = "~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/EP_trends.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.25)
 
