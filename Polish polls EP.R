@@ -1,6 +1,6 @@
 # PREPARE WORKSPACE
 rm(list=ls())
-setwd('/Users/benstanley/Desktop/Personal/Dropbox/Resources/R scripts/Poland')
+setwd('/Users/benstanley/Desktop/Personal/Dropbox/Resources/R scripts/Pooling the Poles')
 library(tidyverse); library(rjags); library(R2jags); library(R2WinBUGS); library(scales)
 library(grid); library(foreign); library(memisc); library(MCMCpack); library(repmis); 
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
@@ -283,11 +283,12 @@ seatsEP <- add_row(seatsEP, const = "Głosy (%)", distribKE = pooledframe$means_
 colnames(seatsEP) <- c("", "KE", "PiS", "Wiosna", "Kukiz'15", "Konf.", "Razem")
 hlines <- c(-1, 0, 2, nrow(seatsEP))
 print(xtable(seatsEP, type = "latex", digits=0, align=c("p{1cm}","p{5.5cm}","c","c","c","c","c","c")), hline.after=hlines, booktabs=TRUE,
-      include.rownames=FALSE, file='~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/seatsEP.tex')
+      include.rownames=FALSE, file='~/Desktop/Personal/Dropbox/Resources/Polish materials/Plots/EP_seats.tex')
 
 #plot trend
-# colours for plots
-pcols <- c("KE"="orange", "PiS"="blue4", "Kukiz15"="black", "Wiosna" = "maroon", "KP" = "deepskyblue", "Razem"="magenta", "Other"="grey")
+setwd('~/Desktop/Personal/Dropbox/Resources/Polish materials/Plots')
+prcols <- c("KE"="orange", "PiS"="blue4", "Kukiz'15"="black", "Wiosna" = "maroon", "Konf." = "goldenrod1", "Razem"="magenta", "Other"="grey")
+pcols <- c("KE"="orange", "PiS"="blue4", "Kukiz15"="black", "Wiosna" = "maroon", "KP" = "goldenrod1", "Razem"="magenta", "Other"="grey")
 
 datl <- melt(plotdata, measure.vars=c("KEmean","PiSmean","Wiosnamean","Kukiz15mean","KPmean", "Razemmean", "Othermean"))
 levels(datl$variable) <- c("KE", "PiS", "Wiosna", "Kukiz15", "KP", "Razem", "Other")
@@ -300,13 +301,11 @@ pdatl$variable <- factor(pdatl$variable, levels = c("KE", "PiS", "Wiosna", "Kuki
 datl_KE <- datl[!(datl$variable %in% c("Other")),]
 p <- ggplot(datl_KE, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
   geom_abline(intercept=5, slope=0, colour="black", linetype=3) +
-  #geom_ribbon(data=subset(datl, variable=="PiS"),aes(ymin=PiSlow, ymax=PiShigh), colour=NA, fill="blue4", alpha=0.3) +
-  #geom_ribbon(data=subset(datl, variable=="KE"),aes(ymin=KElow, ymax=KEhigh), colour=NA, fill="orange", alpha=0.3) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PiS), col="blue4", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=KE), col="orange", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Wiosna), col="maroon", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Kukiz15), col="black", size=1.5) +
-  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=KP), col="deepskyblue", size=1.5) +
+  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=KP), col="goldenrod1", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Razem), col="magenta", size=1.5) +
   theme(panel.background = element_rect(colour="white"),  axis.text.x = element_text(size=10), 
         axis.text.y = element_text(size=10), axis.title.x = element_blank(), axis.title.y = element_blank(),
@@ -314,12 +313,12 @@ p <- ggplot(datl_KE, aes(x=date, y=value, colour=factor(variable))) + geom_line(
   background_grid(major = "xy", minor = "none") +
   scale_x_date(labels=date_format("%d.%m"))+
   scale_colour_manual(name="", values=pcols, breaks=c("PiS", "KE", "Wiosna", "Kukiz15", "KP", "Razem"), 
-                      labels=c("PiS", "KE", "Wiosna", "Kukiz'15", "KP", "Razem")) + 
-  labs(x="", y="% of vote", title="Pooled poll results for parties and coalitions (EP election, Poland)", caption = "@BDStanley")+
+                      labels=c("PiS", "KE", "Wiosna", "Kukiz'15", "Konf.", "Razem")) + 
+  labs(x="", y="% of vote", title="Pooled poll results for parties and coalitions (EP election, Poland)", caption = "@BDStanley; benstanley.org")+
   guides(color=guide_legend(override.aes=list(fill=NA))) +
 theme_minimal() +
   theme_ipsum_rc()
-ggsave(p, file = "~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/EP_trends.png", 
+ggsave(p, file = "EP_trends.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.5)
 
 datl_KE_maj <- datl[!(datl$variable %in% c("Other", "Wiosna", "Kukiz15", "KP", "Razem")),]
@@ -336,18 +335,17 @@ p <- ggplot(datl_KE_maj, aes(x=date, y=value, colour=factor(variable))) + geom_l
   scale_x_date(labels=date_format("%d.%m"))+
   scale_colour_manual(name="", values=pcols, breaks=c("PiS", "KE"), 
                       labels=c("PiS", "KE")) + 
-  labs(x="", y="% of vote", title="Pooled poll results for PiS and KE (EP election, Poland)", caption = "@BDStanley")+
+  labs(x="", y="% of vote", title="Pooled poll results for PiS and KE (EP election, Poland)", caption = "@BDStanley; benstanley.org")+
   guides(color=guide_legend(override.aes=list(fill=NA))) +
   theme_minimal() +
   theme_ipsum_rc()
-ggsave(p, file = "~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/EP_trends_PiS_KE.png", 
+ggsave(p, file = "EP_trends_PiS_KE.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.5)
 
 levels(posfrmelt$variable)[levels(posfrmelt$variable)=="Kukiz15"] <- "Kukiz'15"
 levels(posfrmelt$variable)[levels(posfrmelt$variable)=="KP"] <- "Konf."
 levels(pooledframe$party)[levels(pooledframe$party)=="Kukiz15"] <- "Kukiz'15"
 levels(pooledframe$party)[levels(pooledframe$party)=="KP"] <- "Konf."
-prcols <- c("KE"="orange", "PiS"="blue4", "Kukiz'15"="black", "Wiosna" = "maroon", "Konf." = "deepskyblue", "Razem"="magenta", "Other"="grey")
 p <- ggplot(data=posfrmelt, aes(variable, value)) +
   geom_boxplot(aes(fill=variable, color=variable), outlier.shape=NA, show.legend = F, fatten=0) +
   stat_summary(geom = "crossbar", width=0.65, fatten=0, color="white", 
@@ -374,6 +372,6 @@ p <- ggplot(data=posfrmelt, aes(variable, value)) +
   theme_ipsum_rc() +
   scale_fill_manual(values=prcols) +
   scale_color_manual(values=prcols) +
-  labs(caption="@BDStanley", y="", title="Latest poll estimates (EP elections, Poland)")
-ggsave(p, file = "~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/EP_latest.png", 
+  labs(caption="@BDStanley; benstanley.org", y="", title="Latest poll estimates (EP elections, Poland)")
+ggsave(p, file = "EP_latest.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.5)
