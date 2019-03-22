@@ -5,7 +5,7 @@ library(tidyverse); library(rjags); library(R2jags); library(R2WinBUGS); library
 library(grid); library(foreign); library(memisc); library(MCMCpack); library(repmis); 
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
 library(maptools); library(rgeos); library(gpclib); library(reshape2); library(plyr);
-library(gridExtra); library(grid); library(cowplot); library(scales)
+library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes)
 gpclibPermit()
 
 # d'Hondt function
@@ -22,7 +22,7 @@ dHondt <- function( candidates, votes, seats ){
 
 # colours for plots
 pcols <- c("PO"="orange", "PiS"="blue4", "PSL"="darkgreen", 
-           "Kukiz'15"="black", "KORWiN" = "deepskyblue", "Wiosna" = "maroon", "Other"="gray50", 
+           "Kukiz'15"="black", "KORWiN" = "goldenrod1", "Wiosna" = "maroon", "Other"="gray50", 
            "MN"="yellow", "Nowoczesna"="blue", "SLD"="red", "Razem"="magenta")
 
 
@@ -145,7 +145,7 @@ model {
 results <- run.jags(model, monitor=c('walk','houseEffect','tightness'),data=data,n.chains=4,adapt=10000,
                     burnin=20000,sample=20000,thin=5,method="parallel")
 mysummary <- summary(results)
-save(mysummary,file="ppsummary")
+save(mysummary,file="ppsummary_NAT")
 
 
 ## TREND DATA
@@ -401,8 +401,14 @@ ggplot(data=posfrmelt, aes(variable, value)) +
   scale_x_discrete(name=" ", limits=rev(pooledframe$party)) +
   scale_y_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   scale_fill_manual(values=pcols) +
-  labs(caption="@BDStanley")
-ggsave('Latest_figures.png')
+  labs(x="", y="% of vote", title="Pooled poll estimates for national elections, Poland", caption = "@BDStanley; benstanley.org")+
+  guides(color=guide_legend(override.aes=list(fill=NA))) +
+  scale_fill_manual(values=pcols) +
+  scale_color_manual(values=pcols) +
+  theme_minimal() +
+  theme_ipsum_rc() +
+ggsave(p, file = "NAT_latest.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.5)
 
 # plot trends
 datl <- melt(plotdata, measure.vars=c("POmean","PiSmean","SLDmean","PSLmean","KORWiNmean", "Wiosnamean", "Kukiz15mean", "Nowoczesnamean", "Razemmean", "Othermean"))

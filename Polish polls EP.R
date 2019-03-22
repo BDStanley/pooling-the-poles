@@ -133,7 +133,7 @@ model {
 results <- run.jags(model, monitor=c('walk','houseEffect','tightness'),data=data,n.chains=4,adapt=10000,
                     burnin=20000,sample=20000,thin=5,method="parallel")
 mysummary <- summary(results)
-save(mysummary,file="ppsummary")
+save(mysummary,file="ppsummary_EP")
 
 
 ## TREND DATA
