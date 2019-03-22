@@ -1,6 +1,6 @@
 # PREPARE WORKSPACE
 rm(list=ls())
-setwd('/Users/benstanley/Desktop/Personal/Dropbox/Resources/R scripts/Poland')
+setwd('/Users/benstanley/Desktop/Personal/Dropbox/Resources/R scripts/Pooling the Poles')
 library(tidyverse); library(rjags); library(R2jags); library(R2WinBUGS); library(scales)
 library(grid); library(foreign); library(memisc); library(MCMCpack); library(repmis); 
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
@@ -360,44 +360,41 @@ levels(posfrmelt$variable)[levels(posfrmelt$variable)=="Kukiz15"] <- "Kukiz'15"
 levels(pooledframe$party)[levels(pooledframe$party)=="Kukiz15"] <- "Kukiz'15"
 
 # plot most recent party support
-ggplot(data=posfrmelt, aes(variable, value)) + 
-  geom_boxplot(aes(fill=variable), outlier.shape=NA) +
+p <- ggplot(data=posfrmelt, aes(variable, value)) + 
+  geom_hline(aes(yintercept=0.05), colour="gray60", linetype="dashed") +
+  geom_boxplot(aes(fill=variable, color=variable), outlier.shape=NA, show.legend = F, fatten=0) +
+  stat_summary(geom = "crossbar", width=0.65, fatten=0, color="white", 
+               fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x))) })+
   coord_flip() +
-  geom_hline(aes(yintercept=0.05), colour="black", linetype="dashed") +
-  theme(panel.background = element_rect(colour="white"),  axis.text.x = element_text(size=12), 
-        axis.text.y = element_text(size=12), axis.title.x = element_blank(), axis.title.y = element_blank(),
-        plot.margin = unit(c(1,1,1,1), "lines"),
-        legend.position="none") +
-  background_grid(major = "xy", minor = "none") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PO"]),0)), 
-           x="PO", y=mean(posfrmelt$value[posfrmelt$variable=="PO"]), size=3.5, hjust = "center", vjust=-2.7) +
+           x="PO", y=mean(posfrmelt$value[posfrmelt$variable=="PO"]), size=3.5, hjust = "center", vjust=-2.7, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PiS"]),0)), 
-           x="PiS", y=mean(posfrmelt$value[posfrmelt$variable=="PiS"]), size=3.5, hjust = "center", vjust=-2.7) +
+           x="PiS", y=mean(posfrmelt$value[posfrmelt$variable=="PiS"]), size=3.5, hjust = "center", vjust=-2.7, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="SLD"]),0)), 
-           x="SLD", y=mean(posfrmelt$value[posfrmelt$variable=="SLD"]), size=3.5, hjust = "center", vjust=-2.7) +
+           x="SLD", y=mean(posfrmelt$value[posfrmelt$variable=="SLD"]), size=3.5, hjust = "center", vjust=-2.7, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Kukiz'15"]),0)), 
-           x="Kukiz'15", y=mean(posfrmelt$value[posfrmelt$variable=="Kukiz'15"]), size=3.5, hjust = "center", vjust=-2.7) +
+           x="Kukiz'15", y=mean(posfrmelt$value[posfrmelt$variable=="Kukiz'15"]), size=3.5, hjust = "center", vjust=-2.7, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PSL"]),0)), 
-           x="PSL", y=mean(posfrmelt$value[posfrmelt$variable=="PSL"]), size=3.5, hjust = "center", vjust=-2.7) +
+           x="PSL", y=mean(posfrmelt$value[posfrmelt$variable=="PSL"]), size=3.5, hjust = "center", vjust=-2.7, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Nowoczesna"]),0)), 
-           x="Nowoczesna", y=mean(posfrmelt$value[posfrmelt$variable=="Nowoczesna"]), size=3.5, hjust = "center", vjust=-2.7) +
+           x="Nowoczesna", y=mean(posfrmelt$value[posfrmelt$variable=="Nowoczesna"]), size=3.5, hjust = "center", vjust=-2.7, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="KORWiN"]),0)), 
-           x="KORWiN", y=mean(posfrmelt$value[posfrmelt$variable=="KORWiN"]), size=3.5, hjust = "center", vjust=-2.7) +
+           x="KORWiN", y=mean(posfrmelt$value[posfrmelt$variable=="KORWiN"]), size=3.5, hjust = "center", vjust=-2.7, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Razem"]),0)), 
-           x="Razem", y=mean(posfrmelt$value[posfrmelt$variable=="Razem"]), size=3.5, hjust = "center", vjust=-2.7) +
+           x="Razem", y=mean(posfrmelt$value[posfrmelt$variable=="Razem"]), size=3.5, hjust = "center", vjust=-2.7, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Wiosna"]),0)), 
-           x="Wiosna", y=mean(posfrmelt$value[posfrmelt$variable=="Wiosna"]), size=3.5, hjust = "center", vjust=-2.7) +
+           x="Wiosna", y=mean(posfrmelt$value[posfrmelt$variable=="Wiosna"]), size=3.5, hjust = "center", vjust=-2.7, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Other"]),0)), 
-           x="Other", y=mean(posfrmelt$value[posfrmelt$variable=="Other"]), size=3.5, hjust = "center", vjust=-2.7) +
-  annotate(geom = "text", label=paste("Pr(PiS > 50%)  = ", PiS.50.out), x=5.5, y=0.25, size=3.5, adj=c(0)) +
-  annotate(geom = "text", label=paste("Pr(PiS > PO)  = ", PO.PiS.diff.out), x=5, y=0.25, size=3.5, adj=c(0)) +
-  annotate(geom = "text", label=paste("Pr(Wiosna > 5%)  = ", Wiosna.thr.out), x=4.5, y=0.25, size=3.5, adj=c(0)) +
-  annotate(geom = "text", label=paste("Pr(SLD > 5%)  = ", SLD.thr.out), x=4, y=0.25, size=3.5, adj=c(0)) +
-  annotate(geom = "text", label=paste("Pr(Kukiz'15 > 5%)  = ", Kukiz15.thr.out), x=3.5, y=0.25, size=3.5, adj=c(0)) +
-  annotate(geom = "text", label=paste("Pr(Nowoczesna > 5%)  = ", Nowoczesna.thr.out), x=3, y=0.25, size=3.5, adj=c(0)) +
-  annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL.thr.out), x=2.5, y=0.25, size=3.5, adj=c(0)) +
-  annotate(geom = "text", label=paste("Pr(KORWiN > 5%)  = ", KORWiN.thr.out), x=2, y=0.25, size=3.5, adj=c(0)) +  
-  annotate(geom = "text", label=paste("Pr(Razem > 5%)  = ", Razem.thr.out), x=1.5, y=0.25, size=3.5, adj=c(0)) +
+           x="Other", y=mean(posfrmelt$value[posfrmelt$variable=="Other"]), size=3.5, hjust = "center", vjust=-2.7, family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(PiS > 50%)  = ", PiS.50.out), x=5.5, y=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(PiS > PO)  = ", PO.PiS.diff.out), x=5, y=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(Wiosna > 5%)  = ", Wiosna.thr.out), x=4.5, y=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(SLD > 5%)  = ", SLD.thr.out), x=4, y=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(Kukiz'15 > 5%)  = ", Kukiz15.thr.out), x=3.5, y=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(Nowoczesna > 5%)  = ", Nowoczesna.thr.out), x=3, y=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL.thr.out), x=2.5, y=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(KORWiN > 5%)  = ", KORWiN.thr.out), x=2, y=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +  
+  annotate(geom = "text", label=paste("Pr(Razem > 5%)  = ", Razem.thr.out), x=1.5, y=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
   scale_x_discrete(name=" ", limits=rev(pooledframe$party)) +
   scale_y_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   scale_fill_manual(values=pcols) +
@@ -406,9 +403,9 @@ ggplot(data=posfrmelt, aes(variable, value)) +
   scale_fill_manual(values=pcols) +
   scale_color_manual(values=pcols) +
   theme_minimal() +
-  theme_ipsum_rc() +
+  theme_ipsum_rc() 
 ggsave(p, file = "NAT_latest.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.5)
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 # plot trends
 datl <- melt(plotdata, measure.vars=c("POmean","PiSmean","SLDmean","PSLmean","KORWiNmean", "Wiosnamean", "Kukiz15mean", "Nowoczesnamean", "Razemmean", "Othermean"))
@@ -420,8 +417,8 @@ levels(pdatl$variable) <- c("PO","PiS", "SLD","PSL","KORWiN", "Wiosna", "Kukiz'1
 pdatl$variable <- factor(pdatl$variable, levels = c("PiS", "PO", "Nowoczesna", "Kukiz'15", "PSL", "SLD", "KORWiN", "Wiosna", "Razem", "Other"))
 
 datl_all <- datl[!(datl$variable %in% c("Other")),]
-ggplot(datl_all, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
-  geom_abline(intercept=5, slope=0, colour="black", linetype=3) +
+p <- ggplot(datl_all, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
+  geom_abline(intercept=5, slope=0, colour="gray60", linetype=3) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PiS), col="blue4", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PO), col="orange", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Kukiz15), col="black", size=1.5) +
@@ -441,12 +438,15 @@ ggplot(datl_all, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
                       breaks=c("PiS", "PO", "Kukiz'15", "Wiosna", "PSL", "SLD", "Nowoczesna", "KORWiN", "Razem", "Other"),
                       labels=c("PiS", "PO", "Kukiz'15", "Wiosna", "PSL", "SLD", "Nowoczesna", "KORWiN", "Razem", "Other")) + 
   guides(color=guide_legend(override.aes=list(fill=NA))) +
-  labs(caption="@BDStanley")
-ggsave('all_trends.png')
+  labs(x="", y="% of vote", title="Pooled poll trends for national elections, Poland", caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc() 
+ggsave(p, file = "NAT_trends.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 datl_POPiS <- datl[!(datl$variable %in% c("Kukiz'15", "Nowoczesna", "PSL", "SLD", "KORWiN", "Wiosna", "Other", "Razem")),]
-ggplot(datl_POPiS, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
-  geom_abline(intercept=5, slope=0, colour="black", linetype=3) +
+p <- ggplot(datl_POPiS, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
+  geom_abline(intercept=5, slope=0, colour="gray60", linetype=3) +
   geom_ribbon(data=subset(datl, variable=="PiS"),aes(ymin=PiSlow, ymax=PiShigh), colour=NA, fill="blue4", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="PO"),aes(ymin=POlow, ymax=POhigh), colour=NA, fill="orange", alpha=0.3) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PiS), col="blue4", size=1.5) +
@@ -458,12 +458,15 @@ ggplot(datl_POPiS, aes(x=date, y=value, colour=factor(variable))) + geom_line() 
   scale_x_date(labels=date_format("%d.%m.%y"))+
   scale_colour_manual(name="", values=pcols, breaks=c("PiS", "PO")) + 
   guides(color=guide_legend(override.aes=list(fill=NA))) +
-  labs(caption="@BDStanley")
-ggsave('POPiS_trends.png')
+  labs(x="", y="% of vote", title="Pooled poll trends for major parties, Poland", caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc() 
+ggsave(p, file = "NAT_POPiS_trends.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 datl_other <- datl[!(datl$variable %in% c("PO", "PiS", "KORWiN", "Nowoczesna", "Razem", "Other")), ]
-ggplot(datl_other, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
-  geom_abline(intercept=5, slope=0, colour="black", linetype=2) +
+p <- ggplot(datl_other, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
+  geom_abline(intercept=5, slope=0, colour="gray60", linetype=2) +
   geom_ribbon(data=subset(datl, variable=="Kukiz'15"),aes(ymin=Kukiz15low, ymax=Kukiz15high), colour=NA, fill="black", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="Wiosna"),aes(ymin=Wiosnalow, ymax=Wiosnahigh), colour=NA, fill="maroon", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="PSL"),aes(ymin=PSLlow, ymax=PSLhigh), colour=NA, fill="darkgreen", alpha=0.3) +
@@ -480,12 +483,14 @@ ggplot(datl_other, aes(x=date, y=value, colour=factor(variable))) + geom_line() 
   scale_colour_manual(name="", values=pcols, breaks=c("Kukiz'15", "Wiosna", "PSL", "SLD"), 
                       labels=c("Kukiz'15", "Wiosna", "PSL", "SLD")) + 
   guides(color=guide_legend(override.aes=list(fill=NA))) +
-  labs(caption="@BDStanley")
-ggsave('Other_trends.png')
+  labs(x="", y="% of vote", title="Pooled poll trends for other parties, Poland", caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc() 
+ggsave(p, file = "NAT_Other_trends.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 datl_minor <- datl[!(datl$variable %in% c("PO", "PiS", "Kukiz'15", "Wiosna", "PSL", "SLD")), ]
-ggplot(datl_minor, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
-  geom_abline(intercept=5, slope=0, colour="black", linetype=2) +
+p <- ggplot(datl_minor, aes(x=date, y=value, colour=factor(variable))) + geom_line() + geom_abline(intercept=5, slope=0, colour="black", linetype=2) +
   geom_ribbon(data=subset(datl, variable=="Nowoczesna"),aes(ymin=Nowoczesnalow, ymax=Nowoczesnahigh), colour=NA, fill="blue", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="KORWiN"),aes(ymin=KORWiNlow, ymax=KORWiNhigh), colour=NA, fill="deepskyblue", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="Razem"),aes(ymin=Razemlow, ymax=Razemhigh), colour=NA, fill="magenta", alpha=0.3) +
@@ -502,21 +507,24 @@ ggplot(datl_minor, aes(x=date, y=value, colour=factor(variable))) + geom_line() 
   scale_colour_manual(name="", values=pcols, breaks=c("Nowoczesna", "KORWiN", "Razem", "Other"), 
                       labels=c("Nowoczesna", "KORWiN", "Razem", "Other")) + 
   guides(color=guide_legend(override.aes=list(fill=NA))) +
-  labs(caption="@BDStanley")
-ggsave('Minor_trends.png')
+  labs(x="", y="% of vote", title="Pooled poll trends for minor parties, Poland", caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc() 
+ggsave(p, file = "NAT_Minor_trends.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 #levels(datl$variable) <- c("PiS", "PO", "Kukiz'15", "Wiosna", "PSL", "SLD", "KORWiN", "Nowoczesna", "Razem", "Other")
 #levels(pdatl$variable) <- c("PiS", "PO", "Kukiz'15", "Wiosna", "PSL", "SLD", "KORWiN", "Nowoczesna", "Razem", "Other")
-ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
+p <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) +
+  geom_line(show.legend = F) + geom_abline(intercept=5, slope=0, colour="gray60", linetype=3) +
   facet_wrap( ~ variable, nrow=3, scales="free_y") +
-  geom_abline(intercept=5, slope=0, colour="black", linetype=3) +
   geom_ribbon(data=subset(datl, variable=="PiS"), aes(ymin=PiSlow, ymax=PiShigh), colour=NA, fill="blue4", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="PO"), aes(ymin=POlow, ymax=POhigh), colour=NA, fill="orange", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="Kukiz'15"), aes(ymin=Kukiz15low, ymax=Kukiz15high), colour=NA, fill="black", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="Wiosna"), aes(ymin=Wiosnalow, ymax=Wiosnahigh), colour=NA, fill="maroon", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="PSL"), aes(ymin=PSLlow, ymax=PSLhigh), colour=NA, fill="darkgreen", alpha=0.3) +  
   geom_ribbon(data=subset(datl, variable=="SLD"), aes(ymin=SLDlow, ymax=SLDhigh), colour=NA, fill="red", alpha=0.3) +
-  geom_ribbon(data=subset(datl, variable=="KORWiN"), aes(ymin=KORWiNlow, ymax=KORWiNhigh), colour=NA, fill="deepskyblue", alpha=0.3) +  
+  geom_ribbon(data=subset(datl, variable=="KORWiN"), aes(ymin=KORWiNlow, ymax=KORWiNhigh), colour=NA, fill="goldenrod1", alpha=0.3) +  
   geom_ribbon(data=subset(datl, variable=="Nowoczesna"), aes(ymin=Nowoczesnalow, ymax=Nowoczesnahigh), colour=NA, fill="blue", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="Razem"), aes(ymin=Razemlow, ymax=Razemhigh), colour=NA, fill="magenta", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="Other"), aes(ymin=Otherlow, ymax=Otherhigh), colour=NA, fill="grey50", alpha=0.3) +
@@ -526,7 +534,7 @@ ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
   geom_point(data=subset(pdatl, variable=="Wiosna"), aes(x=as.Date(date, "%d/%m/%Y"), y=value), col="maroon", size=1.5) +
   geom_point(data=subset(pdatl, variable=="PSL"), aes(x=as.Date(date, "%d/%m/%Y"), y=value), col="darkgreen", size=1.5) +
   geom_point(data=subset(pdatl, variable=="SLD"), aes(x=as.Date(date, "%d/%m/%Y"), y=value), col="red", size=1.5) +
-  geom_point(data=subset(pdatl, variable=="KORWiN"), aes(x=as.Date(date, "%d/%m/%Y"), y=value), col="deepskyblue", size=1.5) +
+  geom_point(data=subset(pdatl, variable=="KORWiN"), aes(x=as.Date(date, "%d/%m/%Y"), y=value), col="goldenrod1", size=1.5) +
   geom_point(data=subset(pdatl, variable=="Nowoczesna"), aes(x=as.Date(date, "%d/%m/%Y"), y=value), col="blue", size=1.5) +
   geom_point(data=subset(pdatl, variable=="Razem"), aes(x=as.Date(date, "%d/%m/%Y"), y=value), col="magenta", size=1.5) +
   geom_point(data=subset(pdatl, variable=="Other"), aes(x=as.Date(date, "%d/%m/%Y"), y=value), col="grey50", size=1.5) +
@@ -536,13 +544,16 @@ ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
   background_grid(major = "xy", minor = "none")+
   scale_x_date(labels=date_format("%d.%m"))+
   scale_colour_manual(name="", values=pcols) +
-  labs(caption="@BDStanley")
-ggsave('Overall_trends.png')
+  labs(x="", y="% of vote", title="Pooled poll trends for all parties, Poland", caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc() 
+ggsave(p, file = "NAT_All_trends.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 5)
 
 #current seat share without district weighting
 levels(frame$Party)[levels(frame$Party)=="Kukiz15"] <- "Kukiz'15"
-ggplot(data=frame, mapping=aes(x=Party, y=Unweighted, fill=Party)) +
-  geom_bar(stat="identity", width=.75) +
+p <- ggplot(data=frame, mapping=aes(x=Party, y=Unweighted, fill=Party)) +
+  geom_bar(stat="identity", width=.75, show.legend = F) +
   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
@@ -550,20 +561,20 @@ ggplot(data=frame, mapping=aes(x=Party, y=Unweighted, fill=Party)) +
   scale_fill_manual(name="Party", values = pcols, 
                     breaks=c("PO", "PiS", "SLD", "PSL", "Wiosna", "KORWiN", "MN", "Kukiz'15", "Nowoczesna", "Razem"), 
                     labels=c("PO", "PiS", "SLD", "PSL", "Wiosna", "KORWiN", "MN", "Kukiz'15", "Nowoczesna", "Razem"))+
-  theme(plot.margin = unit(c(1,1,1,1), "lines"),
-        legend.position="none", axis.text.x=element_text(colour="black", size=10), 
-        axis.text.y= element_text(colour="black", size=10), axis.title.x = element_blank()) +
-  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), fill="grey95") +
-  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), fill="grey95") +
-  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), fill="grey95") +    
-  annotate("text", x=frame$Party, y=c(frame$Unweighted+18), label=frame$Unweighted, size=4)+
-  annotate("text", x=frame$Party, y=c(frame$Unweighted+8), label=frame$diffPres, size=3) +
-  labs(caption="@BDStanley")
-ggsave('Seats_unweighted.png')
+  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
+  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
+  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +    
+  annotate("text", x=frame$Party, y=c(frame$Unweighted+18), label=frame$Unweighted, size=4, family="Roboto Condensed")+
+  annotate("text", x=frame$Party, y=c(frame$Unweighted+8), label=frame$diffPres, size=3, family="Roboto Condensed") +
+  labs(x="", y="% of vote", title="Estimated share of seats, Poland (unweighted)", caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc() 
+ggsave(p, file = "NAT_Seats_unweighted.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 #current seat share with district weighting
-ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
-  geom_bar(stat="identity", width=.75) +
+p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
+  geom_bar(stat="identity", width=.75, show.legend = F) +
   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
@@ -571,16 +582,16 @@ ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
   scale_fill_manual(name="Party", values = pcols, 
                     breaks=c("PO", "PiS", "SLD", "PSL", "Wiosna", "KORWiN", "MN", "Kukiz'15", "Nowoczesna", "Razem"), 
                     labels=c("PO", "PiS", "SLD", "PSL", "Wiosna", "KORWiN", "MN", "Kukiz'15", "Nowoczesna", "Razem"))+
-  theme(plot.margin = unit(c(1,1,1,1), "lines"),
-        legend.position="none", axis.text.x=element_text(colour="black", size=10), 
-        axis.text.y= element_text(colour="black", size=10), axis.title.x = element_blank()) +
-  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), fill="grey95") +
-  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), fill="grey95") +
-  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), fill="grey95") +    
-  annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Weighted, size=4)+
-  annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3) +
-  labs(caption="@BDStanley")
-ggsave('Seats_weighted.png')
+  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
+  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
+  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +    
+  annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Unweighted, size=4, family="Roboto Condensed")+
+  annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed") +
+  labs(x="", y="% of vote", title="Estimated share of seats, Poland", caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc() 
+ggsave(p, file = "NAT_Seats_weighted.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 # seats table
 seats <- cbind(poldHondt, data1)
@@ -729,7 +740,7 @@ seats$label_point_y[seats$id==40] <- label_points$y[41]
 const.df$id <- const.df$con
 plotdata <- merge(const.df,seats,by="id")
 
-ggplot(plotdata) + 
+p <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(Wiosna)) + 
   geom_polygon() +
   geom_path(color="black") +
@@ -737,8 +748,9 @@ ggplot(plotdata) +
   scale_fill_gradient(name="Wiosna", limits=c(min=0, max=20), low = "white", high = "maroon", guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=Wiosna, label=Wiosna), fill="white") +
   theme_void() + theme(aspect.ratio=1, legend.position="none") +
-  labs(caption="@BDStanley")
-ggsave('Wiosna_seats.png', width=7, height=7)
+  labs(title="Share of seats for Wiosna", caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
+ggsave(p, file = "Wiosna_seats.png", 
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.5)
 
 ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(PiS)) + 
