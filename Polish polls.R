@@ -426,7 +426,7 @@ p <- ggplot(datl_all, aes(x=date, y=value, colour=factor(variable))) + geom_line
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PSL), col="darkgreen", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=SLD), col="red", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Nowoczesna), col="blue", size=1.5) +
-  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=KORWiN), col="deepskyblue", size=1.5) +
+  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=KORWiN), col="goldenrod1", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Razem), col="magenta", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Other), col="gray50", size=1.5) +
   theme(panel.background = element_rect(colour="white"),  axis.text.x = element_text(size=10), 
@@ -492,11 +492,11 @@ ggsave(p, file = "NAT_Other_trends.png",
 datl_minor <- datl[!(datl$variable %in% c("PO", "PiS", "Kukiz'15", "Wiosna", "PSL", "SLD")), ]
 p <- ggplot(datl_minor, aes(x=date, y=value, colour=factor(variable))) + geom_line() + geom_abline(intercept=5, slope=0, colour="black", linetype=2) +
   geom_ribbon(data=subset(datl, variable=="Nowoczesna"),aes(ymin=Nowoczesnalow, ymax=Nowoczesnahigh), colour=NA, fill="blue", alpha=0.3) +
-  geom_ribbon(data=subset(datl, variable=="KORWiN"),aes(ymin=KORWiNlow, ymax=KORWiNhigh), colour=NA, fill="deepskyblue", alpha=0.3) +
+  geom_ribbon(data=subset(datl, variable=="KORWiN"),aes(ymin=KORWiNlow, ymax=KORWiNhigh), colour=NA, fill="goldenrod1", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="Razem"),aes(ymin=Razemlow, ymax=Razemhigh), colour=NA, fill="magenta", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="Other"),aes(ymin=Otherlow, ymax=Otherhigh), colour=NA, fill="gray50", alpha=0.3) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Nowoczesna), col="blue", size=1.5) +
-  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=KORWiN), col="deepskyblue", size=1.5) +
+  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=KORWiN), col="goldenrod1", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Razem), col="magenta", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Other), col="gray50", size=1.5) +
   theme(panel.background = element_rect(colour="white"),  axis.text.x = element_text(size=10), 
