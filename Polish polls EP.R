@@ -353,19 +353,19 @@ p <- ggplot(data=posfrmelt, aes(variable, value)) +
                fun.data = function(x){ return(c(y=median(x), ymin=median(x), ymax=median(x))) })+
   coord_flip() +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="KE"]),0)), 
-            x="KE", y=mean(posfrmelt$value[posfrmelt$variable=="KE"]), size=3.5, hjust = "center", vjust=-3, family="Roboto Condensed") +
+            x="KE", y=mean(posfrmelt$value[posfrmelt$variable=="KE"]), size=3.5, hjust = "center", vjust=-3.6, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PiS"]),0)), 
-           x="PiS", y=mean(posfrmelt$value[posfrmelt$variable=="PiS"]), size=3.5, hjust = "center", vjust=-3, family="Roboto Condensed") +
+           x="PiS", y=mean(posfrmelt$value[posfrmelt$variable=="PiS"]), size=3.5, hjust = "center", vjust=-3.6, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Wiosna"]),0)), 
-            x="Wiosna", y=mean(posfrmelt$value[posfrmelt$variable=="Wiosna"]), size=3.5, hjust = "center", vjust=-3, family="Roboto Condensed") +
+            x="Wiosna", y=mean(posfrmelt$value[posfrmelt$variable=="Wiosna"]), size=3.5, hjust = "center", vjust=-3.6, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Kukiz'15"]),0)), 
-            x="Kukiz'15", y=mean(posfrmelt$value[posfrmelt$variable=="Kukiz'15"]), size=3.5, hjust = "center", vjust=-3, family="Roboto Condensed") +
+            x="Kukiz'15", y=mean(posfrmelt$value[posfrmelt$variable=="Kukiz'15"]), size=3.5, hjust = "center", vjust=-3.6, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Konf."]),0)), 
-            x="Konf.", y=mean(posfrmelt$value[posfrmelt$variable=="Konf."]), size=3.5, hjust = "center", vjust=-3, family="Roboto Condensed") +
+            x="Konf.", y=mean(posfrmelt$value[posfrmelt$variable=="Konf."]), size=3.5, hjust = "center", vjust=-3.6, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Razem"]),0)), 
-            x="Razem", y=mean(posfrmelt$value[posfrmelt$variable=="Razem"]), size=3.5, hjust = "center", vjust=-3, family="Roboto Condensed") +
+            x="Razem", y=mean(posfrmelt$value[posfrmelt$variable=="Razem"]), size=3.5, hjust = "center", vjust=-3.6, family="Roboto Condensed") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Other"]),0)), 
-            x="Other", y=mean(posfrmelt$value[posfrmelt$variable=="Other"]), size=3.5, hjust = "center", vjust=-3, family="Roboto Condensed") +
+            x="Other", y=mean(posfrmelt$value[posfrmelt$variable=="Other"]), size=3.5, hjust = "center", vjust=-3.6, family="Roboto Condensed") +
   scale_x_discrete(name=" ", limits=rev(pooledframe$party)) +
   scale_y_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   theme_minimal() +
