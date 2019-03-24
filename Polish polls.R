@@ -585,9 +585,11 @@ p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
   geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
   geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
   geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +    
-  annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Unweighted, size=4, family="Roboto Condensed")+
+  annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Weighted, size=4, family="Roboto Condensed")+
   annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed") +
-  labs(x="", y="% of vote", title="Estimated share of seats, Poland", caption = "@BDStanley; benstanley.org") +
+  labs(x="", y="% of vote", title="Estimated share of seats, Poland", 
+       subtitle="Figures in brackets refer to change in seat share since 2015", 
+       caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
   theme_ipsum_rc() 
 ggsave(p, file = "NAT_Seats_weighted.png", 
