@@ -314,7 +314,9 @@ p <- ggplot(datl_KE, aes(x=date, y=value, colour=factor(variable))) + geom_line(
   scale_x_date(labels=date_format("%d.%m"))+
   scale_colour_manual(name="", values=pcols, breaks=c("PiS", "KE", "Wiosna", "Kukiz15", "KP", "Razem"), 
                       labels=c("PiS", "KE", "Wiosna", "Kukiz'15", "Konf.", "Razem")) + 
-  labs(x="", y="% of vote", title="Pooled poll results for parties and coalitions (EP election, Poland)", caption = "@BDStanley; benstanley.org")+
+  labs(x="", y="% of vote", title="Pooled poll results for parties and coalitions (EP election, Poland)", 
+       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster and IBSP.",
+caption = "@BDStanley; benstanley.org")+
   guides(color=guide_legend(override.aes=list(fill=NA))) +
 theme_minimal() +
   theme_ipsum_rc()
@@ -335,7 +337,9 @@ p <- ggplot(datl_KE_maj, aes(x=date, y=value, colour=factor(variable))) + geom_l
   scale_x_date(labels=date_format("%d.%m"))+
   scale_colour_manual(name="", values=pcols, breaks=c("PiS", "KE"), 
                       labels=c("PiS", "KE")) + 
-  labs(x="", y="% of vote", title="Pooled poll results for PiS and KE (EP election, Poland)", caption = "@BDStanley; benstanley.org")+
+  labs(x="", y="% of vote", title="Pooled poll results for PiS and KE (EP election, Poland)", 
+       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster and IBSP.",
+       caption = "@BDStanley; benstanley.org")+
   guides(color=guide_legend(override.aes=list(fill=NA))) +
   theme_minimal() +
   theme_ipsum_rc()
@@ -372,6 +376,7 @@ p <- ggplot(data=posfrmelt, aes(variable, value)) +
   theme_ipsum_rc() +
   scale_fill_manual(values=prcols) +
   scale_color_manual(values=prcols) +
-  labs(caption="@BDStanley; benstanley.org", y="", title="Latest poll estimates (EP elections, Poland)")
+  labs(caption="@BDStanley; benstanley.org", y="", title="Latest poll estimates (EP elections, Poland)",
+       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster and IBSP.")
 ggsave(p, file = "EP_latest.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
