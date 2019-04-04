@@ -6,7 +6,7 @@ library(grid); library(foreign); library(memisc); library(MCMCpack); library(rep
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
 library(maptools); library(rgeos); library(gpclib); library(reshape2); library(plyr);
 library(gridExtra); library(grid); library(cowplot); library(coalitions); library(xtable);
-library(hrbrthemes)
+library(hrbrthemes); library(ggrepel)
 gpclibPermit()
 
 # d'Hondt function
@@ -302,12 +302,7 @@ pdatl$variable <- factor(pdatl$variable, levels = c("KE", "PiS", "Wiosna", "Kuki
 datl_KE <- datl[!(datl$variable %in% c("Other")),]
 p <- ggplot(datl_KE, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
   geom_abline(intercept=5, slope=0, colour="gray60", linetype=3) +
-  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PiS), col="blue4", size=1.5) +
-  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=KE), col="orange", size=1.5) +
-  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Wiosna), col="maroon", size=1.5) +
-  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Kukiz15), col="black", size=1.5) +
-  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=KP), col="goldenrod1", size=1.5) +
-  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Razem), col="magenta", size=1.5) +
+  geom_point(data=pdatl, aes(x=as.Date(pdatl$date, "%d/%m/%Y", y=variable)), size=1.5) +
   theme(panel.background = element_rect(colour="white"),  axis.text.x = element_text(size=10), 
         axis.text.y = element_text(size=10), axis.title.x = element_blank(), axis.title.y = element_blank(),
         plot.margin = unit(c(1,3,1,1), "lines"), strip.text.x = element_text(size = 10))+
@@ -317,9 +312,9 @@ p <- ggplot(datl_KE, aes(x=date, y=value, colour=factor(variable))) + geom_line(
                       labels=c("PiS", "KE", "Wiosna", "Kukiz'15", "Konf.", "Razem")) + 
   labs(x="", y="% of vote", title="Pooled poll results for parties and coalitions (EP election, Poland)", 
        subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster and IBSP.",
-caption = "@BDStanley; benstanley.org")+
+       caption = "@BDStanley; benstanley.org")+
   guides(color=guide_legend(override.aes=list(fill=NA))) +
-theme_minimal() +
+  theme_minimal() +
   theme_ipsum_rc()
 ggsave(p, file = "EP_trends.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
