@@ -346,6 +346,7 @@ levels(posfrmelt$variable)[levels(posfrmelt$variable)=="Kukiz15"] <- "Kukiz'15"
 levels(posfrmelt$variable)[levels(posfrmelt$variable)=="KP"] <- "Konf."
 levels(pooledframe$party)[levels(pooledframe$party)=="Kukiz15"] <- "Kukiz'15"
 levels(pooledframe$party)[levels(pooledframe$party)=="KP"] <- "Konf."
+
 p <- ggplot(data=posfrmelt, aes(variable, value)) +
   geom_hline(aes(yintercept=0.05), colour="gray60", linetype="dashed") +
   geom_boxplot(aes(fill=variable, color=variable), outlier.shape=NA, show.legend = F, fatten=0) +
