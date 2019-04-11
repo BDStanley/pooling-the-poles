@@ -278,8 +278,8 @@ seatsEP <- tibble(const, distribKE, distribPiS, distribWiosna, distribKukiz15, d
 seatsEP <- add_row(seatsEP, const = "Mandaty w skali kraju", distribKE = sum(distribKE), distribPiS = sum(distribPiS), distribWiosna = sum(distribWiosna),
         distribKukiz15 = sum(distribKukiz15), distribKP = sum(distribKP), distribRazem = sum(distribRazem), .before=1)
 seatsEP <- add_row(seatsEP, const = "Głosy (%)", distribKE = pooledframe$means_pos[pooledframe$party=="KE"], distribPiS = pooledframe$means_pos[pooledframe$party=="PiS"],
-                   distribWiosna = pooledframe$means_pos[pooledframe$party=="Wiosna"], distribKukiz15 = pooledframe$means_pos[pooledframe$party=="Kukiz'15"],
-                   distribKP = pooledframe$means_pos[pooledframe$party=="Konf."], distribRazem = pooledframe$means_pos[pooledframe$party=="Razem"], .before=1)
+                   distribWiosna = pooledframe$means_pos[pooledframe$party=="Wiosna"], distribKukiz15 = pooledframe$means_pos[pooledframe$party=="Kukiz15"],
+                   distribKP = pooledframe$means_pos[pooledframe$party=="KP"], distribRazem = pooledframe$means_pos[pooledframe$party=="Razem"], .before=1)
 seatsEP = seatsEP %>% mutate(Suma = rowSums(seatsEP[2:7]))
 colnames(seatsEP) <- c("", "KE", "PiS", "Wiosna", "Kukiz'15", "Konf.", "Razem", "Suma")
 hlines <- c(-1, 0, 2, nrow(seatsEP))
