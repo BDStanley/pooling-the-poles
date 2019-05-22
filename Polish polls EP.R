@@ -311,7 +311,7 @@ p <- ggplot(datl_KE, aes(x=date, y=value, colour=factor(variable))) + geom_line(
   scale_colour_manual(name="", values=pcols, breaks=c("PiS", "KE", "Wiosna", "Kukiz15", "KP", "Razem"), 
                       labels=c("PiS", "KE", "Wiosna", "Kukiz'15", "Konf.", "Razem")) + 
   labs(x="", y="% of vote", title="Pooled poll results for parties and coalitions (EP election, Poland)", 
-       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster and IBSP.",
+       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster, IBSP, Ariadne, Social Changes and Dobra Opinia.",
        caption = "@BDStanley; benstanley.org")+
   guides(color=guide_legend(override.aes=list(fill=NA))) +
   theme_minimal() +
@@ -334,7 +334,7 @@ p <- ggplot(datl_KE_maj, aes(x=date, y=value, colour=factor(variable))) + geom_l
   scale_colour_manual(name="", values=pcols, breaks=c("PiS", "KE"), 
                       labels=c("PiS", "KE")) + 
   labs(x="", y="% of vote", title="Pooled poll results for PiS and KE (EP election, Poland)", 
-       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster and IBSP.",
+       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster, IBSP, Ariadne, Social Changes and Dobra Opinia.",
        caption = "@BDStanley; benstanley.org")+
   guides(color=guide_legend(override.aes=list(fill=NA))) +
   theme_minimal() +
@@ -374,6 +374,40 @@ p <- ggplot(data=posfrmelt, aes(variable, value)) +
   scale_fill_manual(values=prcols) +
   scale_color_manual(values=prcols) +
   labs(caption="@BDStanley; benstanley.org", y="", title="Latest poll estimates (EP elections, Poland)",
-       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster and IBSP.")
+       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster, IBSP, Ariadne, Social Changes and Dobra Opinia.")
+ggsave(p, file = "EP_latest.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+
+p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
+  geom_vline(aes(xintercept=0.05), colour="gray60", linetype="dashed") +
+  geom_halfeyeh(color=NA, scale="width") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PiS"]),0)), 
+           y="PiS", x=mean(posfrmelt$value[posfrmelt$variable=="PiS"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="KE"]),0)), 
+           y="KE", x=mean(posfrmelt$value[posfrmelt$variable=="KE"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Wiosna"]),0)), 
+           y="Wiosna", x=mean(posfrmelt$value[posfrmelt$variable=="Wiosna"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Kukiz'15"]),0)), 
+           y="Kukiz'15", x=mean(posfrmelt$value[posfrmelt$variable=="Kukiz'15"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Konf."]),0)), 
+           y="Konf.", x=mean(posfrmelt$value[posfrmelt$variable=="Konf."]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Razem"]),0)), 
+           y="Razem", x=mean(posfrmelt$value[posfrmelt$variable=="Razem"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Other"]),0)), 
+           y="Other", x=mean(posfrmelt$value[posfrmelt$variable=="Other"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  scale_y_discrete(name=" ", limits=rev(pooledframe$party)) +
+  scale_fill_manual(name=" ", values=prcols, guide=FALSE) +
+  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  labs(caption="@BDStanley; benstanley.org", x="", title="Latest poll estimates (EP elections, Poland)",
+       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster, IBSP, Ariadne, Social Changes and Dobra Opinia.") +
+  theme_minimal() +
+  theme_ipsum_rc() 
 ggsave(p, file = "EP_latest.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
