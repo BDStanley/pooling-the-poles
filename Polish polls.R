@@ -5,7 +5,7 @@ library(tidyverse); library(rjags); library(R2jags); library(R2WinBUGS); library
 library(grid); library(foreign); library(memisc); library(MCMCpack); library(repmis); 
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
 library(maptools); library(rgeos); library(gpclib); library(reshape2); library(plyr);
-library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes)
+library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes); library(tidybayes)
 gpclibPermit()
 
 # d'Hondt function
@@ -402,6 +402,58 @@ p <- ggplot(data=posfrmelt, aes(variable, value)) +
   guides(color=guide_legend(override.aes=list(fill=NA))) +
   scale_fill_manual(values=pcols) +
   scale_color_manual(values=pcols) +
+  theme_minimal() +
+  theme_ipsum_rc() 
+ggsave(p, file = "NAT_latest.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+
+p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
+  geom_vline(aes(xintercept=0.05), colour="gray60", linetype="dashed") +
+  geom_halfeyeh(color=NA, scale="width") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PiS"]),0)), 
+           y="PiS", x=mean(posfrmelt$value[posfrmelt$variable=="PiS"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PO"]),0)), 
+           y="PO", x=mean(posfrmelt$value[posfrmelt$variable=="PO"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Wiosna"]),0)), 
+           y="Wiosna", x=mean(posfrmelt$value[posfrmelt$variable=="Wiosna"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Kukiz'15"]),0)), 
+           y="Kukiz'15", x=mean(posfrmelt$value[posfrmelt$variable=="Kukiz'15"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="KORWiN"]),0)), 
+           y="KORWiN", x=mean(posfrmelt$value[posfrmelt$variable=="KORWiN"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Razem"]),0)), 
+           y="Razem", x=mean(posfrmelt$value[posfrmelt$variable=="Razem"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="SLD"]),0)), 
+           y="SLD", x=mean(posfrmelt$value[posfrmelt$variable=="SLD"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Other"]),0)), 
+           y="Other", x=mean(posfrmelt$value[posfrmelt$variable=="Other"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Nowoczesna"]),0)), 
+           y="Nowoczesna", x=mean(posfrmelt$value[posfrmelt$variable=="Nowoczesna"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PSL"]),0)), 
+           y="PSL", x=mean(posfrmelt$value[posfrmelt$variable=="PSL"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste("Pr(PiS > 50%)  = ", PiS.50.out), y=5.5, x=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(PiS > PO)  = ", PO.PiS.diff.out), y=5, x=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(Wiosna > 5%)  = ", Wiosna.thr.out), y=4.5, x=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(SLD > 5%)  = ", SLD.thr.out), y=4, x=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(Kukiz'15 > 5%)  = ", Kukiz15.thr.out), y=3.5, x=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(Nowoczesna > 5%)  = ", Nowoczesna.thr.out), y=3, x=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL.thr.out), y=2.5, x=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(KORWiN > 5%)  = ", KORWiN.thr.out), y=2, x=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +  
+  annotate(geom = "text", label=paste("Pr(Razem > 5%)  = ", Razem.thr.out), y=1.5, x=0.25, size=3.5, adj=c(0), family="Roboto Condensed") +
+  scale_y_discrete(name=" ", limits=rev(pooledframe$party)) +
+  scale_fill_manual(name=" ", values=pcols, guide=FALSE) +
+  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  labs(caption="@BDStanley; benstanley.org", x="", title="Latest poll estimates (national elections, Poland)",
+       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster, IBSP, CBOS and Social Changes.") +
   theme_minimal() +
   theme_ipsum_rc() 
 ggsave(p, file = "NAT_latest.png", 
