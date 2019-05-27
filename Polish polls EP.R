@@ -207,8 +207,8 @@ for (i in 1:length(pos)){
 posfrmelt <- melt(as.data.frame(posfr))
 
 # SEAT SHARES
-# read in 2014 coefficient data
-data1 <- read_excel('~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/2014percentages.xlsx')
+# read in 2019 coefficient data
+data1 <- read_excel('~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/2019percentages.xlsx')
 
 # enter most recent average level of support and reduce to zero if below electoral threshold
 means_pos <- data.frame(means_pos)
@@ -257,6 +257,9 @@ if (seatsKP==0) {
 votesKukiz15 <- Kukiz15est[2:14]
 seatsKukiz15 <- seats[3]
 distribKukiz15 <- hare_niemeyer(votesKukiz15, const, seatsKukiz15)
+if (seatsKukiz15==0) {
+  distribKukiz15 <- c(0,0,0,0,0,0,0,0,0,0,0,0,0)
+}
 
 votesPiS <- PiSest[2:14]
 seatsPiS <- seats[4]
