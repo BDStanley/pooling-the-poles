@@ -275,19 +275,6 @@ for (i in 1:length(pos)){
 }
 posfrmelt <- melt(as.data.frame(posfr))
 
-const <- readOGR("/Users/benstanley/Desktop/Personal/Dropbox/Resources/Polish materials/Regional data/powiaty/powiaty.shp")
-const@data$id <- const@data$jpt_kod_je
-const.points = fortify(const, region="id")
-const.df = join(const.points, const@data, by="id")
-
-powiaty <- read.csv2("/Users/benstanley/Desktop/Personal/Dropbox/Resources/Polish materials/Regional data/powiaty.csv", sep=",")
-powiaty$id <- str_pad(as.character(powiaty$TERYT), width=6, side="left", pad="0")
-powiaty$id <- gsub('.{2}$', '', powiaty$id)
-
-plotdata <- merge(const.df,powiaty,by="id")
-
-powiaty$POcoef <- ((100/38.47)*powiaty$KE)/100
-
 # SEAT SHARES
 # read in 2015 coefficient data
 data1 <- read_excel('~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/2015percentages.xlsx')

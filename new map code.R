@@ -22,9 +22,16 @@ powiaty$id <- gsub('.{2}$', '', powiaty$id)
 powiaty2015 <- read.csv("/Users/benstanley/Desktop/Personal/Dropbox/Resources/Polish materials/Regional data/powiaty2015.csv")
 powiaty2015$id <- str_pad(as.character(powiaty2015$TERYT), width=4, side="left", pad="0")
 
-plotdata <- merge(const.df,powiaty,by="id")
-plotdata <- merge(plotdata,powiaty2015,by="id")
 regdata <- merge(powiaty, powiaty2015, by="id")
+regdata$POcoef <- ((100/38.47)*powiaty$KE)/100
+regdata$POcoef <- ((100/38.47)*gminy$KE)/100
+
+plotdata <- merge(const.df,regdata,by="id")
+
+
+
+
+
 
 lmPiS <- lm(PiS ~ PiS2015 + I(PiS2015^2), data=regdata)
 pred <- ggemmeans(lmPiS, terms="PiS2015[15,20,30,40,50,60,70]")
