@@ -28,7 +28,7 @@ pcols <- c("PO"="orange", "PiS"="blue4", "PSL"="darkgreen",
 
 ## POOLED POLL MODEL
 # read in, subset and adjust data
-pollingdata <- read.csv('~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/pooledpolls.csv')
+pollingdata <- read.csv('~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/pooledpolls_2019.csv')
 pollingdata <- subset(pollingdata, select = -c(Source,vote,dkn,nvote))
 pollingdata$nDef <- round(((100-pollingdata$DK)/100)*pollingdata$n, digits=0)
 pollingdata$PO <- 100/((100-pollingdata$DK))*pollingdata$PO
@@ -44,19 +44,21 @@ pollingdata$Other <- 100/((100-pollingdata$DK))*pollingdata$Other
 pollingdata$nTot <- NULL
 pollingdata$DK <- NULL
 pollingdata$n <- NULL
-pollingdata$pdate <- julian(as.Date(pollingdata$date, "%d/%m/%Y"), origin=as.Date("2015-10-31"))
-pollingdata$pdate <- as.Date(pollingdata$pdate, origin=as.Date("2015-10-31"))
+pollingdata$pdate <- julian(as.Date(pollingdata$date, "%d/%m/%Y"), origin=as.Date("2019-04-01"))
+pollingdata$pdate <- as.Date(pollingdata$pdate, origin=as.Date("2019-04-01"))
 pollingdata <- pollingdata[which(pollingdata$pdate > 0),]
 pollingdata <- pollingdata[!is.na(pollingdata$pdate),]
 pollingdata <- pollingdata[order(pollingdata$pdate),]
 pollingdata <- subset(pollingdata, as.integer(pdate) > as.integer(max(pdate)-150))
 pollingdata$day <- as.integer(pollingdata$pdate)-as.integer(pollingdata$pdate)[1] + 1
+pollingdata <- unite(pollingdata, agency, method, col="housef", sep="_")
+pollingdata$housef <-as.factor(pollingdata$housef)
 
 # create dataset for jags model
 NUMPOLLS <- nrow(pollingdata)
 PERIOD <- max(as.integer(pollingdata$day))
-HOUSECOUNT <- length(levels(pollingdata$agency))
-HOUSENAMES <- levels(pollingdata$agency)
+HOUSECOUNT <- length(levels(pollingdata$housef))
+HOUSENAMES <- levels(pollingdata$housef)
 PARTYNAMES <- c("PO","PiS","SLD","PSL","KORWiN","Kukiz15","Nowoczesna","Razem", "Wiosna","Other")
 PARTIES <- length(PARTYNAMES)
 Votes <- pollingdata[PARTYNAMES] * pollingdata$nDef * 0.01
@@ -69,7 +71,7 @@ data = list(PERIOD = PERIOD,
             PARTIES = PARTIES,
             Votes = Votes,
             pollDay = as.integer(pollingdata$day),
-            house = as.integer(as.factor(pollingdata$agency)), 
+            house = as.integer(as.factor(pollingdata$housef)), 
             n = rowSums(Votes)
 )
 
@@ -142,10 +144,20 @@ model {
 "
 
 # run jags model and save results
-results <- run.jags(model, monitor=c('walk','houseEffect','tightness'),data=data,n.chains=4,adapt=10000,
-                    burnin=20000,sample=20000,thin=5,method="parallel")
+results <- run.jags(model, monitor=c('walk','houseEffect','tightness'),data=data,n.chains=2,adapt=1000,
+                    burnin=4000,sample=10000,thin=1,method="parallel")
 mysummary <- summary(results)
 save(mysummary,file="ppsummary_NAT")
+
+
+## HOUSE EFFECTS
+ppframe <- data.frame(mysummary)
+ppframe <- rownames_to_column(ppframe, var="n")
+houseframe <- ppframe[-grep('tightness', ppframe$n),]
+houseframe <- houseframe[-grep('walk', ppframe$n),]
+houseframe$agency <- rep(HOUSENAMES, length(PARTYNAMES))
+houseframe$party <- rep(PARTYNAMES, each=length(HOUSENAMES))
+houseframe <- separate(houseframe, agency, c("house", "method"), sep="_")
 
 
 ## TREND DATA
@@ -405,6 +417,16 @@ p <- ggplot(data=posfrmelt, aes(variable, value)) +
   theme_minimal() +
   theme_ipsum_rc() 
 ggsave(p, file = "NAT_latest.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+
+p <- ggplot() + 
+  geom_abline(intercept=0, slope=0, colour="gray10", linetype=3) +
+  geom_pointrange(data=houseframe, mapping=aes(x=party, y=Mean, ymin=Lower95, ymax=Upper95, color=house, shape=method), 
+                  position = position_dodge(width=0.5)) +
+  labs(x="", y="Deviation from mean party vote share", title="House effects for national election polls, Poland", caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc() 
+ggsave(p, file = "NAT_houseeffects.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
