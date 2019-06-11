@@ -5,7 +5,8 @@ library(tidyverse); library(rjags); library(R2jags); library(R2WinBUGS); library
 library(grid); library(foreign); library(memisc); library(MCMCpack); library(repmis); 
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
 library(maptools); library(rgeos); library(gpclib); library(reshape2); library(plyr);
-library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes); library(tidybayes)
+library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes); 
+library(tidybayes); library(bayestestR)
 gpclibPermit()
 
 # d'Hondt function
@@ -144,7 +145,7 @@ model {
 "
 
 # run jags model and save results
-results <- run.jags(model, monitor=c('walk','houseEffect','tightness'),data=data,n.chains=2,adapt=1000,
+results <- run.jags(model, monitor=c('walk','houseEffect','tightness'),data=data,n.chains=4,
                     burnin=4000,sample=10000,thin=1,method="parallel")
 mysummary <- summary(results)
 save(mysummary,file="ppsummary_NAT")
@@ -235,6 +236,10 @@ votes <- round((percent*500)/100, digits=2)
 pooledframe <- data.frame(cbind(party, alpha, votes))
 pos <- MCmultinomdirichlet(votes, alpha, mc=10000)
 colnames(pos) <- pooledframe$party
+pos <- as.data.frame(pos)
+postframe <- describe_posterior(as.data.frame(pos))
+postframe <- arrange(postframe, desc(Median))
+                     
 means_pos <- round(apply(pos,2,mean)*100, digits=2)
 HDIs <- round(HPDinterval(pos)*100, digits=2)
 pooledframe <- cbind(pooledframe, means_pos, HDIs)
@@ -423,7 +428,11 @@ p <- ggplot() +
   geom_abline(intercept=0, slope=0, colour="gray10", linetype=3) +
   geom_pointrange(data=houseframe, mapping=aes(x=party, y=Mean, ymin=Lower95, ymax=Upper95, color=house, shape=method), 
                   position = position_dodge(width=0.5)) +
-  labs(x="", y="Deviation from mean party vote share", title="House effects for national election polls, Poland", caption = "@BDStanley; benstanley.org") +
+  guides(color=guide_legend(override.aes=list(shape=15, size=1, linetype=0)))+
+  labs(color="Pollster", shape="Mode", x="", y="Deviation from mean party vote share", 
+       title="House and mode effects for national election polls, Poland", 
+       caption = "@BDStanley; benstanley.org") +
+  scale_y_continuous(labels = scales::percent) +
   theme_minimal() +
   theme_ipsum_rc() 
 ggsave(p, file = "NAT_houseeffects.png", 
