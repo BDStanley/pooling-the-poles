@@ -3,7 +3,6 @@ library(tidyverse); library(hrbrthemes); library(reshape2); library(ggrepel)
 year <- c(2001, 2005, 2007, 2011, 2015)
 PO <- c(12.65, 24.14, 41.51, 39.18, 24.09)
 PiS <- c(9.50, 26.99, 32.11, 29.89, 37.58)
-
 frame <- tibble(year, PO, PiS)
 data <- melt(frame, id=c("year"))
 
