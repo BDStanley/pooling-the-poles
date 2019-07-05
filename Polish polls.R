@@ -1,6 +1,6 @@
 # PREPARE WORKSPACE
 rm(list=ls())
-setwd('/Users/benstanley/Desktop/Personal/Dropbox/Resources/R scripts/Pooling the Poles')
+setwd('/Users/benstanley/Google Drive/Resources/R scripts/Pooling the Poles')
 library(tidyverse); library(rjags); library(R2jags); library(R2WinBUGS); library(scales)
 library(grid); library(foreign); library(memisc); library(MCMCpack); library(repmis); 
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
@@ -28,7 +28,7 @@ pcols <- c("PO"="orange", "PiS"="blue4", "PSL"="darkgreen",
 
 ## POOLED POLL MODEL
 # read in, subset and adjust data
-pollingdata <- read.csv('~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/pooledpolls.csv')
+pollingdata <- read.csv('~/Google Drive/Resources/Polish materials/Poll data/pooledpolls.csv')
 pollingdata <- subset(pollingdata, select = -c(Source,vote,dkn,nvote))
 pollingdata$nDef <- round(((100-pollingdata$DK)/100)*pollingdata$n, digits=0)
 pollingdata$PO <- 100/((100-pollingdata$DK))*pollingdata$PO
@@ -278,7 +278,7 @@ posfrmelt <- melt(as.data.frame(posfr))
 
 # SEAT SHARES
 # read in 2015 coefficient data
-data1 <- read_excel('~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/2015percentages.xlsx')
+data1 <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/2015percentages.xlsx')
 
 # enter most recent average level of support and reduce to zero if below electoral threshold
 means_pos <- data.frame(means_pos)
@@ -355,7 +355,7 @@ frame$diffPresUn <- sprintf("(%s)", frame$diffPresUn)
 frame$Party <- reorder(frame$Party, -frame$Weighted)
 
 ## CREATE PLOTS
-setwd('~/Desktop/Personal/Dropbox/Resources/Polish materials/Plots')
+setwd('~/Google Drive/Resources/Polish materials/Plots')
 levels(posfrmelt$variable)[levels(posfrmelt$variable)=="Kukiz15"] <- "Kukiz'15"
 levels(pooledframe$party)[levels(pooledframe$party)=="Kukiz15"] <- "Kukiz'15"
 
@@ -659,7 +659,7 @@ seats$PiSPO <-abs(seats$PiS-seats$PO)
 seats$PiSmPO <- seats$PiS-seats$PO
 
 #regional maps
-const=readOGR("/Users/benstanley/Desktop/Personal/Dropbox/Resources/Polish materials/Regional data/GRED_beta2_20170530_Poland/shapefile/GRED_Poland_2011_beta2.shp")
+const=readOGR("/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/GRED_beta2_20170530_Poland/shapefile/GRED_Poland_2011_beta2.shp")
 const@data$id = rownames(const@data)
 const.points = fortify(const, region="id")
 const.df = join(const.points, const@data, by="id")
