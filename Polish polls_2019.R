@@ -146,7 +146,7 @@ model {
 
 # run jags model and save results
 results <- run.jags(model, monitor=c('walk','houseEffect','tightness'),data=data,n.chains=4,
-                    burnin=4000,sample=10000,thin=1,method="parallel")
+                    burnin=4000,sample=20000,thin=5,method="parallel")
 mysummary <- summary(results)
 save(mysummary,file="ppsummary_NAT")
 
