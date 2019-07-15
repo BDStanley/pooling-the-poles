@@ -17,5 +17,6 @@ p <- ggplot(aes(year, value, colour=variable, label=value, group=variable), data
                    box.padding=0.5, segment.color="gray60", segment.size=0.3)+
   labs(x="Year of election", y="Share of vote (%)") +
   theme_ipsum_rc()
-ggsave(p, file = "/Users/benstanley/Google Drive/Papers/Party leaders in Eastern Europe paper 2019/Figure 1.png", 
+
+ggsave(p, file = '~/Google Drive/Resources/Polish materials/Party votes in elections.png', 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3)
