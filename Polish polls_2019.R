@@ -235,13 +235,13 @@ votes <- round((percent*500)/100, digits=2)
 # calculate means and HDIs
 pooledframe <- data.frame(cbind(party, alpha, votes))
 pos <- MCmultinomdirichlet(votes, alpha, mc=10000)
+HDIs <- round(HPDinterval(pos)*100, digits=2)
 colnames(pos) <- pooledframe$party
 pos <- as.data.frame(pos)
 postframe <- describe_posterior(as.data.frame(pos))
 postframe <- arrange(postframe, desc(Median))
                      
 means_pos <- round(apply(pos,2,mean)*100, digits=2)
-HDIs <- round(HPDinterval(pos)*100, digits=2)
 pooledframe <- cbind(pooledframe, means_pos, HDIs)
 pooledframe <- arrange(pooledframe, desc(means_pos))
 
