@@ -27,6 +27,18 @@ pcols <- c("PO"="orange", "PiS"="blue4", "PSL"="darkgreen",
            "MN"="yellow", "Nowoczesna"="blue", "SLD"="red", "Razem"="magenta")
 
 
+#regional votes
+powiaty <- read_xlsx('~/Google Drive/Resources/Polish materials/Regional data/powiaty2019.xlsx')
+colnames(powiaty) <- c("code", "powiat", "okręg", "turnout", "invalid", "invalid2", "invalid3", "invalid4", "valid", 
+                       "KE", "Lewica", "Polexit", "Jedność", "PiS", "PE", "Wiosna", "Konfederacja", "Kukiz15", "FairPlay")
+powiaty$KEcoef <- (1/38.47)*powiaty$KE
+powiaty$PiScoef <- (1/45.38)*powiaty$PiS
+powiaty$Wiosnacoef <- (1/6.06)*powiaty$Wiosna
+powiaty$Konfcoef <- (1/4.55)*powiaty$Konfederacja
+powiaty$Kukizcoef <- (1/3.69)*powiaty$Kukiz15
+powiaty$Lewicacoef <- (1/1.24)*powiaty$Lewica
+
+
 ## POOLED POLL MODEL
 # read in, subset and adjust data
 pollingdata <- read.csv('~/Google Drive/Resources/Polish materials/Poll data/pooledpolls_2019.csv')
