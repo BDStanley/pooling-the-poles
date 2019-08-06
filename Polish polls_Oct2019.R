@@ -6,7 +6,8 @@ library(grid); library(foreign); library(memisc); library(MCMCpack); library(rep
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
 library(maptools); library(rgeos); library(gpclib); library(reshape2); library(plyr);
 library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes); 
-library(tidybayes); library(bayestestR)
+library(tidybayes); library(bayestestR); library(seatdist); library(kable); library(kableExtra);
+library(xtable)
 gpclibPermit()
 
 # d'Hondt function
@@ -22,10 +23,6 @@ dHondt <- function( candidates, votes, seats ){
 }
 
 # colours for plots
-pcols <- c("PO"="orange", "PiS"="blue4", "PSL"="darkgreen", 
-           "Kukiz'15"="black", "KORWiN" = "goldenrod1", "Wiosna" = "maroon", "Other"="gray50", 
-           "MN"="yellow", "Nowoczesna"="blue", "SLD"="red", "Razem"="magenta")
-
 k1cols <- c("KO"="orange", "PiS"="blue4", "PSL"="darkgreen", "Konfederacja" = "goldenrod1", "Lewica" = "red", "MN" = "yellow", "Other"="gray50")
 
 
@@ -83,13 +80,16 @@ pollingdata <- subset(pollingdata, as.integer(pdate) > as.integer(max(pdate)-150
 pollingdata$day <- as.integer(pollingdata$pdate)-as.integer(pollingdata$pdate)[1] + 1
 pollingdata <- unite(pollingdata, agency, method, col="housef", sep="_")
 pollingdata$housef <-as.factor(pollingdata$housef)
+pollingdata$KO <- pollingdata$PO + pollingdata$Nowoczesna
+pollingdata$Lewica <- pollingdata$SLD + pollingdata$Wiosna + pollingdata$Razem
+pollingdata$Konfederacja <- pollingdata$KORWiN + pollingdata$Kukiz15
 
 # create dataset for jags model
 NUMPOLLS <- nrow(pollingdata)
 PERIOD <- max(as.integer(pollingdata$day))
 HOUSECOUNT <- length(levels(pollingdata$housef))
 HOUSENAMES <- levels(pollingdata$housef)
-PARTYNAMES <- c("PO","PiS","SLD","PSL","KORWiN","Kukiz15","Nowoczesna","Razem", "Wiosna","Other")
+PARTYNAMES <- c("KO","PiS","Lewica","PSL","Konfederacja","Other")
 PARTIES <- length(PARTYNAMES)
 Votes <- pollingdata[PARTYNAMES] * pollingdata$nDef * 0.01
 Votes <- sapply(Votes, function(x) round(x,0))
@@ -135,16 +135,12 @@ model {
 
     ## -- weakly informative priors for first day.
 
-   alpha[1] ~ dunif(200, 300) # PO
+   alpha[1] ~ dunif(200, 300) # KO
    alpha[2] ~ dunif(350, 450) # PiS
-   alpha[3] ~ dunif(50, 100) # SLD
-   alpha[4] ~ dunif(50, 100) # PSL
-   alpha[5] ~ dunif(20, 40) # KORWiN
-   alpha[6] ~ dunif(50, 100) # Kukiz15
-   alpha[7] ~ dunif(25, 50) # Nowoczesna
-   alpha[8] ~ dunif(20, 40) # Razem
-   alpha[9] ~ dunif(50, 100) # Wiosna
-   alpha[10] ~ dunif(10, 20) # Other
+   alpha[3] ~ dunif(75, 125) # Lewica
+   alpha[4] ~ dunif(40, 70) # PSL
+   alpha[5] ~ dunif(40, 70) # Konfederacja
+   alpha[6] ~ dunif(10, 20) # Other
 
    walk[1, 1:PARTIES] ~ ddirch(alpha[])             # initial starting point
 
@@ -196,58 +192,38 @@ ppframe <- rownames_to_column(ppframe, var="n")
 ppframe <- ppframe[-grep('tightness', ppframe$n),]
 ppframe <- ppframe[-grep('houseEffect', ppframe$n),]
 
-POmean <- ppframe$Mean[grep('1]', ppframe$n)]*100
-POlow <- ppframe$Lower95[grep('1]', ppframe$n)]*100
-POhigh <- ppframe$Upper95[grep('1]', ppframe$n)]*100
-POest <- data.frame(POmean, POlow, POhigh)
+KOmean <- ppframe$Mean[grep('1]', ppframe$n)]*100
+KOlow <- ppframe$Lower95[grep('1]', ppframe$n)]*100
+KOhigh <- ppframe$Upper95[grep('1]', ppframe$n)]*100
+KOest <- data.frame(KOmean, KOlow, KOhigh)
 
 PiSmean <- ppframe$Mean[grep('2]', ppframe$n)]*100
 PiSlow <- ppframe$Lower95[grep('2]', ppframe$n)]*100
 PiShigh <- ppframe$Upper95[grep('2]', ppframe$n)]*100
 PiSest <- data.frame(PiSmean, PiSlow, PiShigh)
 
-SLDmean <- ppframe$Mean[grep('3]', ppframe$n)]*100
-SLDlow <- ppframe$Lower95[grep('3]', ppframe$n)]*100
-SLDhigh <- ppframe$Upper95[grep('3]', ppframe$n)]*100
-SLDest <- data.frame(SLDmean, SLDlow, SLDhigh)
+Lewicamean <- ppframe$Mean[grep('3]', ppframe$n)]*100
+Lewicalow <- ppframe$Lower95[grep('3]', ppframe$n)]*100
+Lewicahigh <- ppframe$Upper95[grep('3]', ppframe$n)]*100
+Lewicaest <- data.frame(Lewicamean, Lewicalow, Lewicahigh)
 
 PSLmean <- ppframe$Mean[grep('4]', ppframe$n)]*100
 PSLlow <- ppframe$Lower95[grep('4]', ppframe$n)]*100
 PSLhigh <- ppframe$Upper95[grep('4]', ppframe$n)]*100
 PSLest <- data.frame(PSLmean, PSLlow, PSLhigh)
 
-KORWiNmean <- ppframe$Mean[grep('5]', ppframe$n)]*100
-KORWiNlow <- ppframe$Lower95[grep('5]', ppframe$n)]*100
-KORWiNhigh <- ppframe$Upper95[grep('5]', ppframe$n)]*100
-KORWiNest <- data.frame(KORWiNmean, KORWiNlow, KORWiNhigh)
+Konfederacjamean <- ppframe$Mean[grep('5]', ppframe$n)]*100
+Konfederacjalow <- ppframe$Lower95[grep('5]', ppframe$n)]*100
+Konfederacjahigh <- ppframe$Upper95[grep('5]', ppframe$n)]*100
+Konfederacjaest <- data.frame(Konfederacjamean, Konfederacjalow, Konfederacjahigh)
 
-Kukiz15mean <- ppframe$Mean[grep('6]', ppframe$n)]*100
-Kukiz15low <- ppframe$Lower95[grep('6]', ppframe$n)]*100
-Kukiz15high <- ppframe$Upper95[grep('6]', ppframe$n)]*100
-Kukiz15est <- data.frame(Kukiz15mean, Kukiz15low, Kukiz15high)
-
-Nowoczesnamean <- ppframe$Mean[grep('7]', ppframe$n)]*100
-Nowoczesnalow <- ppframe$Lower95[grep('7]', ppframe$n)]*100
-Nowoczesnahigh <- ppframe$Upper95[grep('7]', ppframe$n)]*100
-Nowoczesnaest <- data.frame(Nowoczesnamean, Nowoczesnalow, Nowoczesnahigh)
-
-Razemmean <- ppframe$Mean[grep('8]', ppframe$n)]*100
-Razemlow <- ppframe$Lower95[grep('8]', ppframe$n)]*100
-Razemhigh <- ppframe$Upper95[grep('8]', ppframe$n)]*100
-Razemest <- data.frame(Razemmean, Razemlow, Razemhigh)
-
-Wiosnamean <- ppframe$Mean[grep('9]', ppframe$n)]*100
-Wiosnalow <- ppframe$Lower95[grep('9]', ppframe$n)]*100
-Wiosnahigh <- ppframe$Upper95[grep('9]', ppframe$n)]*100
-Wiosnaest <- data.frame(Wiosnamean, Wiosnalow, Wiosnahigh)
-
-Othermean <- ppframe$Mean[grep('10]', ppframe$n)]*100
-Otherlow <- ppframe$Lower95[grep('10]', ppframe$n)]*100
-Otherhigh <- ppframe$Upper95[grep('10]', ppframe$n)]*100
+Othermean <- ppframe$Mean[grep('6]', ppframe$n)]*100
+Otherlow <- ppframe$Lower95[grep('6]', ppframe$n)]*100
+Otherhigh <- ppframe$Upper95[grep('6]', ppframe$n)]*100
 Otherest <- data.frame(Othermean, Otherlow, Otherhigh)
 
-plotdata <- cbind(PiSest, POest, PSLest, SLDest, KORWiNest, Kukiz15est, Nowoczesnaest, Razemest, Wiosnaest, Otherest)
-plotdata$date <- as.Date(c(1:length(POmean)), origin=as.Date(tail(pollingdata$pdate, n=1)-length(POmean)))
+plotdata <- cbind(PiSest, KOest, PSLest, Lewicaest, Konfederacjaest, Otherest)
+plotdata$date <- as.Date(c(1:length(KOmean)), origin=as.Date(tail(pollingdata$pdate, n=1)-length(KOmean)))
 
 
 # LATEST FIGURES
@@ -255,10 +231,10 @@ plotdata$date <- as.Date(c(1:length(POmean)), origin=as.Date(tail(pollingdata$pd
 party <- c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "Other")
 alpha <- rep(1, length(party))
 percent <- round(c(mean(tail(PiSest$PiSmean, n=7)),
-                   mean(tail(POest$POmean, n=7) + mean(tail(Nowoczesnaest$Nowoczesnamean, n=7))),
+                   mean(tail(KOest$KOmean, n=7)),
                    mean(tail(PSLest$PSLmean, n=7)), 
-                   mean(tail(SLDest$SLDmean, n=7) + mean(tail(Razemest$Razemmean, n=7) + mean(tail(Wiosnaest$Wiosnamean, n=7)))), 
-                   mean(tail(KORWiNest$KORWiNmean, n=7)) + mean(tail(Kukiz15est$Kukiz15mean, n=7)),
+                   mean(tail(Lewicaest$Lewicamean, n=7)), 
+                   mean(tail(Konfederacjaest$Konfederacjamean, n=7)),
                    mean(tail(Otherest$Othermean, n=7))))
 votes <- round((percent*500)/100, digits=2)
 
@@ -284,7 +260,7 @@ PiS.KO.diff <-pos[,"PiS"] - pos[,"KO"]
 PiS.KO.diff.out <- sum(PiS.KO.diff > 0) / length(PiS.KO.diff)
 PiS.KO.diff.out <- round(PiS.KO.diff.out, 2)
 
-Lewica.thr <- pos[,"Lewica"] - 0.08
+Lewica.thr <- pos[,"Lewica"] - 0.05
 Lewica.thr.out <- sum(Lewica.thr > 0) / length(Lewica.thr)
 Lewica.thr.out <- round(Lewica.thr.out, 2)
 
@@ -408,7 +384,7 @@ p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste("Pr(PiS > 50%)  = ", PiS.50.out), y=3, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
   annotate(geom = "text", label=paste("Pr(PiS > KE)  = ", PiS.KO.diff.out), y=2.75, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
-  annotate(geom = "text", label=paste("Pr(Lewica > 8%)  = ", Lewica.thr.out), y=2.5, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica.thr.out), y=2.5, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
   annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja.thr.out), y=2.25, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
   annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL.thr.out), y=2, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
   scale_y_discrete(name=" ", limits=rev(pooledframe$party)) +
@@ -422,41 +398,39 @@ ggsave(p, file = "k1cols_latest.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 # plot trends
-# datl <- melt(plotdata, measure.vars=c("POmean","PiSmean","SLDmean","PSLmean","KORWiNmean", "Wiosnamean", "Kukiz15mean", "Nowoczesnamean", "Razemmean", "Othermean"))
-# levels(datl$variable) <- c("PO","PiS", "SLD","PSL","KORWiN", "Wiosna", "Kukiz'15", "Nowoczesna", "Razem", "Other")
-# datl$variable <- factor(datl$variable, levels = c("PiS", "PO", "Nowoczesna", "Kukiz'15", "PSL", "SLD", "KORWiN", "Wiosna", "Razem", "Other"))
-# 
-# pdatl <- melt(pollingdata, measure.vars=c("PO","PiS","SLD","PSL","KORWiN", "Wiosna", "Kukiz15", "Nowoczesna", "Razem", "Other"))
-# levels(pdatl$variable) <- c("PO","PiS", "SLD","PSL","KORWiN", "Wiosna", "Kukiz'15", "Nowoczesna", "Razem", "Other")
-# pdatl$variable <- factor(pdatl$variable, levels = c("PiS", "PO", "Nowoczesna", "Kukiz'15", "PSL", "SLD", "KORWiN", "Wiosna", "Razem", "Other"))
-# 
-# datl_all <- datl[!(datl$variable %in% c("Other")),]
-# p <- ggplot(datl_all, aes(x=date, y=value, colour=factor(variable))) + geom_line() + 
-#   geom_abline(intercept=5, slope=0, colour="gray60", linetype=3) +
-#   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PiS), col="blue4", size=1.5) +
-#   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PO), col="orange", size=1.5) +
-#   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Kukiz15), col="black", size=1.5) +
-#   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Wiosna), col="maroon", size=1.5) +
-#   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PSL), col="darkgreen", size=1.5) +
-#   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=SLD), col="red", size=1.5) +
-#   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Nowoczesna), col="blue", size=1.5) +
-#   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=KORWiN), col="goldenrod1", size=1.5) +
-#   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Razem), col="magenta", size=1.5) +
-#   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Other), col="gray50", size=1.5) +
-#   theme(panel.background = element_rect(colour="white"),  axis.text.x = element_text(size=10), 
-#         axis.text.y = element_text(size=10), axis.title.x = element_blank(), axis.title.y = element_blank(),
-#         plot.margin = unit(c(1,3,1,1), "lines"), strip.text.x = element_text(size = 10))+
-#   background_grid(major = "xy", minor = "none") +
-#   scale_x_date(labels=date_format("%d.%m.%y"))+
-#   scale_colour_manual(name="", values=pcols, 
-#                       breaks=c("PiS", "PO", "Kukiz'15", "Wiosna", "PSL", "SLD", "Nowoczesna", "KORWiN", "Razem", "Other"),
-#                       labels=c("PiS", "PO", "Kukiz'15", "Wiosna", "PSL", "SLD", "Nowoczesna", "KORWiN", "Razem", "Other")) + 
-#   guides(color=guide_legend(override.aes=list(fill=NA))) +
-#   labs(x="", y="% of vote", title="Pooled poll trends for national elections, Poland", caption = "@BDStanley; benstanley.org") +
-#   theme_minimal() +
-#   theme_ipsum_rc() 
-# ggsave(p, file = "NAT_trends.png", 
-#        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+datl <- melt(plotdata, measure.vars=c("KOmean","PiSmean","Lewicamean","PSLmean","Konfederacjamean", "Othermean"))
+levels(datl$variable) <- c("KO","PiS", "Lewica","PSL", "Konfederacja", "Other")
+datl$variable <- factor(datl$variable, levels = c("PiS", "KO", "Lewica", "PSL", "Konfederacja", "Other"))
+
+#datl_all <- datl[!(datl$variable %in% c("Other")),]
+p <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
+  geom_abline(intercept=5, slope=0, colour="gray60", linetype=3) +
+  geom_ribbon(data=subset(datl, variable=="PiS"), aes(ymin=PiSlow, ymax=PiShigh), colour=NA, fill="blue4", alpha=0.3) +
+  geom_ribbon(data=subset(datl, variable=="KO"), aes(ymin=KOlow, ymax=KOhigh), colour=NA, fill="orange", alpha=0.3) +
+  geom_ribbon(data=subset(datl, variable=="Lewica"), aes(ymin=Lewicalow, ymax=Lewicahigh), colour=NA, fill="red", alpha=0.3) +
+  geom_ribbon(data=subset(datl, variable=="PSL"), aes(ymin=PSLlow, ymax=PSLhigh), colour=NA, fill="darkgreen", alpha=0.3) +  
+  geom_ribbon(data=subset(datl, variable=="Konfederacja"), aes(ymin=Konfederacjalow, ymax=Konfederacjahigh), colour=NA, fill="goldenrod1", alpha=0.3) +  
+  geom_ribbon(data=subset(datl, variable=="Other"), aes(ymin=Otherlow, ymax=Otherhigh), colour=NA, fill="grey50", alpha=0.3) +
+  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PiS), col="blue4", size=1.5) +
+  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=KO), col="orange", size=1.5) +
+  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PSL), col="darkgreen", size=1.5) +
+  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Lewica), col="red", size=1.5) +
+  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Konfederacja), col="goldenrod1", size=1.5) +
+  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Other), col="gray50", size=1.5) +
+  theme(panel.background = element_rect(colour="white"),  axis.text.x = element_text(size=10),
+        axis.text.y = element_text(size=10), axis.title.x = element_blank(), axis.title.y = element_blank(),
+        plot.margin = unit(c(1,3,1,1), "lines"), strip.text.x = element_text(size = 10))+
+  background_grid(major = "xy", minor = "none") +
+  scale_x_date(labels=date_format("%d.%m.%y"))+
+  scale_colour_manual(name="", values=k1cols,
+                      breaks=c("PiS", "KO", "Lewica", "PSL", "Konfederacja", "Other"),
+                      labels=c("PiS", "KO", "Lewica", "PSL", "Konfederacja", "Other")) +
+  guides(color=guide_legend(override.aes=list(fill=NA))) +
+  labs(x="", y="% of vote", title="Pooled poll trends for national elections, Poland", caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc()
+ggsave(p, file = "k1cols_trends.png",
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 #current seat share
 p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
@@ -471,7 +445,7 @@ p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
   geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +    
   annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Weighted, size=4, family="Roboto Condensed")+
   annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed") +
-  labs(x="", y="% of vote", title="Estimated share of seats if Sainte-Laguë method used, Poland", 
+  labs(x="", y="% of vote", title="Estimated share of seats, Poland", 
        subtitle="Figures in brackets refer to change in seat share since 2015", 
        caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
@@ -708,5 +682,15 @@ p <- ggplot(plotdata) +
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
 ggsave(p, file = "PiSKO_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
+
+seattable <- tibble(rownames(seats), seats[,5], seats[,1], seats[,3], seats[,2], seats[,6], seats[,4])
+colnames(seattable) <- c("Constituency", "PiS", "KO", "Lewica", "Konf.", "PSL", "MN")
+hlines <- c(-1, 0, nrow(seattable))
+print(xtable(seattable, type = "latex", digits=0, align=c("l","l","c","c","c","c","c","c")), hline.after=hlines, booktabs=TRUE,
+      include.rownames=FALSE, file='seat_table.tex')
+# kable(seattable, format = "latex", booktabs=TRUE, longtable=TRUE) %>%
+#   column_spec(column=c(2:7), width = "5em", monospace = TRUE) %>%
+#   column_spec(column=c(1), width = "15em", monospace = TRUE, italic=TRUE) %>%
+#   kable_styling(bootstrap_options = "striped", full_width = FALSE)
 
 save.image("~/Desktop/Personal/PoolingthePoles.RData")
