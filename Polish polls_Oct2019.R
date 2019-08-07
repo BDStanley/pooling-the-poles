@@ -6,7 +6,7 @@ library(grid); library(foreign); library(memisc); library(MCMCpack); library(rep
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
 library(maptools); library(rgeos); library(gpclib); library(reshape2); library(plyr);
 library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes); 
-library(tidybayes); library(bayestestR); library(seatdist); library(kable); library(kableExtra);
+library(tidybayes); library(bayestestR); library(seatdist); library(knitr); library(kableExtra);
 library(xtable)
 gpclibPermit()
 
