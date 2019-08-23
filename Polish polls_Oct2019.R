@@ -1,10 +1,10 @@
 # PREPARE WORKSPACE
 rm(list=ls())
 setwd('/Users/benstanley/Google Drive/Resources/R scripts/Pooling the Poles')
-library(tidyverse); library(rjags); library(R2jags); library(R2WinBUGS); library(scales)
+library(plyr); library(tidyverse); library(rjags); library(R2jags); library(R2WinBUGS); library(scales)
 library(grid); library(foreign); library(memisc); library(MCMCpack); library(repmis); 
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
-library(maptools); library(rgeos); library(gpclib); library(reshape2); library(plyr);
+library(maptools); library(rgeos); library(gpclib); library(reshape2); 
 library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes); 
 library(tidybayes); library(bayestestR); library(seatdist); library(knitr); library(kableExtra);
 library(xtable)
@@ -24,7 +24,6 @@ dHondt <- function( candidates, votes, seats ){
 
 # colours for plots
 k1cols <- c("KO"="orange", "PiS"="blue4", "PSL-Kukiz"="darkgreen", "Konfederacja" = "goldenrod1", "Lewica" = "red", "MN" = "yellow", "Other"="gray50")
-
 
 # build regional weights matrix
 powiaty <- read_xlsx('~/Google Drive/Resources/Polish materials/Regional data/powiaty2019.xlsx')
@@ -59,17 +58,19 @@ weights$magnitude <- powiaty2015$magnitude
 # read in, subset and adjust data
 #pollingdata <- read.csv('~/Google Drive/Resources/Polish materials/Poll data/pooledpolls_2019.csv')
 pollingdata <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/pooledpolls_2019.xlsx')
-pollingdata <- subset(pollingdata, select = -c(Source))
+pollingdata$KO <- pollingdata$PO + pollingdata$Nowoczesna
+pollingdata$Lewica <- pollingdata$SLD + pollingdata$Wiosna + pollingdata$Razem
+pollingdata$Konfederacja <- pollingdata$KORWiN + pollingdata$Kukiz15*0.25
+pollingdata$PSL <- pollingdata$PSL + pollingdata$Kukiz15*0.75
+pollingdata_k <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/pooledpolls_2019_k.xlsx')
+pollingdata <- plyr::rbind.fill(pollingdata, pollingdata_k)
+pollingdata <- subset(pollingdata, select = -c(Source, PO, SLD, KORWiN, Kukiz15, Nowoczesna, Razem, Wiosna))
 pollingdata$nDef <- round(((100-pollingdata$DK)/100)*pollingdata$n, digits=0)
-pollingdata$PO <- 100/((100-pollingdata$DK))*pollingdata$PO
+pollingdata$KO <- 100/((100-pollingdata$DK))*pollingdata$KO
 pollingdata$PiS <- 100/((100-pollingdata$DK))*pollingdata$PiS
 pollingdata$PSL <- 100/((100-pollingdata$DK))*pollingdata$PSL
-pollingdata$SLD <- 100/((100-pollingdata$DK))*pollingdata$SLD
-pollingdata$KORWiN <- 100/((100-pollingdata$DK))*pollingdata$KORWiN
-pollingdata$Kukiz15 <- 100/((100-pollingdata$DK))*pollingdata$Kukiz15
-pollingdata$Nowoczesna <- 100/((100-pollingdata$DK))*pollingdata$Nowoczesna
-pollingdata$Razem <- 100/((100-pollingdata$DK))*pollingdata$Razem
-pollingdata$Wiosna <- 100/((100-pollingdata$DK))*pollingdata$Wiosna
+pollingdata$Lewica <- 100/((100-pollingdata$DK))*pollingdata$Lewica
+pollingdata$Konfederacja <- 100/((100-pollingdata$DK))*pollingdata$Konfederacja
 pollingdata$Other <- 100/((100-pollingdata$DK))*pollingdata$Other
 pollingdata$nTot <- NULL
 pollingdata$DK <- NULL
@@ -83,10 +84,6 @@ pollingdata <- subset(pollingdata, as.integer(pdate) > as.integer(max(pdate)-150
 pollingdata$day <- as.integer(pollingdata$pdate)-as.integer(pollingdata$pdate)[1] + 1
 pollingdata <- unite(pollingdata, agency, method, col="housef", sep="_")
 pollingdata$housef <-as.factor(pollingdata$housef)
-pollingdata$KO <- pollingdata$PO + pollingdata$Nowoczesna
-pollingdata$Lewica <- pollingdata$SLD + pollingdata$Wiosna + pollingdata$Razem
-pollingdata$Konfederacja <- pollingdata$KORWiN + pollingdata$Kukiz15*0.25
-pollingdata$PSL <- pollingdata$PSL + pollingdata$Kukiz15*0.75
 
 # create dataset for jags model
 NUMPOLLS <- nrow(pollingdata)
