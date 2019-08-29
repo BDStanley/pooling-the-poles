@@ -55,7 +55,7 @@ weights$magnitude <- powiaty2015$magnitude
 
 
 ## POOLED POLL MODEL
-# read in, subset and adjust data
+# read in, subset, adjust data
 #pollingdata <- read.csv('~/Google Drive/Resources/Polish materials/Poll data/pooledpolls_2019.csv')
 pollingdata <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/pooledpolls_2019.xlsx')
 pollingdata$KO <- pollingdata$PO + pollingdata$Nowoczesna
