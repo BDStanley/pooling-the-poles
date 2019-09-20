@@ -339,6 +339,8 @@ for( i in 1 : 42 ) {
                                     PSLest[i]), ns = weights$magnitude[i], method="sl", thresh=5))$seats
 }
 
+colnames(stlague) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "PSL-Kukiz")
+
 # create frame for plots
 frame <- t(rbind(poldHondt[1,], colSums(poldHondt[2:42,])))
 #frame <- t(rbind(stlague[1,], colSums(stlague[2:42,])))
@@ -697,7 +699,7 @@ p <- ggplot(plotdata) +
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
   scale_fill_gradient2(name="PiSKO", limits=c(min=-20, max=20), low = "orange", mid="white", high = "blue4", midpoint=0, guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiSKO, label=PiSKO), fill="white") +
-  labs(title="Constituency-level differences in share of seats for PiS and Koalicja Obywatelska", subtitle="Constituencies in shades of blue have more PiS MPs; constituencies in orange have more KE MPs", 
+  labs(title="Constituency-level differences in share of seats for PiS and Koalicja Obywatelska", subtitle="Constituencies in shades of blue have more PiS MPs; constituencies in orange have more KO MPs", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
 ggsave(p, file = "PiSKO_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
