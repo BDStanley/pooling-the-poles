@@ -489,8 +489,8 @@ const=readOGR("/Users/benstanley/Google Drive/Resources/Polish materials/Regiona
 const@data$id = rownames(const@data)
 const.points = fortify(const, region="id")
 const.df = join(const.points, const@data, by="id")
-const.df$con[const.df$id==0] <- 12
-const.df$con[const.df$id==1] <- 13
+const.df$con[const.df$id==0] <- 13
+const.df$con[const.df$id==1] <- 12
 const.df$con[const.df$id==2] <- 14
 const.df$con[const.df$id==3] <- 15
 const.df$con[const.df$id==4] <- 3
@@ -534,10 +534,10 @@ const.df$con[const.df$id==40] <- 40
 label_points <- coordinates(const)
 colnames(label_points) <- c("x","y")
 label_points <- data.frame(label_points)
-seats$label_point_x[seats$id==12] <- label_points$x[1]
-seats$label_point_y[seats$id==12] <- label_points$y[1]
-seats$label_point_x[seats$id==13] <- label_points$x[2]
-seats$label_point_y[seats$id==13] <- label_points$y[2]
+seats$label_point_x[seats$id==12] <- label_points$x[2]
+seats$label_point_y[seats$id==12] <- label_points$y[2]
+seats$label_point_x[seats$id==13] <- label_points$x[1]
+seats$label_point_y[seats$id==13] <- label_points$y[1]
 seats$label_point_x[seats$id==14] <- label_points$x[3]
 seats$label_point_y[seats$id==14] <- label_points$y[3]
 seats$label_point_x[seats$id==15] <- label_points$x[4]
