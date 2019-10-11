@@ -329,6 +329,12 @@ for( i in 1 : 42 ) {
                              MNest[i]), weights$magnitude[i])
 }
 
+for( i in 1 : 42 ) {
+  poldHondt[i, ] <- dHondt(c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "MN"), 
+                           c(PiSest[i], KOest[i], PSLest[i], Lewicaest[i], Konfederacjaest[i], 
+                             MNest[i]), weights$magnitude[i])
+}
+
 colnames(poldHondt) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "PSL-Kukiz")
 
 stlague <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42),
@@ -340,6 +346,27 @@ for( i in 1 : 42 ) {
 }
 
 colnames(stlague) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "PSL-Kukiz")
+
+#Warsaw constituency - spread of projected seat shares
+PiS20 <- posfr[,1]*weights$PiScoef[20]
+PiS20est <- (weights$validvotes[20])*PiS20
+KO20 <- posfr[,2]*weights$KOcoef[20]
+KO20est <- (weights$validvotes[20])*KO20
+PSL20 <- posfr[,3]*weights$PSLcoef[20]
+PSL20est <- (weights$validvotes[20])*PSL20
+Lewica20 <- posfr[,4]*weights$Lewicacoef[20]
+Lewica20est <- (weights$validvotes[20])*Lewica20
+Konf20 <- posfr[,5]*weights$Konfcoef[20]
+Konf20est <- (weights$validvotes[20])*Konf20
+MN20est <- rep(0,10000)
+for( i in 1 : 10000 ) {
+  poldHondt[i, ] <- dHondt(c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "MN"), 
+                           c(PiS20est[i], KO20est[i], PSL20est[i], Lewica20est[i], Konf20est[i], 
+                             MN20est[i]), weights$magnitude[20])
+}
+
+prop.table(table(poldHondt[3]))*100
+warsaw_lewica <- table(poldHondt[3])
 
 # create frame for plots
 frame <- t(rbind(poldHondt[1,], colSums(poldHondt[2:42,])))
