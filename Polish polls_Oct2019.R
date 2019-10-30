@@ -231,12 +231,13 @@ plotdata$date <- as.Date(c(1:length(KOmean)), origin=as.Date(tail(pollingdata$pd
 # prepare data frame
 party <- c("PiS", "KO", "PSL-Kukiz", "Lewica", "Konfederacja", "Other")
 alpha <- rep(1, length(party))
-percent <- round(c(mean(tail(PiSest$PiSmean, n=7)),
-                   mean(tail(KOest$KOmean, n=7)),
-                   mean(tail(PSLest$PSLmean, n=7)), 
-                   mean(tail(Lewicaest$Lewicamean, n=7)), 
-                   mean(tail(Konfederacjaest$Konfederacjamean, n=7)),
-                   mean(tail(Otherest$Othermean, n=7))))
+percent <- c(43.59, 27.40, 8.55, 12.56, 6.81, 1.09)
+# percent <- round(c(mean(tail(PiSest$PiSmean, n=7)),
+#                    mean(tail(KOest$KOmean, n=7)),
+#                    mean(tail(PSLest$PSLmean, n=7)),
+#                    mean(tail(Lewicaest$Lewicamean, n=7)),
+#                    mean(tail(Konfederacjaest$Konfederacjamean, n=7)),
+#                    mean(tail(Otherest$Othermean, n=7))))
 votes <- round((percent*500)/100, digits=2)
 
 # calculate means and HDIs
@@ -309,7 +310,7 @@ KOpct <- round(weights$KOcoef*means_pos[2,], digits=2)
 PSLpct <- round(weights$PSLcoef*means_pos[3,], digits=2)
 Lewicapct <- round(weights$Lewicacoef*means_pos[4,], digits=2)
 Konfederacjapct <- round(weights$Konfcoef*means_pos[5,], digits=2)
-MNpct <- c(0.18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8.14, 0, 0, 0, 0, 
+MNpct <- c(0.18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 
            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 # estimate number of votes per party per district based on 2015 turnout
@@ -347,26 +348,26 @@ for( i in 1 : 42 ) {
 
 colnames(stlague) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "PSL-Kukiz")
 
-#Warsaw constituency - spread of projected seat shares
-PiS20 <- posfr[,1]*weights$PiScoef[20]
-PiS20est <- (weights$validvotes[20])*PiS20
-KO20 <- posfr[,2]*weights$KOcoef[20]
-KO20est <- (weights$validvotes[20])*KO20
-PSL20 <- posfr[,3]*weights$PSLcoef[20]
-PSL20est <- (weights$validvotes[20])*PSL20
-Lewica20 <- posfr[,4]*weights$Lewicacoef[20]
-Lewica20est <- (weights$validvotes[20])*Lewica20
-Konf20 <- posfr[,5]*weights$Konfcoef[20]
-Konf20est <- (weights$validvotes[20])*Konf20
-MN20est <- rep(0,10000)
-for( i in 1 : 10000 ) {
-  poldHondt[i, ] <- dHondt(c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "MN"), 
-                           c(PiS20est[i], KO20est[i], PSL20est[i], Lewica20est[i], Konf20est[i], 
-                             MN20est[i]), weights$magnitude[20])
-}
-
-prop.table(table(poldHondt[3]))*100
-warsaw_lewica <- table(poldHondt[3])
+# #Warsaw constituency - spread of projected seat shares
+# PiS20 <- posfr[,1]*weights$PiScoef[20]
+# PiS20est <- (weights$validvotes[20])*PiS20
+# KO20 <- posfr[,2]*weights$KOcoef[20]
+# KO20est <- (weights$validvotes[20])*KO20
+# PSL20 <- posfr[,3]*weights$PSLcoef[20]
+# PSL20est <- (weights$validvotes[20])*PSL20
+# Lewica20 <- posfr[,4]*weights$Lewicacoef[20]
+# Lewica20est <- (weights$validvotes[20])*Lewica20
+# Konf20 <- posfr[,5]*weights$Konfcoef[20]
+# Konf20est <- (weights$validvotes[20])*Konf20
+# MN20est <- rep(0,10000)
+# for( i in 1 : 10000 ) {
+#   poldHondt[i, ] <- dHondt(c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "MN"), 
+#                            c(PiS20est[i], KO20est[i], PSL20est[i], Lewica20est[i], Konf20est[i], 
+#                              MN20est[i]), weights$magnitude[20])
+# }
+# 
+# prop.table(table(poldHondt[3]))*100
+# warsaw_lewica <- table(poldHondt[3])
 
 # create frame for plots
 frame <- t(rbind(poldHondt[1,], colSums(poldHondt[2:42,])))
@@ -479,6 +480,27 @@ p <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
 ggsave(p, file = "k1cols_trends.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
+# #current seat share
+# p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
+#   geom_bar(stat="identity", width=.75, show.legend = F) +
+#   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
+#   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
+#   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
+#   scale_y_continuous('Number of seats', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
+#   scale_fill_manual(name="Party", values = k1cols)+
+#   geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
+#   geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
+#   geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
+#   annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Weighted, size=4, family="Roboto Condensed")+
+#   annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed") +
+#   labs(x="", y="% of vote", title="Estimated share of seats, Poland",
+#        subtitle="Figures in brackets refer to change in seat share since 2015",
+#        caption = "@BDStanley; benstanley.org") +
+#   theme_minimal() +
+#   theme_ipsum_rc()
+# ggsave(p, file = "k1cols_seats.png",
+#        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+
 #current seat share
 p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
   geom_bar(stat="identity", width=.75, show.legend = F) +
@@ -492,12 +514,12 @@ p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
   geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +    
   annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Weighted, size=4, family="Roboto Condensed")+
   annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed") +
-  labs(x="", y="% of vote", title="Estimated share of seats, Poland", 
+  labs(x="", y="% of vote", title="Estimated share of seats based on final results", 
        subtitle="Figures in brackets refer to change in seat share since 2015", 
        caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
   theme_ipsum_rc() 
-ggsave(p, file = "k1cols_seats.png", 
+ggsave(p, file = "k1cols_seats_exitpoll.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 # seats table

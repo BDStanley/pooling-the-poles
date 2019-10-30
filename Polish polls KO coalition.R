@@ -273,8 +273,8 @@ for (i in 1:length(pos)){
 posfrmelt <- melt(as.data.frame(posfr))
 
 # SEAT SHARES
-# read in 2015 coefficient data
-data1 <- read_excel('~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/2015percentagesKO.xlsx')
+# read in 2019 coefficient data
+data1 <- read_excel('~/Desktop/Personal/Dropbox/Resources/Polish materials/Poll data/2019_elec_percentagesKO.xlsx')
 
 # enter most recent average level of support and reduce to zero if below electoral threshold
 means_pos <- data.frame(means_pos)
