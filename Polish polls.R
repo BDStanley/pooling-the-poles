@@ -386,16 +386,16 @@ p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PSL-Kukiz"]),0)), 
            y="PSL-Kukiz", x=mean(posfrmelt$value[posfrmelt$variable=="PSL-Kukiz"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste("Pr(PiS > 50%)  = ", PiS.50.out), y=3, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
-  annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff.out), y=2.75, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
-  annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica.thr.out), y=2.5, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
-  annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja.thr.out), y=2.25, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
-  annotate(geom = "text", label=paste("Pr(PSL-Kukiz > 5%)  = ", PSL.thr.out), y=2, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(PiS > 50%)  = ", PiS.50.out), y=3, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff.out), y=2.75, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica.thr.out), y=2.5, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja.thr.out), y=2.25, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(PSL-Kukiz > 5%)  = ", PSL.thr.out), y=2, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
   scale_y_discrete(name=" ", limits=rev(pooledframe$party)) +
   scale_fill_manual(name=" ", values=k1cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   labs(caption="@BDStanley; benstanley.org", x="", title="Latest poll estimates, Poland",
-       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster, IBSP, CBOS and Social Changes") +
+       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster, IBSP, CBOS, Social Changes and Indicator") +
   theme_minimal() +
   theme_ipsum_rc() 
 ggsave(p, file = "polls_latest.png", 
