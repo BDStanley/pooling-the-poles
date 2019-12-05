@@ -317,8 +317,8 @@ colnames(stlague) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "PSL-Kukiz")
 # Konf20est <- (weights$validvotes[20])*Konf20
 # MN20est <- rep(0,10000)
 # for( i in 1 : 10000 ) {
-#   poldHondt[i, ] <- dHondt(c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "MN"), 
-#                            c(PiS20est[i], KO20est[i], PSL20est[i], Lewica20est[i], Konf20est[i], 
+#   poldHondt[i, ] <- dHondt(c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "MN"),
+#                            c(PiS20est[i], KO20est[i], PSL20est[i], Lewica20est[i], Konf20est[i],
 #                              MN20est[i]), weights$magnitude[20])
 # }
 # 
@@ -355,7 +355,7 @@ p <- ggplot() +
                   position = position_dodge(width=0.5)) +
   guides(color=guide_legend(override.aes=list(shape=15, size=1, linetype=0)))+
   labs(color="Pollster", shape="Mode", x="", y="Deviation from mean party vote share", 
-       title="House and mode effects - coalitions", 
+       title="House and mode effects", 
        caption = "@BDStanley; benstanley.org") +
   scale_y_continuous(labels = scales::percent) +
   theme_minimal() +
@@ -366,7 +366,7 @@ ggsave(p, file = "polls_houseeffects.png",
 # plot most recent party support
 p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   geom_vline(aes(xintercept=0.05), colour="gray60", linetype="dotted") +
-  geom_vline(aes(xintercept=0.08), colour="gray60", linetype="dotted") +
+  #geom_vline(aes(xintercept=0.08), colour="gray60", linetype="dotted") +
   geom_halfeyeh(color=NA, scale="width") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PiS"]),0)), 
            y="PiS", x=mean(posfrmelt$value[posfrmelt$variable=="PiS"]), size=4, hjust = "center", vjust=-1, 
@@ -394,8 +394,8 @@ p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   scale_y_discrete(name=" ", limits=rev(pooledframe$party)) +
   scale_fill_manual(name=" ", values=k1cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
-  labs(caption="@BDStanley; benstanley.org", x="", title="Latest poll estimates - coalitions",
-       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster, IBSP, CBOS, Social Changes and Indicator") +
+  labs(caption="@BDStanley; benstanley.org", x="", title="Latest pooled estimates",
+       subtitle="Estimated using polls published by CBOS, Estymator, IBRIS, IBSP, Indicator, IPSOS, Kantar, Pollster, Social Changes") +
   theme_minimal() +
   theme_ipsum_rc() 
 ggsave(p, file = "polls_latest.png", 
@@ -430,7 +430,7 @@ p <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
                       breaks=c("PiS", "KO", "Lewica", "PSL-Kukiz", "Konfederacja", "Other"),
                       labels=c("PiS", "KO", "Lewica", "PSL-Kukiz", "Konfederacja", "Other")) +
   guides(color=guide_legend(override.aes=list(fill=NA))) +
-  labs(x="", y="% of vote", title="Pooled poll trends - coalitions", caption = "@BDStanley; benstanley.org") +
+  labs(x="", y="% of vote", title="Pooled poll trends", subtitle="Estimated using polls published by CBOS, Estymator, IBRIS, IBSP, Indicator, IPSOS, Kantar, Pollster, Social Changes", caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
   theme_ipsum_rc()
 ggsave(p, file = "polls_trends.png",
@@ -449,7 +449,7 @@ p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
   geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
   annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Weighted, size=4, family="Roboto Condensed")+
   annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed") +
-  labs(x="", y="% of vote", title="Estimated share of seats - coalitions",
+  labs(x="", y="% of vote", title="Estimated share of seats",
        subtitle="Figures in brackets refer to change in seat share since October 2019 election",
        caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
