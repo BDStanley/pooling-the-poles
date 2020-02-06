@@ -243,7 +243,7 @@ cols <- c("Duda"="blue4", "Kidawa-Błońska"="orange", "Kosiniak-Kamysz"="darkgr
 
 p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   geom_vline(aes(xintercept=0.50), colour="gray60", linetype="dotted") +
-  geom_halfeyeh(color=NA, scale="width") +
+  geom_halfeyeh(color=NA, scale=2) +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Duda"]),0)), 
            y="Duda", x=mean(posfrmelt$value[posfrmelt$variable=="Duda"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
@@ -270,7 +270,7 @@ p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   labs(caption="@BDStanley; benstanley.org", x="", title="Polish presidential elections, round 1: latest estimates",
-       subtitle="Data from Estymator, IBRIS, IBSP, Kantar, Pollster and Social Changes") +
+       subtitle="Data from Estymator, IBRIS, IBSP, Kantar, Maison & Partners, Pollster and Social Changes") +
   theme_minimal() +
   theme_ipsum_rc() 
 ggsave(p, file = "polls_latest_pres_r1.png", 
@@ -307,7 +307,7 @@ p <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
                       labels=c("Duda","Kidawa-Błońska", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other")) +
   guides(color=guide_legend(override.aes=list(fill=NA))) +
   labs(x="", y="% of vote", title="Polish presidential elections, round 1: trends", 
-       subtitle="Data from Estymator, IBRIS, IBSP, Kantar, Pollster and Social Changes", 
+       subtitle="Data from Estymator, IBRIS, IBSP, Kantar, Maison & Partners, Pollster and Social Changes", 
        caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
   theme_ipsum_rc()
@@ -510,7 +510,7 @@ cols <- c("Duda"="blue4", "Kidawa-Błońska"="orange")
 
 p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   geom_vline(aes(xintercept=0.50), colour="gray60", linetype="dotted") +
-  geom_halfeyeh(color=NA, scale="width") +
+  geom_halfeyeh(color=NA) +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Duda"]),0)), 
            y="Duda", x=mean(posfrmelt$value[posfrmelt$variable=="Duda"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
@@ -525,7 +525,7 @@ p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   labs(caption="@BDStanley; benstanley.org", x="", title="Polish presidential elections, round 2: latest estimates",
-       subtitle="Data from IBSP, Kantar, Pollster and Social Changes") +
+       subtitle="Data from IBSP, Kantar, Maison & Partners, Pollster and Social Changes") +
   theme_minimal() +
   theme_ipsum_rc() 
 ggsave(p, file = "polls_latest_pres_r2.png", 
@@ -552,7 +552,7 @@ p <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
                       labels=c("Duda","Kidawa-Błońska")) +
   guides(color=guide_legend(override.aes=list(fill=NA))) +
   labs(x="", y="% of vote", title="Polish presidential elections, round 2: trends", 
-       subtitle="Data from IBSP, Kantar, Pollster and Social Changes", 
+       subtitle="Data from IBSP, Kantar, Maison & Partners, Pollster and Social Changes", 
        caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
   theme_ipsum_rc()
