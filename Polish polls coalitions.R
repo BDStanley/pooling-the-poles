@@ -367,7 +367,7 @@ ggsave(p, file = "polls_houseeffects.png",
 p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   geom_vline(aes(xintercept=0.05), colour="gray60", linetype="dotted") +
   #geom_vline(aes(xintercept=0.08), colour="gray60", linetype="dotted") +
-  geom_halfeyeh(color=NA) +
+  geom_halfeyeh(color=NA, scale=1.5) +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PiS"]),0)), 
            y="PiS", x=mean(posfrmelt$value[posfrmelt$variable=="PiS"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
