@@ -7,7 +7,7 @@ library(readxl); library(pander); library(coda); library(runjags); library(rgdal
 library(maptools); library(rgeos); library(gpclib); library(reshape2); 
 library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes); 
 library(tidybayes); library(bayestestR); library(seatdist); library(knitr); library(kableExtra);
-library(xtable)
+library(xtable); library(sjlabelled)
 gpclibPermit()
 
 # d'Hondt function
@@ -245,6 +245,9 @@ for (i in 1:length(pos)){
 }
 posfrmelt <- melt(as.data.frame(posfr))
 
+# create subtitle with pollster names
+names <- as.factor(get_labels(houseframe$house))
+housenames <- paste0(names, collapse=", ")
 
 # SEAT SHARES
 # read in 2019 coefficient data
@@ -349,7 +352,7 @@ frame$Party <- reorder(frame$Party, -frame$Weighted)
 setwd('~/Google Drive/Resources/Polish materials/Plots')
 
 #plot house effects
-p <- ggplot() + 
+p_house <- ggplot() + 
   geom_abline(intercept=0, slope=0, colour="gray10", linetype=3) +
   geom_pointrange(data=houseframe, mapping=aes(x=party, y=Mean, ymin=Lower95, ymax=Upper95, color=house, shape=method), 
                   position = position_dodge(width=0.5)) +
@@ -360,11 +363,11 @@ p <- ggplot() +
   scale_y_continuous(labels = scales::percent) +
   theme_minimal() +
   theme_ipsum_rc() 
-ggsave(p, file = "polls_houseeffects.png", 
+ggsave(p_house, file = "polls_houseeffects.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 # plot most recent party support
-p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
+p_recent <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   geom_vline(aes(xintercept=0.05), colour="gray60", linetype="dotted") +
   #geom_vline(aes(xintercept=0.08), colour="gray60", linetype="dotted") +
   stat_slabh(normalize="xy") +
@@ -395,10 +398,10 @@ p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   scale_fill_manual(name=" ", values=k1cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   labs(caption="@BDStanley; benstanley.org", x="", title="Latest pooled estimates",
-       subtitle="Estimated using polls published by CBOS, Estymator, IBRIS, IBSP, Indicator, IPSOS, Kantar, Pollster, Social Changes") +
+       subtitle=str_c("Data from ", housenames)) +
   theme_minimal() +
   theme_ipsum_rc() 
-ggsave(p, file = "polls_latest.png", 
+ggsave(p_recent, file = "polls_latest.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 # plot trends
@@ -407,7 +410,7 @@ levels(datl$variable) <- c("KO","PiS", "Lewica","PSL-Kukiz", "Konfederacja", "Ot
 datl$variable <- factor(datl$variable, levels = c("PiS", "KO", "Lewica", "PSL-Kukiz", "Konfederacja", "Other"))
 
 #datl_all <- datl[!(datl$variable %in% c("Other")),]
-p <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
+p_trends <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
   geom_abline(intercept=5, slope=0, colour="gray60", linetype=3) +
   geom_ribbon(data=subset(datl, variable=="PiS"), aes(ymin=PiSlow, ymax=PiShigh), colour=NA, fill="blue4", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="KO"), aes(ymin=KOlow, ymax=KOhigh), colour=NA, fill="orange", alpha=0.3) +
@@ -430,14 +433,14 @@ p <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
                       breaks=c("PiS", "KO", "Lewica", "PSL-Kukiz", "Konfederacja", "Other"),
                       labels=c("PiS", "KO", "Lewica", "PSL-Kukiz", "Konfederacja", "Other")) +
   guides(color=guide_legend(override.aes=list(fill=NA))) +
-  labs(x="", y="% of vote", title="Pooled poll trends", subtitle="Estimated using polls published by CBOS, Estymator, IBRIS, IBSP, Indicator, IPSOS, Kantar, Pollster, Social Changes", caption = "@BDStanley; benstanley.org") +
+  labs(x="", y="% of vote", title="Pooled poll trends", subtitle=str_c("Data from ", housenames), caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
   theme_ipsum_rc()
-ggsave(p, file = "polls_trends.png",
+ggsave(p_trends, file = "polls_trends.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 #current seat share
-p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
+p_seats <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
   geom_bar(stat="identity", width=.75, show.legend = F) +
   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
@@ -454,7 +457,7 @@ p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
        caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
   theme_ipsum_rc()
-ggsave(p, file = "polls_seats.png",
+ggsave(p_seats, file = "polls_seats.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 # seats table

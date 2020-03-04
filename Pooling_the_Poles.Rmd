@@ -1,0 +1,21 @@
+---
+title: "Pooling the Poles"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r echo = F, eval = T, include=F}
+load("~/Desktop/Personal/PoolingthePoles.RData")
+```
+
+```{r echo=FALSE}
+p_recent
+```
+
+```{r}
+p_trends
+```
+

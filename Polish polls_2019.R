@@ -6,7 +6,7 @@ library(grid); library(foreign); library(memisc); library(MCMCpack); library(rep
 library(readxl); library(pander); library(coda); library(runjags); library(rgdal);
 library(maptools); library(rgeos); library(gpclib); library(reshape2); library(plyr);
 library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes); 
-library(tidybayes); library(bayestestR)
+library(tidybayes); library(bayestestR); library(sjlabelled)
 gpclibPermit()
 
 # d'Hondt function
@@ -304,6 +304,10 @@ for (i in 1:length(pos)){
   posfr <- pos[1:10000,]
 }
 posfrmelt <- melt(as.data.frame(posfr))
+
+# create subtitle with pollster names
+names <- as.factor(get_labels(houseframe$house))
+housenames <- paste0(names, collapse=", ")
 
 # SEAT SHARES
 # read in 2015 coefficient data
