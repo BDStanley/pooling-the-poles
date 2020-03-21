@@ -283,7 +283,7 @@ ggsave(p_sup_r1, file = "polls_latest_pres_r1.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 # plot trends
-datl <- melt(plotdata, measure.vars=c("Dudamean","RBmean","KKmean","RBmean","Bosakmean","Holowniamean","Othermean"))
+datl <- melt(plotdata, measure.vars=c("Dudamean","KBmean","KKmean","RBmean","Bosakmean","Holowniamean","Othermean"))
 levels(datl$variable) <- c("Duda", "Kidawa-Błońska", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other")
 datl$variable <- factor(datl$variable, levels = c("Duda", "Kidawa-Błońska", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other"))
 
