@@ -215,6 +215,10 @@ Duda.KB.diff <-pos[,"Duda"] - pos[,"Kidawa-Błońska"]
 Duda.KB.diff.out <- sum(Duda.KB.diff > 0) / length(Duda.KB.diff)
 Duda.KB.diff.out <- round(Duda.KB.diff.out, 2)
 
+KK.KB.diff <-pos[,"Kosiniak-Kamysz"] - pos[,"Kidawa-Błońska"]
+KK.KB.diff.out <- sum(KK.KB.diff > 0) / length(KK.KB.diff)
+KK.KB.diff.out <- round(KK.KB.diff.out, 2)
+
 # calculate latest figures
 posfr <- data.frame()
 for (i in 1:length(pos)){
@@ -272,9 +276,10 @@ p_sup_r1 <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
            y="Other", x=mean(posfrmelt$value[posfrmelt$variable=="Other"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste("Probability of Duda winning in the first round:", Duda.50.out), y=6.75, x=median(posfrmelt$value[posfrmelt$variable=="Duda"]), size=3.75, family="Roboto Condensed", hjust=0.5) +
+  annotate(geom = "text", label=paste("Probability of Kosiniak-Kamysz coming second:", KK.KB.diff.out), y=5.75, x=max(posfrmelt$value[posfrmelt$variable=="Kosiniak-Kamysz"])+0.07, size=3.75, family="Roboto Condensed", hjust=0.5) +
   scale_y_discrete(name=" ", limits=rev(pooledframe$party)) +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
-  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6), labels=c("0", "10", "20", "30", "40", "50", "60")) +
   labs(caption="@BDStanley; benstanley.org", x="", title="Polish presidential elections, round 1: latest estimates",
        subtitle=str_c("Data from ", housenames)) +
   theme_minimal() +
