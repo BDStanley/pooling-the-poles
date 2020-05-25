@@ -7,64 +7,16 @@ library(readxl); library(pander); library(coda); library(runjags); library(rgdal
 library(maptools); library(rgeos); library(gpclib); library(reshape2); 
 library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes); 
 library(tidybayes); library(bayestestR); library(seatdist); library(knitr); library(kableExtra);
-library(xtable)
+library(xtable); library(sjlabelled)
 gpclibPermit()
 
-# d'Hondt function
-countN <- function (v) {return (Reduce(function (x, y) x + y, ifelse(is.na(v), 0, 1)))}
-dHondt <- function( candidates, votes, seats ){ 
-  tmp <- data.frame( 
-    candidates = rep( candidates, each = seats ), 
-    scores     = as.vector(sapply( votes, function(x) x / 
-                                     1:seats )) 
-  ) 
-  tmp <- tmp$candidates[order( - tmp$scores )] [1:seats] 
-  table(tmp) 
-}
-
 # colours for plots
-k1cols <- c("KO"="orange", "PiS"="blue4", "PSL-Kukiz"="darkgreen", "Konfederacja" = "goldenrod1", "Lewica" = "red", "MN" = "yellow", "Other"="gray50")
-
-# build regional weights matrix
-powiaty <- read_xlsx('~/Google Drive/Resources/Polish materials/Regional data/powiaty2019.xlsx')
-powiaty2015 <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/2015percentages.xlsx')
-colnames(powiaty) <- c("code", "powiat", "okręg", "turnout", "validvotes", "invalid", "invalid2", "invalid3", "invalid4", "valid", 
-                       "KO", "Lewica", "Polexit", "Jedność", "PiS", "PE", "Wiosna", "Konfederacja", "Kukiz15", "FairPlay")
-powiaty$KOcoef <- (1/38.47)*powiaty$KO
-powiaty$PiScoef <- (1/45.38)*powiaty$PiS
-powiaty$Wiosnacoef <- (1/6.06)*powiaty$Wiosna
-powiaty$Konfcoef <- (1/4.55)*powiaty$Konfederacja
-powiaty$Kukizcoef <- (1/3.69)*powiaty$Kukiz15
-powiaty$Lewicacoef <- (1/1.24)*powiaty$Lewica
-weights <- as_tibble(ddply(powiaty, .(okręg), function(x) data.frame(KOcoef=weighted.mean(x$KOcoef, x$validvotes),
-                                                PiScoef=weighted.mean(x$PiScoef, x$validvotes),
-                                                Wiosnacoef=weighted.mean(x$Wiosnacoef, x$validvotes),
-                                                Konfcoef=weighted.mean(x$Konfcoef, x$validvotes),
-                                                Kukizcoef=weighted.mean(x$Kukizcoef, x$validvotes),
-                                                Lewicacoef=weighted.mean(x$Lewicacoef, x$validvotes))))
-#weights <- aggregate(powiaty[, 21:26], list(powiaty$okręg), weighted.mean)
-weights <- add_row(weights, okręg=0, KOcoef=1, PiScoef=1, Wiosnacoef=1, Konfcoef=1, Kukizcoef=1, Lewicacoef=1, .before=1)
-weights <- drop_na(weights)
-weights$name <- powiaty2015$name
-weights$PSLcoef <- powiaty2015$PSLcoef
-weights$PSLcoef[13] <- weights$Kukizcoef[13]
-weights$PSLcoef[21] <- weights$Kukizcoef[21]
-weights$PSLcoef[22] <- weights$Kukizcoef[22]
-weights$validvotes <- powiaty2015$validvotes
-weights$magnitude <- powiaty2015$magnitude
-
+k1cols <- c("PiS"="blue4", "KO"="orange", "PSL-Kukiz"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "Other"="gray50")
 
 ## POOLED POLL MODEL
 # read in, subset, adjust data
-#pollingdata <- read.csv('~/Google Drive/Resources/Polish materials/Poll data/pooledpolls_2019.csv')
-pollingdata <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/pooledpolls_2019.xlsx')
-pollingdata$KO <- pollingdata$PO + pollingdata$Nowoczesna
-pollingdata$Lewica <- pollingdata$SLD + pollingdata$Wiosna + pollingdata$Razem
-pollingdata$Konfederacja <- pollingdata$KORWiN + pollingdata$Kukiz15*0.25
-pollingdata$PSL <- pollingdata$PSL + pollingdata$Kukiz15*0.75
-pollingdata_k <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/pooledpolls_2019_k.xlsx')
-pollingdata <- plyr::rbind.fill(pollingdata, pollingdata_k)
-pollingdata <- subset(pollingdata, select = -c(Source, PO, SLD, KORWiN, Kukiz15, Nowoczesna, Razem, Wiosna))
+pollingdata <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/pooledpolls_2019_k.xlsx')
+pollingdata <- subset(pollingdata, select = -c(Source))
 pollingdata$nDef <- round(((100-pollingdata$DK)/100)*pollingdata$n, digits=0)
 pollingdata$KO <- 100/((100-pollingdata$DK))*pollingdata$KO
 pollingdata$PiS <- 100/((100-pollingdata$DK))*pollingdata$PiS
@@ -136,11 +88,11 @@ model {
 
     ## -- weakly informative priors for first day.
 
-   alpha[1] ~ dunif(200, 300) # KO
-   alpha[2] ~ dunif(350, 450) # PiS
-   alpha[3] ~ dunif(75, 125) # Lewica
-   alpha[4] ~ dunif(40, 70) # PSL
-   alpha[5] ~ dunif(40, 70) # Konfederacja
+   alpha[1] ~ dunif(250, 300) # KO
+   alpha[2] ~ dunif(400, 450) # PiS
+   alpha[3] ~ dunif(100, 150) # Lewica
+   alpha[4] ~ dunif(50, 100) # PSL
+   alpha[5] ~ dunif(50, 100) # Konfederacja
    alpha[6] ~ dunif(10, 20) # Other
 
    walk[1, 1:PARTIES] ~ ddirch(alpha[])             # initial starting point
@@ -231,14 +183,13 @@ plotdata$date <- as.Date(c(1:length(KOmean)), origin=as.Date(tail(pollingdata$pd
 # prepare data frame
 party <- c("PiS", "KO", "PSL-Kukiz", "Lewica", "Konfederacja", "Other")
 alpha <- rep(1, length(party))
-percent <- c(43.59, 27.40, 8.55, 12.56, 6.81, 1.09)
-# percent <- round(c(mean(tail(PiSest$PiSmean, n=7)),
-#                    mean(tail(KOest$KOmean, n=7)),
-#                    mean(tail(PSLest$PSLmean, n=7)),
-#                    mean(tail(Lewicaest$Lewicamean, n=7)),
-#                    mean(tail(Konfederacjaest$Konfederacjamean, n=7)),
-#                    mean(tail(Otherest$Othermean, n=7))))
-votes <- round((percent*500)/100, digits=2)
+percent <- round(c(mean(tail(PiSest$PiSmean, n=7)),
+                   mean(tail(KOest$KOmean, n=7)),
+                   mean(tail(PSLest$PSLmean, n=7)),
+                   mean(tail(Lewicaest$Lewicamean, n=7)),
+                   mean(tail(Konfederacjaest$Konfederacjamean, n=7)),
+                   mean(tail(Otherest$Othermean, n=7))))
+votes <- round((percent*650)/100, digits=2)
 
 # calculate means and HDIs
 pooledframe <- data.frame(cbind(party, alpha, votes))
@@ -281,8 +232,14 @@ for (i in 1:length(pos)){
 }
 posfrmelt <- melt(as.data.frame(posfr))
 
+# create subtitle with pollster names
+names <- as.factor(get_labels(houseframe$house))
+housenames <- paste0(names, collapse=", ")
+
 # SEAT SHARES
-# enter most recent average level of support and reduce to zero if below electoral threshold
+# read in 2019 coefficient data
+weights <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/2019_elec_percentages.xlsx')
+
 means_pos <- data.frame(means_pos)
 for(i in 1:length(party)) {
   if(means_pos[i,] > 4.99) {
@@ -297,11 +254,6 @@ for(i in 1:length(party)) {
 # } else { means_pos["Konfederacja",] <- 0
 # }
 
-# if(means_pos["Lewica",] > 7.99) {
-#   means_pos["Lewica",] <- means_pos["Lewica",] 
-# } else { means_pos["Lewica",] <- 0
-# }
-
 means_pos <- 100/(sum(means_pos))*means_pos
 
 # define party percentage per district according to most recent poll, include MN manually
@@ -310,7 +262,7 @@ KOpct <- round(weights$KOcoef*means_pos[2,], digits=2)
 PSLpct <- round(weights$PSLcoef*means_pos[3,], digits=2)
 Lewicapct <- round(weights$Lewicacoef*means_pos[4,], digits=2)
 Konfederacjapct <- round(weights$Konfcoef*means_pos[5,], digits=2)
-MNpct <- c(0.18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 
+MNpct <- c(0.17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 
            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 # estimate number of votes per party per district based on 2015 turnout
@@ -324,19 +276,14 @@ MNest <- (weights$validvotes/100)*MNpct
 # estimate seat shares for each district
 poldHondt <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42),
                         PSL=rep(1,42))
-for( i in 1 : 42 ) {
-  poldHondt[i, ] <- dHondt(c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "MN"), 
-                           c(PiSest[i], KOest[i], PSLest[i], Lewicaest[i], Konfederacjaest[i], 
-                             MNest[i]), weights$magnitude[i])
-}
 
 for( i in 1 : 42 ) {
-  poldHondt[i, ] <- dHondt(c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "MN"), 
-                           c(PiSest[i], KOest[i], PSLest[i], Lewicaest[i], Konfederacjaest[i], 
-                             MNest[i]), weights$magnitude[i])
+  poldHondt[i,] <- c(giveseats(v = c(KOest[i], Konfederacjaest[i], Lewicaest[i], MNest[i], PiSest[i], 
+                                   PSLest[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
 }
 
 colnames(poldHondt) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "PSL-Kukiz")
+
 
 stlague <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42),
                       PSL=rep(1,42))
@@ -361,8 +308,8 @@ colnames(stlague) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "PSL-Kukiz")
 # Konf20est <- (weights$validvotes[20])*Konf20
 # MN20est <- rep(0,10000)
 # for( i in 1 : 10000 ) {
-#   poldHondt[i, ] <- dHondt(c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "MN"), 
-#                            c(PiS20est[i], KO20est[i], PSL20est[i], Lewica20est[i], Konf20est[i], 
+#   poldHondt[i, ] <- dHondt(c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "MN"),
+#                            c(PiS20est[i], KO20est[i], PSL20est[i], Lewica20est[i], Konf20est[i],
 #                              MN20est[i]), weights$magnitude[20])
 # }
 # 
@@ -375,17 +322,17 @@ frame <- t(rbind(poldHondt[1,], colSums(poldHondt[2:42,])))
 frame <- data.frame(rownames(frame), frame)
 colnames(frame) <- c("Party", "Unweighted", "Weighted")
 frame <- frame[with(frame, order(-Weighted)),]
-frame$in2015[frame$Party=="KO"] <- 166
-frame$in2015[frame$Party=="PiS"] <- 235
-frame$in2015[frame$Party=="Lewica"] <- 0
-frame$in2015[frame$Party=="PSL-Kukiz"] <- 58
-frame$in2015[frame$Party=="MN"] <- 1
-frame$in2015[frame$Party=="Konfederacja"] <- 0
+frame$in2019[frame$Party=="KO"] <- 134
+frame$in2019[frame$Party=="PiS"] <- 235
+frame$in2019[frame$Party=="Lewica"] <- 49
+frame$in2019[frame$Party=="PSL-Kukiz"] <- 30
+frame$in2019[frame$Party=="MN"] <- 1
+frame$in2019[frame$Party=="Konfederacja"] <- 11
 frame <- frame[frame$Weighted>0,]
 frame$Party <- factor(frame$Party, levels=c("PiS", "KO", "PSL-Kukiz", "Lewica", "Konfederacja", "MN"))
-frame$diffPres <- sprintf("%+d", (frame$Weighted - frame$in2015))
+frame$diffPres <- sprintf("%+d", (frame$Weighted - frame$in2019))
 frame$diffPres <- sprintf("(%s)", frame$diffPres)
-frame$diffPresUn <- sprintf("%+d", (frame$Unweighted - frame$in2015))
+frame$diffPresUn <- sprintf("%+d", (frame$Unweighted - frame$in2019))
 frame$diffPresUn <- sprintf("(%s)", frame$diffPresUn)
 frame$Party <- reorder(frame$Party, -frame$Weighted)
 
@@ -393,25 +340,25 @@ frame$Party <- reorder(frame$Party, -frame$Weighted)
 setwd('~/Google Drive/Resources/Polish materials/Plots')
 
 #plot house effects
-p <- ggplot() + 
+p_house <- ggplot() + 
   geom_abline(intercept=0, slope=0, colour="gray10", linetype=3) +
   geom_pointrange(data=houseframe, mapping=aes(x=party, y=Mean, ymin=Lower95, ymax=Upper95, color=house, shape=method), 
                   position = position_dodge(width=0.5)) +
   guides(color=guide_legend(override.aes=list(shape=15, size=1, linetype=0)))+
   labs(color="Pollster", shape="Mode", x="", y="Deviation from mean party vote share", 
-       title="House and mode effects for national election polls, Poland", 
+       title="House and mode effects", 
        caption = "@BDStanley; benstanley.org") +
   scale_y_continuous(labels = scales::percent) +
   theme_minimal() +
   theme_ipsum_rc() 
-ggsave(p, file = "k1cols_houseeffects.png", 
+ggsave(p_house, file = "polls_houseeffects.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 # plot most recent party support
-p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
+p_recent <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   geom_vline(aes(xintercept=0.05), colour="gray60", linetype="dotted") +
-  geom_vline(aes(xintercept=0.08), colour="gray60", linetype="dotted") +
-  geom_halfeyeh(color=NA, scale="width") +
+  #geom_vline(aes(xintercept=0.08), colour="gray60", linetype="dotted") +
+  stat_slabh(normalize="xy") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PiS"]),0)), 
            y="PiS", x=mean(posfrmelt$value[posfrmelt$variable=="PiS"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
@@ -430,19 +377,19 @@ p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="PSL-Kukiz"]),0)), 
            y="PSL-Kukiz", x=mean(posfrmelt$value[posfrmelt$variable=="PSL-Kukiz"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste("Pr(PiS > 50%)  = ", PiS.50.out), y=3, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
-  annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff.out), y=2.75, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
-  annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica.thr.out), y=2.5, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
-  annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja.thr.out), y=2.25, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
-  annotate(geom = "text", label=paste("Pr(PSL-Kukiz > 5%)  = ", PSL.thr.out), y=2, x=0.45, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(PiS > 50%)  = ", PiS.50.out), y=3, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff.out), y=2.75, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica.thr.out), y=2.5, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja.thr.out), y=2.25, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
+  annotate(geom = "text", label=paste("Pr(PSL-Kukiz > 5%)  = ", PSL.thr.out), y=2, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
   scale_y_discrete(name=" ", limits=rev(pooledframe$party)) +
   scale_fill_manual(name=" ", values=k1cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
-  labs(caption="@BDStanley; benstanley.org", x="", title="Latest poll estimates, Poland",
-       subtitle="Estimated using polls published by IPSOS, IBRIS, Estymator, Kantar, Pollster, IBSP, CBOS and Social Changes") +
+  labs(caption="@BDStanley; benstanley.org", x="", title="Latest pooled estimates",
+       subtitle=str_c("Data from ", housenames)) +
   theme_minimal() +
   theme_ipsum_rc() 
-ggsave(p, file = "k1cols_latest.png", 
+ggsave(p_recent, file = "polls_latest.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 # plot trends
@@ -451,19 +398,19 @@ levels(datl$variable) <- c("KO","PiS", "Lewica","PSL-Kukiz", "Konfederacja", "Ot
 datl$variable <- factor(datl$variable, levels = c("PiS", "KO", "Lewica", "PSL-Kukiz", "Konfederacja", "Other"))
 
 #datl_all <- datl[!(datl$variable %in% c("Other")),]
-p <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
+p_trends <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
   geom_abline(intercept=5, slope=0, colour="gray60", linetype=3) +
   geom_ribbon(data=subset(datl, variable=="PiS"), aes(ymin=PiSlow, ymax=PiShigh), colour=NA, fill="blue4", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="KO"), aes(ymin=KOlow, ymax=KOhigh), colour=NA, fill="orange", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="Lewica"), aes(ymin=Lewicalow, ymax=Lewicahigh), colour=NA, fill="red", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="PSL-Kukiz"), aes(ymin=PSLlow, ymax=PSLhigh), colour=NA, fill="darkgreen", alpha=0.3) +  
-  geom_ribbon(data=subset(datl, variable=="Konfederacja"), aes(ymin=Konfederacjalow, ymax=Konfederacjahigh), colour=NA, fill="goldenrod1", alpha=0.3) +  
+  geom_ribbon(data=subset(datl, variable=="Konfederacja"), aes(ymin=Konfederacjalow, ymax=Konfederacjahigh), colour=NA, fill="midnightblue", alpha=0.3) +  
   geom_ribbon(data=subset(datl, variable=="Other"), aes(ymin=Otherlow, ymax=Otherhigh), colour=NA, fill="grey50", alpha=0.3) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PiS), col="blue4", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=KO), col="orange", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=PSL), col="darkgreen", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Lewica), col="red", size=1.5) +
-  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Konfederacja), col="goldenrod1", size=1.5) +
+  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Konfederacja), col="midnightblue", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Other), col="gray50", size=1.5) +
   theme(panel.background = element_rect(colour="white"),  axis.text.x = element_text(size=10),
         axis.text.y = element_text(size=10), axis.title.x = element_blank(), axis.title.y = element_blank(),
@@ -474,35 +421,14 @@ p <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
                       breaks=c("PiS", "KO", "Lewica", "PSL-Kukiz", "Konfederacja", "Other"),
                       labels=c("PiS", "KO", "Lewica", "PSL-Kukiz", "Konfederacja", "Other")) +
   guides(color=guide_legend(override.aes=list(fill=NA))) +
-  labs(x="", y="% of vote", title="Pooled poll trends for national elections, Poland", caption = "@BDStanley; benstanley.org") +
+  labs(x="", y="% of vote", title="Pooled poll trends", subtitle=str_c("Data from ", housenames), caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
   theme_ipsum_rc()
-ggsave(p, file = "k1cols_trends.png",
+ggsave(p_trends, file = "polls_trends.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
-# #current seat share
-# p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
-#   geom_bar(stat="identity", width=.75, show.legend = F) +
-#   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
-#   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
-#   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
-#   scale_y_continuous('Number of seats', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
-#   scale_fill_manual(name="Party", values = k1cols)+
-#   geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
-#   geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
-#   geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
-#   annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Weighted, size=4, family="Roboto Condensed")+
-#   annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed") +
-#   labs(x="", y="% of vote", title="Estimated share of seats, Poland",
-#        subtitle="Figures in brackets refer to change in seat share since 2015",
-#        caption = "@BDStanley; benstanley.org") +
-#   theme_minimal() +
-#   theme_ipsum_rc()
-# ggsave(p, file = "k1cols_seats.png",
-#        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
-
 #current seat share
-p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
+p_seats <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
   geom_bar(stat="identity", width=.75, show.legend = F) +
   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
@@ -511,15 +437,15 @@ p <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
   scale_fill_manual(name="Party", values = k1cols)+
   geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
   geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
-  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +    
+  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
   annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Weighted, size=4, family="Roboto Condensed")+
   annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed") +
-  labs(x="", y="% of vote", title="Estimated share of seats based on final results", 
-       subtitle="Figures in brackets refer to change in seat share since 2015", 
+  labs(x="", y="% of vote", title="Estimated share of seats",
+       subtitle="Figures in brackets refer to change in seat share since October 2019 election",
        caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
-  theme_ipsum_rc() 
-ggsave(p, file = "k1cols_seats_exitpoll.png", 
+  theme_ipsum_rc()
+ggsave(p_seats, file = "polls_seats.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 # seats table
@@ -678,7 +604,7 @@ p <- ggplot(plotdata) +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=Lewica, label=Lewica), fill="white") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) + theme(aspect.ratio=1, legend.position="none",
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
-  labs(title="Constituency-level share of seats for Lewica", subtitle="Seat distribution reflects regional levels of support for SLD, Razem and Wiosna at 2019 European Parliament elections", 
+  labs(title="Constituency-level share of seats for Lewica", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
 ggsave(p, file = "Lewica_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
@@ -692,7 +618,7 @@ p <- ggplot(plotdata) +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiS, label=PiS), fill="white") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) + theme(aspect.ratio=1, legend.position="none",
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
-  labs(title="Constituency-level share of seats for PiS", subtitle="Seat distribution reflects regional levels of support for PiS at 2019 European Parliament elections", 
+  labs(title="Constituency-level share of seats for PiS", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
 ggsave(p, file = "PiS_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
@@ -706,11 +632,10 @@ p <- ggplot(plotdata) +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=KO, label=KO), fill="white") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) + theme(aspect.ratio=1, legend.position="none",
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
-  labs(title="Constituency-level share of seats for Koalicja Obywatelska", subtitle="Seat distribution reflects regional levels of support for Koalicja Europejska at 2019 European Parliament elections", 
+  labs(title="Constituency-level share of seats for Koalicja Obywatelska", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
 ggsave(p, file = "KO_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
-
 
 p <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(`PSL-Kukiz`)) + 
@@ -721,7 +646,7 @@ p <- ggplot(plotdata) +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=`PSL-Kukiz`, label=`PSL-Kukiz`), fill="white") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) + theme(aspect.ratio=1, legend.position="none",
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
-  labs(title="Constituency-level share of seats for PSL-Kukiz", subtitle="Seat distribution reflects regional levels of support for PSL at 2015 parliamentary elections", 
+  labs(title="Constituency-level share of seats for PSL-Kukiz", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
 ggsave(p, file = "PSL_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
@@ -731,11 +656,11 @@ p <- ggplot(plotdata) +
   geom_polygon() +
   geom_path(color="black") +
   theme(aspect.ratio=1) +
-  scale_fill_gradient(name="Konfederacja", limits=c(min=0, max=20), low = "white", high = "goldenrod1", guide="colorbar") +
+  scale_fill_gradient(name="Konfederacja", limits=c(min=0, max=20), low = "white", high = "midnightblue", guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=Konfederacja, label=Konfederacja), fill="white") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) + theme(aspect.ratio=1, legend.position="none",
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
-  labs(title="Constituency-level share of seats for Konfederacja", subtitle="Seat distribution reflects regional levels of support for Konfederacja at 2019 European Parliament elections", 
+  labs(title="Constituency-level share of seats for Konfederacja", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
 ggsave(p, file = "Konf_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)

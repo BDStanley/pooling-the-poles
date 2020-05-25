@@ -6,6 +6,7 @@ library(grid); library(foreign); library(memisc); library(MCMCpack); library(rep
 library(readxl); library(pander); library(coda); library(runjags); library(reshape2); 
 library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes); 
 library(tidybayes); library(bayestestR); library(googledrive); library(sjlabelled)
+options(mc.cores = parallel::detectCores())
 
 
 #####ROUND 1#####
@@ -16,7 +17,7 @@ pollingdata <- read_excel('pooledpolls_pres_r1.xlsx')
 pollingdata <- subset(pollingdata, select = -c(Source))
 pollingdata$nDef <- round(((100-pollingdata$DK)/100)*pollingdata$n, digits=0)
 pollingdata$Duda <- 100/((100-pollingdata$DK))*pollingdata$Duda
-pollingdata$`Kidawa-Błońska` <- 100/((100-pollingdata$DK))*pollingdata$`Kidawa-Błońska`
+pollingdata$`Trzaskowski` <- 100/((100-pollingdata$DK))*pollingdata$`Trzaskowski`
 pollingdata$`Kosiniak-Kamysz` <- 100/((100-pollingdata$DK))*pollingdata$`Kosiniak-Kamysz`
 pollingdata$Biedroń <- 100/((100-pollingdata$DK))*pollingdata$Biedroń
 pollingdata$Bosak <- 100/((100-pollingdata$DK))*pollingdata$Bosak
@@ -27,6 +28,7 @@ pollingdata$DK <- NULL
 pollingdata$n <- NULL
 pollingdata$pdate <- julian(as.Date(pollingdata$date, "%d/%m/%Y"), origin=as.Date("2019-12-19"))
 pollingdata$pdate <- as.Date(pollingdata$pdate, origin=as.Date("2019-12-19"))
+#pollingdata <- subset(pollingdata, pdate > as.Date("2020-05-14"))
 pollingdata <- pollingdata[which(pollingdata$pdate > 0),]
 pollingdata <- pollingdata[!is.na(pollingdata$pdate),]
 pollingdata <- pollingdata[order(pollingdata$pdate),]
@@ -40,7 +42,7 @@ NUMPOLLS <- nrow(pollingdata)
 PERIOD <- max(as.integer(pollingdata$day))
 HOUSECOUNT <- length(levels(pollingdata$housef))
 HOUSENAMES <- levels(pollingdata$housef)
-PARTYNAMES <- c("Duda","Kidawa-Błońska", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other")
+PARTYNAMES <- c("Duda","Trzaskowski", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other")
 PARTIES <- length(PARTYNAMES)
 Votes <- pollingdata[PARTYNAMES] * pollingdata$nDef * 0.01
 Votes <- sapply(Votes, function(x) round(x,0))
@@ -87,7 +89,7 @@ model {
     ## -- weakly informative priors for first day.
 
    alpha[1] ~ dunif(350, 450) # Duda
-   alpha[2] ~ dunif(200, 300) # Kidawa-Błońska
+   alpha[2] ~ dunif(200, 300) # Trzaskowski
    alpha[3] ~ dunif(50, 150) # Kosiniak-Kamysz
    alpha[4] ~ dunif(50, 150) # Biedroń
    alpha[5] ~ dunif(40, 120) # Bosak
@@ -182,7 +184,7 @@ plotdata$date <- as.Date(c(1:length(Dudamean)), origin=as.Date(tail(pollingdata$
 
 #Latest figures
 # prepare data frame
-party <- c("Duda", "Kidawa-Błońska", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other")
+party <- c("Duda", "Trzaskowski", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other")
 alpha <- rep(1, length(party))
 percent <- round(c(mean(tail(Dudaest$Dudamean, n=7)),
                    mean(tail(KBest$KBmean, n=7)),
@@ -211,13 +213,9 @@ Duda.50.diff <- pos[,"Duda"] - 0.50
 Duda.50.out <- sum(Duda.50.diff > 0) / length(Duda.50.diff)
 Duda.50.out <- round(Duda.50.out, 2)
 
-Duda.KB.diff <-pos[,"Duda"] - pos[,"Kidawa-Błońska"]
+Duda.KB.diff <-pos[,"Duda"] - pos[,"Trzaskowski"]
 Duda.KB.diff.out <- sum(Duda.KB.diff > 0) / length(Duda.KB.diff)
 Duda.KB.diff.out <- round(Duda.KB.diff.out, 2)
-
-KK.KB.diff <-pos[,"Kosiniak-Kamysz"] - pos[,"Kidawa-Błońska"]
-KK.KB.diff.out <- sum(KK.KB.diff > 0) / length(KK.KB.diff)
-KK.KB.diff.out <- round(KK.KB.diff.out, 2)
 
 # calculate latest figures
 posfr <- data.frame()
@@ -249,7 +247,7 @@ ggsave(p_he_1, file = "polls_houseeffects_pres_r1.png",
 
 # plot most recent party support
 # colours for plots
-cols <- c("Duda"="blue4", "Kidawa-Błońska"="orange", "Kosiniak-Kamysz"="darkgreen", "Bosak" = "midnightblue", "Biedroń" = "red", "Hołownia" = "darkorchid1", "Other"="gray50")
+cols <- c("Duda"="blue4", "Trzaskowski"="orange", "Kosiniak-Kamysz"="darkgreen", "Bosak" = "midnightblue", "Biedroń" = "red", "Hołownia" = "darkorchid1", "Other"="gray50")
 
 p_sup_r1 <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   geom_vline(aes(xintercept=0.50), colour="gray60", linetype="dotted") +
@@ -257,8 +255,8 @@ p_sup_r1 <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Duda"]),0)), 
            y="Duda", x=mean(posfrmelt$value[posfrmelt$variable=="Duda"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Kidawa-Błońska"]),0)), 
-           y="Kidawa-Błońska", x=mean(posfrmelt$value[posfrmelt$variable=="Kidawa-Błońska"]), size=4, hjust = "center", vjust=-1, 
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Trzaskowski"]),0)), 
+           y="Trzaskowski", x=mean(posfrmelt$value[posfrmelt$variable=="Trzaskowski"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Kosiniak-Kamysz"]),0)), 
            y="Kosiniak-Kamysz", x=mean(posfrmelt$value[posfrmelt$variable=="Kosiniak-Kamysz"]), size=4, hjust = "center", vjust=-1, 
@@ -276,7 +274,6 @@ p_sup_r1 <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
            y="Other", x=mean(posfrmelt$value[posfrmelt$variable=="Other"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste("Probability of Duda winning in the first round:", Duda.50.out), y=6.75, x=median(posfrmelt$value[posfrmelt$variable=="Duda"]), size=3.75, family="Roboto Condensed", hjust=0.5) +
-  annotate(geom = "text", label=paste("Probability of Kosiniak-Kamysz coming second:", KK.KB.diff.out), y=5.75, x=max(posfrmelt$value[posfrmelt$variable=="Kosiniak-Kamysz"])+0.07, size=3.75, family="Roboto Condensed", hjust=0.5) +
   scale_y_discrete(name=" ", limits=rev(pooledframe$party)) +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6), labels=c("0", "10", "20", "30", "40", "50", "60")) +
@@ -289,20 +286,20 @@ ggsave(p_sup_r1, file = "polls_latest_pres_r1.png",
 
 # plot trends
 datl <- melt(plotdata, measure.vars=c("Dudamean","KBmean","KKmean","RBmean","Bosakmean","Holowniamean","Othermean"))
-levels(datl$variable) <- c("Duda", "Kidawa-Błońska", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other")
-datl$variable <- factor(datl$variable, levels = c("Duda", "Kidawa-Błońska", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other"))
+levels(datl$variable) <- c("Duda", "Trzaskowski", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other")
+datl$variable <- factor(datl$variable, levels = c("Duda", "Trzaskowski", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other"))
 
 p_tr_r1 <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
   geom_abline(intercept=50, slope=0, colour="gray60", linetype=3) +
   geom_ribbon(data=subset(datl, variable=="Duda"), aes(ymin=Dudalow, ymax=Dudahigh), colour=NA, fill="blue4", alpha=0.3) +
-  geom_ribbon(data=subset(datl, variable=="Kidawa-Błońska"), aes(ymin=KBlow, ymax=KBhigh), colour=NA, fill="orange", alpha=0.3) +
+  geom_ribbon(data=subset(datl, variable=="Trzaskowski"), aes(ymin=KBlow, ymax=KBhigh), colour=NA, fill="orange", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="Kosiniak-Kamysz"), aes(ymin=KKlow, ymax=KKhigh), colour=NA, fill="darkgreen", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="Biedroń"), aes(ymin=RBlow, ymax=RBhigh), colour=NA, fill="red", alpha=0.3) +  
   geom_ribbon(data=subset(datl, variable=="Bosak"), aes(ymin=Bosaklow, ymax=Bosakhigh), colour=NA, fill="midnightblue", alpha=0.3) +
   geom_ribbon(data=subset(datl, variable=="Hołownia"), aes(ymin=Holownialow, ymax=Holowniahigh), colour=NA, fill="midnightblue", alpha=0.3) +  
   geom_ribbon(data=subset(datl, variable=="Other"), aes(ymin=Otherlow, ymax=Otherhigh), colour=NA, fill="grey50", alpha=0.3) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Duda), col="blue4", size=1.5) +
-  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=`Kidawa-Błońska`), col="orange", size=1.5) +
+  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=`Trzaskowski`), col="orange", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=`Kosiniak-Kamysz`), col="darkgreen", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Biedroń), col="red", size=1.5) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Bosak), col="midnightblue", size=1.5) +
@@ -314,8 +311,8 @@ p_tr_r1 <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_li
   background_grid(major = "xy", minor = "none") +
   scale_x_date(labels=date_format("%d.%m.%y"))+
   scale_colour_manual(name="", values=cols,
-                      breaks=c("Duda","Kidawa-Błońska", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other"),
-                      labels=c("Duda","Kidawa-Błońska", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other")) +
+                      breaks=c("Duda","Trzaskowski", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other"),
+                      labels=c("Duda","Trzaskowski", "Kosiniak-Kamysz", "Biedroń", "Bosak", "Hołownia", "Other")) +
   guides(color=guide_legend(override.aes=list(fill=NA))) +
   labs(x="", y="% of vote", title="Polish presidential elections, round 1: trends", 
        subtitle=str_c("Data from ", housenames), 
@@ -326,7 +323,7 @@ ggsave(p_tr_r1, file = "polls_trends_pres_r1.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 
-#####ROUND 2: Duda vs. Kidawa-Błońska#####
+#####ROUND 2: Duda vs. Trzaskowski#####
 #read in data
 import <- drive_download(as_id("https://drive.google.com/file/d/1J_rNuLiETmzPfNpuRlQDtfwWpsCARRIj/view?usp=sharing"), overwrite=TRUE)
 1
@@ -334,7 +331,7 @@ pollingdata <- read_excel('pooledpolls_pres_r2.xlsx')
 pollingdata <- subset(pollingdata, select = -c(Source))
 pollingdata$nDef <- round(((100-pollingdata$DK)/100)*pollingdata$n, digits=0)
 pollingdata$Duda <- 100/((100-pollingdata$DK))*pollingdata$Duda
-pollingdata$`Kidawa-Błońska` <- 100/((100-pollingdata$DK))*pollingdata$`Kidawa-Błońska`
+pollingdata$`Trzaskowski` <- 100/((100-pollingdata$DK))*pollingdata$`Trzaskowski`
 pollingdata$nTot <- NULL
 pollingdata$DK <- NULL
 pollingdata$n <- NULL
@@ -353,7 +350,7 @@ NUMPOLLS <- nrow(pollingdata)
 PERIOD <- max(as.integer(pollingdata$day))
 HOUSECOUNT <- length(levels(pollingdata$housef))
 HOUSENAMES <- levels(pollingdata$housef)
-PARTYNAMES <- c("Duda","Kidawa-Błońska")
+PARTYNAMES <- c("Duda","Trzaskowski")
 PARTIES <- length(PARTYNAMES)
 Votes <- pollingdata[PARTYNAMES] * pollingdata$nDef * 0.01
 Votes <- sapply(Votes, function(x) round(x,0))
@@ -400,7 +397,7 @@ model {
     ## -- weakly informative priors for first day.
 
    alpha[1] ~ dunif(45, 55) # Duda
-   alpha[2] ~ dunif(40, 50) # Kidawa-Błońska
+   alpha[2] ~ dunif(40, 50) # Trzaskowski
 
    walk[1, 1:PARTIES] ~ ddirch(alpha[])             # initial starting point
 
@@ -465,7 +462,7 @@ plotdata$date <- as.Date(c(1:length(Dudamean)), origin=as.Date(tail(pollingdata$
 
 #Latest figures
 # prepare data frame
-party <- c("Duda", "Kidawa-Błońska")
+party <- c("Duda", "Trzaskowski")
 alpha <- rep(1, length(party))
 percent <- round(c(mean(tail(Dudaest$Dudamean, n=7)),
                    mean(tail(KBest$KBmean, n=7))))
@@ -489,7 +486,7 @@ Duda.50.diff <- pos[,"Duda"] - 0.50
 Duda.50.out <- sum(Duda.50.diff > 0) / length(Duda.50.diff)
 Duda.50.out <- round(Duda.50.out, 2)
 
-KB.50.diff <- pos[,"Kidawa-Błońska"] - 0.50
+KB.50.diff <- pos[,"Trzaskowski"] - 0.50
 KB.50.out <- sum(KB.50.diff > 0) / length(KB.50.diff)
 KB.50.out <- round(KB.50.out, 2)
 
@@ -523,7 +520,7 @@ ggsave(p, file = "polls_houseeffects_pres_r2.png",
 
 # plot most recent support
 # colours for plots
-cols <- c("Duda"="blue4", "Kidawa-Błońska"="orange")
+cols <- c("Duda"="blue4", "Trzaskowski"="orange")
 
 p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   geom_vline(aes(xintercept=0.50), colour="gray60", linetype="dotted") +
@@ -531,49 +528,49 @@ p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Duda"]),0)), 
            y="Duda", x=mean(posfrmelt$value[posfrmelt$variable=="Duda"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Kidawa-Błońska"]),0)), 
-           y="Kidawa-Błońska", x=mean(posfrmelt$value[posfrmelt$variable=="Kidawa-Błońska"]), size=4, hjust = "center", vjust=-1, 
+  annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Trzaskowski"]),0)), 
+           y="Trzaskowski", x=mean(posfrmelt$value[posfrmelt$variable=="Trzaskowski"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste("Probability of victory:", Duda.50.out), 
            y=1.85, x=median(posfrmelt$value[posfrmelt$variable=="Duda"]), size=3.75, family="Roboto Condensed", hjust=0.5) +
   annotate(geom = "text", label=paste("Probability of victory:", KB.50.out), 
-           y=0.85, x=median(posfrmelt$value[posfrmelt$variable=="Kidawa-Błońska"]), size=3.75, family="Roboto Condensed", hjust=0.5) +
+           y=0.85, x=median(posfrmelt$value[posfrmelt$variable=="Trzaskowski"]), size=3.75, family="Roboto Condensed", hjust=0.5) +
   scale_y_discrete(name=" ", limits=rev(pooledframe$party)) +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
-  labs(caption="@BDStanley; benstanley.org", x="", title="Polish presidential elections, round 2, Duda vs. Kidawa-Błońska: latest estimates",
+  labs(caption="@BDStanley; benstanley.org", x="", title="Polish presidential elections, round 2, Duda vs. Trzaskowski: latest estimates",
        subtitle=str_c("Data from ", housenames)) +
   theme_minimal() +
   theme_ipsum_rc() 
-ggsave(p, file = "polls_latest_pres_r2_kidawa.png", 
+ggsave(p, file = "polls_latest_pres_r2_trzask.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 # plot trends
 datl <- melt(plotdata, measure.vars=c("Dudamean","KBmean"))
-levels(datl$variable) <- c("Duda", "Kidawa-Błońska")
-datl$variable <- factor(datl$variable, levels = c("Duda", "Kidawa-Błońska"))
+levels(datl$variable) <- c("Duda", "Trzaskowski")
+datl$variable <- factor(datl$variable, levels = c("Duda", "Trzaskowski"))
 
 p <- ggplot(datl, aes(x=date, y=value, colour=factor(variable))) + geom_line() +
   geom_abline(intercept=50, slope=0, colour="gray60", linetype=3) +
   geom_ribbon(data=subset(datl, variable=="Duda"), aes(ymin=Dudalow, ymax=Dudahigh), colour=NA, fill="blue4", alpha=0.3) +
-  geom_ribbon(data=subset(datl, variable=="Kidawa-Błońska"), aes(ymin=KBlow, ymax=KBhigh), colour=NA, fill="orange", alpha=0.3) +
+  geom_ribbon(data=subset(datl, variable=="Trzaskowski"), aes(ymin=KBlow, ymax=KBhigh), colour=NA, fill="orange", alpha=0.3) +
   geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=Duda), col="blue4", size=1.5) +
-  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=`Kidawa-Błońska`), col="orange", size=1.5) +
+  geom_point(data=pollingdata, aes(x=as.Date(pollingdata$date, "%d/%m/%Y"), y=`Trzaskowski`), col="orange", size=1.5) +
   theme(panel.background = element_rect(colour="white"),  axis.text.x = element_text(size=10),
         axis.text.y = element_text(size=10), axis.title.x = element_blank(), axis.title.y = element_blank(),
         plot.margin = unit(c(1,3,1,1), "lines"), strip.text.x = element_text(size = 10))+
   background_grid(major = "xy", minor = "none") +
   scale_x_date(labels=date_format("%d.%m.%y"))+
   scale_colour_manual(name="", values=cols,
-                      breaks=c("Duda","Kidawa-Błońska"),
-                      labels=c("Duda","Kidawa-Błońska")) +
+                      breaks=c("Duda","Trzaskowski"),
+                      labels=c("Duda","Trzaskowski")) +
   guides(color=guide_legend(override.aes=list(fill=NA))) +
-  labs(x="", y="% of vote", title="Polish presidential elections, round 2,  Duda vs. Kidawa-Błońska: trends", 
+  labs(x="", y="% of vote", title="Polish presidential elections, round 2,  Duda vs. Trzaskowski: trends", 
        subtitle=str_c("Data from ", housenames), 
        caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
   theme_ipsum_rc()
-ggsave(p, file = "polls_trends_pres_r2_kidawa.png",
+ggsave(p, file = "polls_trends_pres_r2_trzask.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 
