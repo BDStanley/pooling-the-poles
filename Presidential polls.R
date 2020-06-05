@@ -28,7 +28,7 @@ pollingdata$DK <- NULL
 pollingdata$n <- NULL
 pollingdata$pdate <- julian(as.Date(pollingdata$date, "%d/%m/%Y"), origin=as.Date("2019-12-19"))
 pollingdata$pdate <- as.Date(pollingdata$pdate, origin=as.Date("2019-12-19"))
-#pollingdata <- subset(pollingdata, pdate > as.Date("2020-05-14"))
+pollingdata <- subset(pollingdata, pdate > as.Date("2020-05-14"))
 pollingdata <- pollingdata[which(pollingdata$pdate > 0),]
 pollingdata <- pollingdata[!is.na(pollingdata$pdate),]
 pollingdata <- pollingdata[order(pollingdata$pdate),]
