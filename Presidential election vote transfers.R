@@ -45,7 +45,8 @@ p <- fala_7 %>%
   stat_pointinterval(position = position_dodge(width = .4)) +
   scale_color_manual(breaks = c("2", "1", "3"), values = c("blue4", "orange", "grey50"), labels=c("Duda", "Trzaskowski", "Nie wezmę udziału")) +
   labs(x = "Candidate voted for in first round", y = "Probability of vote in second round", 
-       subtitle = "Second-round vote choice based on first-round choices",
+       title = "Second-round vote choice based on first-round choices: Duda - Trzaskowski",
+       subtitle = "Data from PBS survey for Centre for the Study of Democracy, SWPS University",
        color="",
        caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
@@ -68,7 +69,8 @@ p <- fala_7 %>%
   stat_pointinterval(position = position_dodge(width = .4)) +
   scale_color_manual(breaks = c("2", "1", "3"), values = c("blue4", "darkorchid1", "grey50"), labels=c("Duda", "Hołownia", "Nie wezmę udziału")) +
   labs(x = "Candidate voted for in first round", y = "Probability of vote in second round", 
-       subtitle = "Second-round vote choice based on first-round choices",
+       title = "Second-round vote choice based on first-round choices: Duda - Hołownia",
+       subtitle = "Data from PBS survey for Centre for the Study of Democracy, SWPS University",
        color="",
        caption = "@BDStanley; benstanley.org") +
   theme_minimal() +

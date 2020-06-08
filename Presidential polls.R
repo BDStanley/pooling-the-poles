@@ -526,15 +526,15 @@ p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   geom_vline(aes(xintercept=0.50), colour="gray60", linetype="dotted") +
   stat_slabh(normalize="xy") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Duda"]),0)), 
-           y="Duda", x=mean(posfrmelt$value[posfrmelt$variable=="Duda"]), size=4, hjust = "center", vjust=-1, 
+           y="Duda", x=mean(posfrmelt$value[posfrmelt$variable=="Duda"]), size=4, hjust = "centre", vjust=-1, 
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste(round(100*mean(posfrmelt$value[posfrmelt$variable=="Trzaskowski"]),0)), 
-           y="Trzaskowski", x=mean(posfrmelt$value[posfrmelt$variable=="Trzaskowski"]), size=4, hjust = "center", vjust=-1, 
+           y="Trzaskowski", x=mean(posfrmelt$value[posfrmelt$variable=="Trzaskowski"]), size=4, hjust = "centre", vjust=-1, 
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste("Probability of victory:", Duda.50.out), 
-           y=1.85, x=median(posfrmelt$value[posfrmelt$variable=="Duda"]), size=3.75, family="Roboto Condensed", hjust=0.5) +
+           y=1.85, x=median(posfrmelt$value[posfrmelt$variable=="Duda"]), size=3.75, family="Roboto Condensed", hjust=0.4) +
   annotate(geom = "text", label=paste("Probability of victory:", KB.50.out), 
-           y=0.85, x=median(posfrmelt$value[posfrmelt$variable=="Trzaskowski"]), size=3.75, family="Roboto Condensed", hjust=0.5) +
+           y=0.85, x=median(posfrmelt$value[posfrmelt$variable=="Trzaskowski"]), size=3.75, family="Roboto Condensed", hjust=0.4) +
   scale_y_discrete(name=" ", limits=rev(pooledframe$party)) +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
@@ -1036,9 +1036,9 @@ p <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
            y="Hołownia", x=mean(posfrmelt$value[posfrmelt$variable=="Hołownia"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste("Probability of victory:", Duda.50.out), 
-           y=1.85, x=median(posfrmelt$value[posfrmelt$variable=="Duda"]), size=3.75, family="Roboto Condensed", hjust=0.5) +
+           y=1.85, x=median(posfrmelt$value[posfrmelt$variable=="Duda"]), size=3.75, family="Roboto Condensed", hjust=-0.4) +
   annotate(geom = "text", label=paste("Probability of victory:", SH.50.out), 
-           y=0.85, x=median(posfrmelt$value[posfrmelt$variable=="Hołownia"]), size=3.75, family="Roboto Condensed", hjust=0.5) +
+           y=0.85, x=median(posfrmelt$value[posfrmelt$variable=="Hołownia"]), size=3.75, family="Roboto Condensed", hjust=-0.4) +
   scale_y_discrete(name=" ", limits=rev(pooledframe$party)) +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
