@@ -1,17 +1,23 @@
 ---
 title: "Pooling the Poles"
+subtitle: "Pooled polls of intended voting at parliamentary elections."
+author: "[Ben Stanley](https://www.benstanley.org/)"
+date: "`r format(Sys.time(), '%A %d %b')`"
 output:
   html_document:
-    df_print: paged
-  html_notebook: default
-  pdf_document: default
+    theme: cosmo
 ---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=10, fig.height=8, fig.align = "center",
+                      echo=FALSE, warning=FALSE, message=FALSE)
+```
 
 ```{r echo = F, eval = T, include=F}
 load("~/Desktop/Personal/PoolingthePoles.RData")
 ```
 
-```{r echo=FALSE}
+```{r}
 p_recent
 ```
 
@@ -19,3 +25,34 @@ p_recent
 p_trends
 ```
 
+```{r}
+p_seats
+```
+
+```{r fig.width=10, fig.height=10}
+p_pis
+```
+
+```{r fig.width=10, fig.height=10}
+p_ko
+```
+
+```{r fig.width=10, fig.height=10}
+p_pis_ko
+```
+
+```{r fig.width=10, fig.height=10}
+p_psl
+```
+
+```{r fig.width=10, fig.height=10}
+p_lewica
+```
+
+```{r fig.width=10, fig.height=10}
+p_konf
+```
+
+```{r}
+p_house
+```

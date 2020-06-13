@@ -7,7 +7,10 @@ library(readxl); library(pander); library(coda); library(runjags); library(resha
 library(gridExtra); library(grid); library(cowplot); library(scales); library(hrbrthemes); 
 library(tidybayes); library(bayestestR); library(googledrive); library(sjlabelled)
 options(mc.cores = parallel::detectCores())
-
+if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
+    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.0.0") {
+  parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
+}
 
 #####ROUND 1#####
 #read in data

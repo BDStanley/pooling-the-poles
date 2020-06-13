@@ -9,6 +9,11 @@ library(gridExtra); library(grid); library(cowplot); library(scales); library(hr
 library(tidybayes); library(bayestestR); library(seatdist); library(knitr); library(kableExtra);
 library(xtable); library(sjlabelled)
 gpclibPermit()
+options(mc.cores = parallel::detectCores())
+if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
+    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.0.0") {
+  parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
+}
 
 # colours for plots
 k1cols <- c("PiS"="blue4", "KO"="orange", "PSL-Kukiz"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "Other"="gray50")
@@ -382,7 +387,7 @@ p_recent <- ggplot(posfrmelt, aes(y=variable, x = value, fill=variable)) +
   annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica.thr.out), y=2.5, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
   annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja.thr.out), y=2.25, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
   annotate(geom = "text", label=paste("Pr(PSL-Kukiz > 5%)  = ", PSL.thr.out), y=2, x=0.4, size=3.5, adj=c(0), family="Roboto Condensed") +
-  scale_y_discrete(name=" ", limits=rev(pooledframe$party)) +
+  scale_y_discrete(name=" ", limits=rev(pooledframe$party), position="right") +
   scale_fill_manual(name=" ", values=k1cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   labs(caption="@BDStanley; benstanley.org", x="", title="Latest pooled estimates",
@@ -595,7 +600,7 @@ seats$label_point_y[seats$id==40] <- label_points$y[41]
 const.df$id <- const.df$con
 plotdata <- merge(const.df,seats,by="id")
 
-p <- ggplot(plotdata) + 
+p_lewica <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(Lewica)) + 
   geom_polygon() +
   geom_path(color="black") +
@@ -606,10 +611,10 @@ p <- ggplot(plotdata) +
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
   labs(title="Constituency-level share of seats for Lewica", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
-ggsave(p, file = "Lewica_seats.png", 
+ggsave(p_lewica, file = "Lewica_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
 
-p <- ggplot(plotdata) + 
+p_pis <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(PiS)) + 
   geom_polygon() +
   geom_path(color="black") +
@@ -620,10 +625,10 @@ p <- ggplot(plotdata) +
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
   labs(title="Constituency-level share of seats for PiS", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
-ggsave(p, file = "PiS_seats.png", 
+ggsave(p_pis, file = "PiS_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
 
-p <- ggplot(plotdata) + 
+p_ko <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(KO)) + 
   geom_polygon() +
   geom_path(color="black") +
@@ -634,10 +639,10 @@ p <- ggplot(plotdata) +
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
   labs(title="Constituency-level share of seats for Koalicja Obywatelska", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
-ggsave(p, file = "KO_seats.png", 
+ggsave(p_ko, file = "KO_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
 
-p <- ggplot(plotdata) + 
+p_psl <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(`PSL-Kukiz`)) + 
   geom_polygon() +
   geom_path(color="black") +
@@ -648,10 +653,10 @@ p <- ggplot(plotdata) +
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
   labs(title="Constituency-level share of seats for PSL-Kukiz", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
-ggsave(p, file = "PSL_seats.png", 
+ggsave(p_psl, file = "PSL_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
 
-p <- ggplot(plotdata) + 
+p_konf <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(Konfederacja)) + 
   geom_polygon() +
   geom_path(color="black") +
@@ -662,10 +667,10 @@ p <- ggplot(plotdata) +
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
   labs(title="Constituency-level share of seats for Konfederacja", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
-ggsave(p, file = "Konf_seats.png", 
+ggsave(p_konf, file = "Konf_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
 
-p <- ggplot(plotdata) + 
+p_pis_ko <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(PiSmKO)) + 
   geom_polygon() +
   geom_path(color="black") +
@@ -675,7 +680,7 @@ p <- ggplot(plotdata) +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiSKO, label=PiSKO), fill="white") +
   labs(title="Constituency-level differences in share of seats for PiS and Koalicja Obywatelska", subtitle="Constituencies in shades of blue have more PiS MPs; constituencies in orange have more KO MPs", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
-ggsave(p, file = "PiSKO_seats.png", 
+ggsave(p_pis_ko, file = "PiSKO_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
 
 seattable <- tibble(rownames(seats), seats[,2], seats[,1], seats[,4], seats[,3], seats[,5], seats[,6])

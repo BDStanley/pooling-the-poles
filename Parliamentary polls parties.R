@@ -9,6 +9,12 @@ library(gridExtra); library(grid); library(cowplot); library(scales); library(hr
 library(tidybayes); library(bayestestR); library(seatdist); library(knitr); library(kableExtra);
 library(xtable)
 gpclibPermit()
+options(mc.cores = parallel::detectCores())
+if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
+    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.0.0") {
+  parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
+}
+
 
 # d'Hondt function
 countN <- function (v) {return (Reduce(function (x, y) x + y, ifelse(is.na(v), 0, 1)))}
