@@ -18,15 +18,15 @@ load("~/Desktop/Personal/PoolingthePoles.RData")
 ```
 
 ```{r}
-p_recent
+print(plot_latest_parl)
 ```
 
 ```{r}
-p_trends
+plot_trends_parl
 ```
 
 ```{r}
-p_seats
+plot_seats_parl
 ```
 
 ```{r fig.width=10, fig.height=10}
@@ -51,8 +51,4 @@ p_lewica
 
 ```{r fig.width=10, fig.height=10}
 p_konf
-```
-
-```{r}
-p_house
 ```

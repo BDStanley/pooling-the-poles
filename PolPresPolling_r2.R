@@ -16,6 +16,10 @@ import <- drive_download(as_id("https://drive.google.com/file/d/1MYtcJEZ4ougvrpC
 1
 PolPresPolling <- read_excel('pooledpolls_pres_r2_dudatrzask.xlsx')
 
+import <- drive_download(as_id("https://drive.google.com/file/d/1jgkmVxkddCV-ERanROEZeZA0FM_xvnTj/view?usp=sharing"), overwrite=TRUE)
+1
+PolPresPolling <- read_excel('pooledpolls_pres_r1_new.xlsx')
+
 START_DATE <- "2020-05-14"
 PolPresPolling$startDate <- as.Date(PolPresPolling$startDate)
 PolPresPolling$endDate <- as.Date(PolPresPolling$endDate)
@@ -147,3 +151,17 @@ ggplot() +
   geom_point(data = PolPresPolling,
              mapping = aes(x = midDate, y = Trzaskowski, colour = org))
 
+
+
+
+trzask <- tidybayes::spread_draws(trzaskowski_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "Trzaskowski") %>%
+  ggplot() +
+  stat_lineribbon(aes(x = time, y = xi), .width=c(0.5, 0.66, 0.95), alpha=1/4)
+
+duda <- tidybayes::spread_draws(duda_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "Duda") %>%
+  ggplot() +
+  stat_lineribbon(aes(x = time, y = xi), .width=c(0.5, 0.66, 0.95), alpha=1/4)
