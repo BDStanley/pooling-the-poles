@@ -14,6 +14,7 @@ library("maptools")
 library("rgeos") 
 library("gpclib")
 library("tidybayes")
+library("xtable")
 
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
@@ -333,19 +334,19 @@ plot_latest_parl <- ggplot(plot_latest, aes(y=candidate, x = xi, fill=candidate)
            y="PSL-Kukiz", x=mean(plot_latest$xi[plot_latest$candidate=="PSL-Kukiz"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS", 
-           x=quantile(plot_latest$xi[plot_latest$candidate=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed") +
+           x=quantile(plot_latest$xi[plot_latest$candidate=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", round(median(plot_latest$over_5[plot_latest$candidate=="Lewica"]),2)), y="Lewica", 
-           x=quantile(plot_latest$xi[plot_latest$candidate=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed") +
+           x=quantile(plot_latest$xi[plot_latest$candidate=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(PSL-Kukiz > 5%)  = ", round(median(plot_latest$over_5[plot_latest$candidate=="PSL-Kukiz"]),2)), y="PSL-Kukiz", 
-           x=quantile(plot_latest$xi[plot_latest$candidate=="PSL-Kukiz"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed") +
+           x=quantile(plot_latest$xi[plot_latest$candidate=="PSL-Kukiz"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", round(median(plot_latest$over_5[plot_latest$candidate=="Konfederacja"]),2)), y="Konfederacja", 
-           x=quantile(plot_latest$xi[plot_latest$candidate=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed") +
+           x=quantile(plot_latest$xi[plot_latest$candidate=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Lewica > 8%)  = ", round(median(plot_latest$over_8[plot_latest$candidate=="Lewica"]),2)), y="Lewica", 
-           x=quantile(plot_latest$xi[plot_latest$candidate=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-2, family="Roboto Condensed") +
+           x=quantile(plot_latest$xi[plot_latest$candidate=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-2, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(PSL-Kukiz > 8%)  = ", round(median(plot_latest$over_8[plot_latest$candidate=="PSL-Kukiz"]),2)), y="PSL-Kukiz", 
-           x=quantile(plot_latest$xi[plot_latest$candidate=="PSL-Kukiz"], 0.999), size=3.5, adj=c(0), vjust=-2, family="Roboto Condensed") +
+           x=quantile(plot_latest$xi[plot_latest$candidate=="PSL-Kukiz"], 0.999), size=3.5, adj=c(0), vjust=-2, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Konfederacja > 8%)  = ", round(median(plot_latest$over_8[plot_latest$candidate=="Konfederacja"]),2)), y="Konfederacja", 
-           x=quantile(plot_latest$xi[plot_latest$candidate=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-2, family="Roboto Condensed") +
+           x=quantile(plot_latest$xi[plot_latest$candidate=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-2, family="Roboto Condensed Light") +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 5, 8, 10, 20, 30, 40, 50), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
@@ -391,7 +392,6 @@ for( i in 1 : 42 ) {
 colnames(poldHondt) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "PSL-Kukiz")
 
 frame <- t(rbind(poldHondt[1,], colSums(poldHondt[2:42,])))
-#frame <- t(rbind(stlague[1,], colSums(stlague[2:42,])))
 frame <- data.frame(rownames(frame), frame)
 colnames(frame) <- c("Party", "Unweighted", "Weighted")
 frame <- frame[with(frame, order(-Weighted)),]
@@ -417,11 +417,11 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Part
   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
   scale_y_continuous('Number of seats', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
   scale_fill_manual(name="Party", values = cols)+
-  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
-  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
-  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed") +
-  annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Weighted, size=4, family="Roboto Condensed")+
-  annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed") +
+  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
+  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
+  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
+  annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Weighted, size=4, family="Roboto Condensed Light")+
+  annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed Light") +
   labs(x="", y="% of vote", title="Estimated share of seats",
        subtitle="Figures in brackets refer to change in seat share since October 2019 election",
        caption = "@BDStanley; benstanley.org") +
@@ -436,7 +436,6 @@ seats <- cbind(poldHondt, weights)
 row.names(seats) <- weights$name
 keep <- c("KO","PiS","PSL-Kukiz","Lewica", "Konfederacja", "MN")
 seats <- seats[keep]
-#colnames(seats) <- sprintf("%-8s", colnames(seats))
 seats <- seats[-1,]
 seats$id <- 1:41
 seats$PiSKO <-abs(seats$PiS-seats$KO)
@@ -584,7 +583,7 @@ p_lewica <- ggplot(plotdata) +
   geom_path(color="black") +
   theme(aspect.ratio=1) +
   scale_fill_gradient(name="Lewica", limits=c(min=0, max=20), low = "white", high = "red", guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=Lewica, label=Lewica), fill="white") +
+  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=Lewica, label=Lewica), fill="white", family="Roboto Condensed Light") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) + theme(aspect.ratio=1, legend.position="none",
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
   labs(title="Constituency-level share of seats for Lewica", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
@@ -598,7 +597,7 @@ p_pis <- ggplot(plotdata) +
   geom_path(color="black") +
   theme(aspect.ratio=1) +
   scale_fill_gradient(name="PiS", limits=c(min=0, max=20), low = "white", high = "blue4", guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiS, label=PiS), fill="white") +
+  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiS, label=PiS), fill="white", family="Roboto Condensed Light") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) + theme(aspect.ratio=1, legend.position="none",
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
   labs(title="Constituency-level share of seats for PiS", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
@@ -612,7 +611,7 @@ p_ko <- ggplot(plotdata) +
   geom_path(color="black") +
   theme(aspect.ratio=1) +
   scale_fill_gradient(name="KO", limits=c(min=0, max=20), low = "white", high = "orange", guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=KO, label=KO), fill="white") +
+  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=KO, label=KO), fill="white", family="Roboto Condensed Light") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) + theme(aspect.ratio=1, legend.position="none",
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
   labs(title="Constituency-level share of seats for Koalicja Obywatelska", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
@@ -626,7 +625,7 @@ p_psl <- ggplot(plotdata) +
   geom_path(color="black") +
   theme(aspect.ratio=1) +
   scale_fill_gradient(name="PSL-Kukiz", limits=c(min=0, max=20), low = "white", high = "darkgreen", guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=`PSL-Kukiz`, label=`PSL-Kukiz`), fill="white") +
+  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=`PSL-Kukiz`, label=`PSL-Kukiz`), fill="white", family="Roboto Condensed Light") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) + theme(aspect.ratio=1, legend.position="none",
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
   labs(title="Constituency-level share of seats for PSL-Kukiz", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
@@ -640,7 +639,7 @@ p_konf <- ggplot(plotdata) +
   geom_path(color="black") +
   theme(aspect.ratio=1) +
   scale_fill_gradient(name="Konfederacja", limits=c(min=0, max=20), low = "white", high = "midnightblue", guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=Konfederacja, label=Konfederacja), fill="white") +
+  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=Konfederacja, label=Konfederacja), fill="white", family="Roboto Condensed Light") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) + theme(aspect.ratio=1, legend.position="none",
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
   labs(title="Constituency-level share of seats for Konfederacja", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
@@ -655,7 +654,7 @@ p_pis_ko <- ggplot(plotdata) +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) + theme(aspect.ratio=1, legend.position="none",
                                                                                   axis.title.x = element_blank(), axis.title.y = element_blank()) +
   scale_fill_gradient2(name="PiSKO", limits=c(min=-20, max=20), low = "orange", mid="white", high = "blue4", midpoint=0, guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiSKO, label=PiSKO), fill="white") +
+  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiSKO, label=PiSKO), fill="white", family="Roboto Condensed Light") +
   labs(title="Constituency-level differences in share of seats for PiS and Koalicja Obywatelska", subtitle="Constituencies in shades of blue have more PiS MPs; constituencies in orange have more KO MPs", 
        caption = "@BDStanley; benstanley.org", family="Roboto Condensed")
 ggsave(p_pis_ko, file = "PiSKO_seats.png", 

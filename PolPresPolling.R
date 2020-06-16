@@ -8,6 +8,7 @@ library("rio")
 library("readxl")
 library("hrbrthemes")
 library("sjlabelled")
+library("tidybayes")
 
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
@@ -22,30 +23,30 @@ polls <- read_excel('pooledpolls_pres_r1_new.xlsx')
 polls <- unite(polls, org, remark, col="org", sep="_")
 polls$org <-as.factor(polls$org)
 
-START_DATE <- "2020-05-10"
 polls$startDate <- as.Date(polls$startDate)
 polls$endDate <- as.Date(polls$endDate)
 
 polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + difftime(endDate, startDate)),
-         Duda = 100/((100-polls$DK))*polls$Duda,
+         Duda = 100/((100-DK))*Duda,
          Duda_se = Duda * (100 - Duda) / sampleSize,
-         Trzaskowski = 100/((100-polls$DK))*polls$Trzaskowski,
+         Trzaskowski = 100/((100-DK))*Trzaskowski,
          Trzaskowski_se = Trzaskowski * (100 - Trzaskowski) / sampleSize,
-        `Kosiniak-Kamysz` = 100/((100-polls$DK))*polls$`Kosiniak-Kamysz`,
+        `Kosiniak-Kamysz` = 100/((100-DK))*`Kosiniak-Kamysz`,
         `Kosiniak-Kamysz_se` = `Kosiniak-Kamysz` * (100 - `Kosiniak-Kamysz`) / sampleSize,
-         Hołownia = 100/((100-polls$DK))*polls$Hołownia,
+         Hołownia = 100/((100-DK))*Hołownia,
          Hołownia_se = Hołownia * (100 - Hołownia) / sampleSize,
-         Bosak = 100/((100-polls$DK))*polls$Bosak,
+         Bosak = 100/((100-DK))*Bosak,
          Bosak_se = Bosak * (100 - Bosak) / sampleSize,
-         Biedroń = 100/((100-polls$DK))*polls$Biedroń,
+         Biedroń = 100/((100-DK))*Biedroń,
          Biedroń_se = Biedroń * (100 - Biedroń) / sampleSize,
-         Other = 100/((100-polls$DK))*polls$Other,
+         Other = 100/((100-DK))*Other,
          Other_se = Other * (100 - Other) / sampleSize,
-         time = as.integer(difftime(midDate, START_DATE, units = "days")) + 1L,
+         time = as.integer(difftime(midDate, min(midDate)-1, units = "days")) + 1L,
          pollster = as.integer(factor(org)))
 
+START_DATE <- min(polls$midDate)-1
 END_DATE <- max(polls$midDate)
 
 
@@ -241,8 +242,9 @@ cols <- c("Duda"="blue4", "Trzaskowski"="orange", "Kosiniak-Kamysz"="darkgreen",
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
 names$house <- as.factor(names$house)
-names$house <- fct_recode(names$house, "Maison & Partners" = "Maison")
-names <- paste0(names$house, collapse=", ")
+names$house <- fct_recode(names$house, "Maison & Partners" = "Maison", "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+names <- paste0(get_labels(names$house), collapse=", ")
 
 #####Trend plot#####
 
@@ -350,6 +352,10 @@ Bosak_draws <- tidybayes::spread_draws(Bosak_fit, xi[term]) %>%
   mutate(over_50 = xi - 50,
          over_50 = sum(over_50 > 0) / length(over_50))
 
+Duda.Trzaskowski.diff <- Duda_draws$xi - Trzaskowski_draws$xi
+Duda.Trzaskowski.diff <- sum(Duda.Trzaskowski.diff > 0) / length(Duda.Trzaskowski.diff)
+Duda.Trzaskowski.diff <- round(Duda.Trzaskowski.diff, 2)
+
 plot_latest <- rbind(Duda_draws, Trzaskowski_draws, Hołownia_draws, `Kosiniak-Kamysz_draws`, Biedroń_draws, Bosak_draws)
 
 plot_latest$candidate <- fct_reorder(plot_latest$candidate, plot_latest$xi, .fun=median, .desc=TRUE)
@@ -359,14 +365,18 @@ plot_latest_r1 <- ggplot(plot_latest) +
   stat_slabh(aes(y=reorder(candidate, desc(candidate)), x=xi, fill=candidate), normalize="xy") +
   scale_y_discrete(name="") +
   scale_fill_manual(name="", values=cols, guide=FALSE) +
-  annotate(geom = "text", label=paste("Probability of Duda winning:", 
-                                      round(mean(plot_latest$over_50[plot_latest$candidate=="Duda"]),2)), 
-           y=5.8, x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), 
-           size=3.75, family="Roboto Condensed") +
-  annotate(geom = "text", label=paste("Probability of Trzaskowski winning:", 
+  annotate(geom = "text", label=paste("Probability of first-round win:", 
+                                      round(median(plot_latest$over_50[plot_latest$candidate=="Duda"]),2)), 
+           y="Duda", x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), 
+           size=3.75, family="Roboto Condensed Light", vjust=1.4) +
+  annotate(geom = "text", label=paste("Probability Duda leads Trzaskowski:", 
+                                      round(median(Duda.Trzaskowski.diff),2)), 
+           y="Duda", x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), 
+           size=3.75, family="Roboto Condensed Light", vjust=3) +
+  annotate(geom = "text", label=paste("Probability of first-round win:", 
                                       round(median(plot_latest$over_50[plot_latest$candidate=="Trzaskowski"]),2)), 
-           y=4.8, x=median(plot_latest$xi[plot_latest$candidate=="Trzaskowski"]), 
-           size=3.75, family="Roboto Condensed") +
+           y="Trzaskowski", x=median(plot_latest$xi[plot_latest$candidate=="Trzaskowski"]), 
+           size=3.75, family="Roboto Condensed Light", vjust=1.4) +
   annotate(geom = "text", label=paste(round(median(plot_latest$xi[plot_latest$candidate=="Duda"]),0)), 
            y="Duda", x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
@@ -407,11 +417,11 @@ polls$endDate <- as.Date(polls$endDate)
 polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + difftime(endDate, startDate)),
-         Duda = 100/((100-polls$DK))*polls$Duda,
+         Duda = 100/((100-DK))*Duda,
          Duda_se = Duda * (100 - Duda) / sampleSize,
-         Trzaskowski = 100/((100-polls$DK))*polls$Trzaskowski,
+         Trzaskowski = 100/((100-DK))*Trzaskowski,
          Trzaskowski_se = Trzaskowski * (100 - Trzaskowski) / sampleSize,
-         time = as.integer(difftime(midDate, START_DATE, units = "days")) + 1L,
+         time = as.integer(difftime(midDate, min(midDate)-1, units = "days")) + 1L,
          pollster = as.integer(factor(org)))
 
 START_DATE <- min(polls$midDate)-1
@@ -507,6 +517,13 @@ Trzaskowski_data <- within(list(), {
 Trzaskowski_fit <- stan(model, data = Trzaskowski_data, pars="xi",
                         iter = 10000, chains = 4, control = list(adapt_delta=0.99))
 
+names <- data.frame(as.factor(get_labels(polls$org)))
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
+names$house <- as.factor(names$house)
+names$house <- fct_recode(names$house, "Maison & Partners" = "Maison", "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+names <- paste0(get_labels(names$house), collapse=", ")
+
 #####Trend plot#####
 Trzaskowski_draws <- tidybayes::spread_draws(Trzaskowski_fit, xi[term]) %>%
   mutate(time = as.Date(term, origin=START_DATE),
@@ -564,12 +581,12 @@ plot_latest_r2 <- ggplot(plot_latest) +
   scale_fill_manual(name="", values=cols, guide=FALSE) +
   annotate(geom = "text", label=paste("Probability of Duda winning:", 
                                       round(mean(plot_latest$over_50[plot_latest$candidate=="Duda"]),2)), 
-           y=1.8, x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), 
-           size=3.75, family="Roboto Condensed") +
+           y="Duda", x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), 
+           size=3.75, family="Roboto Condensed Light", vjust=1.4) +
   annotate(geom = "text", label=paste("Probability of Trzaskowski winning:", 
                                       round(mean(plot_latest$over_50[plot_latest$candidate=="Trzaskowski"]),2)), 
-           y=0.8, x=median(plot_latest$xi[plot_latest$candidate=="Trzaskowski"]), 
-           size=3.75, family="Roboto Condensed") +
+           y="Trzaskowski", x=median(plot_latest$xi[plot_latest$candidate=="Trzaskowski"]), 
+           size=3.75, family="Roboto Condensed Light", vjust=1.4) +
   annotate(geom = "text", label=paste(round(median(plot_latest$xi[plot_latest$candidate=="Duda"]),0)), 
            y="Duda", x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
