@@ -219,8 +219,9 @@ cols <- c("PiS"="blue4", "KO"="orange", "PSL-Kukiz"="darkgreen", "Konfederacja" 
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
 names$house <- as.factor(names$house)
-names$house <- fct_recode(names$house, "Maison & Partners" = "Maison")
-names <- paste0(names$house, collapse=", ")
+housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+names <- paste0(get_labels(housenames), collapse=", ")
 
 
 #####Trend plot#####
