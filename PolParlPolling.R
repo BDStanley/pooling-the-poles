@@ -18,7 +18,7 @@ library("xtable")
 
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
-    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.0.0") {
+    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.0.2") {
   parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
 }
 
@@ -308,7 +308,7 @@ Konfederacja_draws <- tidybayes::spread_draws(Konfederacja_fit, xi[term]) %>%
 
 PiS.KO.diff <- PiS_draws$xi - KO_draws$xi
 PiS.KO.diff <- sum(PiS.KO.diff > 0) / length(PiS.KO.diff)
-PiS.KO.diff <- round(PiS.KO.diff.out, 2)
+PiS.KO.diff <- round(PiS.KO.diff, 2)
 
 plot_latest <- rbind(PiS_draws, KO_draws, `PSL-Kukiz_draws`, Lewica_draws, Konfederacja_draws)
 

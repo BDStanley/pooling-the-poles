@@ -12,7 +12,7 @@ library("tidybayes")
 
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
-    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.0.0") {
+    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.0.2") {
   parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
 }
 
@@ -43,11 +43,11 @@ polls <-
          Biedroń_se = Biedroń * (100 - Biedroń) / sampleSize,
          Other = 100/((100-DK))*Other,
          Other_se = Other * (100 - Other) / sampleSize,
-         time = as.integer(difftime(midDate, min(midDate)-1, units = "days")) + 1L,
+         time = as.integer(difftime(midDate, min(midDate)-1, units = "days")) +1L,
          pollster = as.integer(factor(org)))
 
 START_DATE <- min(polls$midDate)-1
-END_DATE <- max(polls$midDate)
+END_DATE <- max(polls$midDate) 
 
 
 write("data {
