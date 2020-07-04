@@ -668,5 +668,42 @@ print(xtable(seattable, type = "latex", digits=0, align=c("l","l","c","c","c","c
       include.rownames=FALSE, file='seat_table.tex')
 
 
+PiS_house <- tidybayes::spread_draws(PiS_fit, delta[term]) %>%
+  mutate(party="PiS")
+KO_house <- tidybayes::spread_draws(KO_fit, delta[term]) %>%
+  mutate(party="KO")
+`PSL-Kukiz_house` <- tidybayes::spread_draws(`PSL-Kukiz_fit`, delta[term]) %>%
+  mutate(party="PSL-Kukiz")
+Lewica_house <- tidybayes::spread_draws(Lewica_fit, delta[term]) %>%
+  mutate(party="Lewica")
+Konfederacja_house <- tidybayes::spread_draws(Konfederacja_fit, delta[term]) %>%
+  mutate(party="Konfederacja")
+
+houselevels <- get_labels(droplevels(polls$org))
+
+houseeff <- bind_rows(PiS_house, KO_house, `PSL-Kukiz_house`, Lewica_house, Konfederacja_house) %>%
+  mutate(house = as_factor(term)) %>%
+  set_labels(house, labels=houselevels) %>%
+  group_by(house, party) %>%
+  ggplot(aes(x = party, y = delta, color=house)) +
+  stat_pointinterval(position = position_dodge(width = .7)) +
+  scale_size_continuous(guide=FALSE) 
+
+p_house <- bind_rows(PiS_house, KO_house, `PSL-Kukiz_house`, Lewica_house, Konfederacja_house) %>%
+  mutate(house = factor(term, levels=c(1:max(.$term)), labels=houselevels)) %>%
+  separate(., house, c("house", "method"), sep="_") %>%
+  group_by(house, method, party) %>%
+  ggplot(aes(x = party, y = delta, color=house, shape=method)) +
+  geom_abline(intercept=0, slope=0, colour="gray10", linetype=3) +
+  stat_pointinterval(position = position_dodge(width = .7)) +
+  labs(color="Pollster", shape="Mode", x="", y="Deviation from mean party vote share (percent)", 
+       title="House and mode effects for national election polls - all parties", 
+       caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc() 
+ggsave(p_house, file = "p_house.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+
+
 #####Save image out#####
 save.image("~/Desktop/Personal/PoolingthePoles.RData")

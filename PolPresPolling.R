@@ -16,6 +16,207 @@ if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) &&
   parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
 }
 
+#####Second round: Duda/Trzaskowski#####
+import <- drive_download(as_id("https://drive.google.com/file/d/1MYtcJEZ4ougvrpCqFj5TkLtVT9UfOm7M/view?usp=sharing"), overwrite=TRUE)
+1
+polls <- read_excel('pooledpolls_pres_r2_new.xlsx')
+
+polls <- unite(polls, org, remark, col="org", sep="_")
+polls$org <-as.factor(polls$org)
+
+polls$startDate <- as.Date(polls$startDate)
+polls$endDate <- as.Date(polls$endDate)
+
+polls <-
+  polls %>%
+  mutate(midDate = as.Date(startDate + (difftime(endDate, startDate)/2)),
+         Duda = 100/((100-DK))*Duda,
+         Duda_se = Duda * (100 - Duda) / sampleSize,
+         Trzaskowski = 100/((100-DK))*Trzaskowski,
+         Trzaskowski_se = Trzaskowski * (100 - Trzaskowski) / sampleSize,
+         time = as.integer(difftime(midDate, min(midDate)-1, units = "days")) + 1L,
+         pollster = as.integer(factor(org)))
+
+START_DATE <- min(polls$midDate)-1
+END_DATE <- max(polls$midDate)
+
+write("data {
+          int N;
+          int T;
+          vector[N] y;
+          vector[N] s;
+          int time[N];
+          int H;
+          int house[N];
+          // initial and final values
+          real xi_init;
+          real xi_final;
+          real delta_loc;
+          real zeta_scale;
+          real tau_scale;
+        }
+        parameters {
+          vector[T - 1] omega;
+          real tau;
+          vector[H] delta_raw;
+          real zeta;
+        }
+        transformed parameters {
+          vector[H] delta;
+          vector[T - 1] xi;
+          vector[N] mu;
+          // this is necessary. If not centered the model is unidentified
+          delta = (delta_raw - mean(delta_raw)) / sd(delta_raw) * zeta;
+          xi[1] = xi_init;
+          for (i in 2:(T - 1)) {
+            xi[i] = xi[i - 1] + tau * omega[i - 1];
+          }
+          for (i in 1:N) {
+            mu[i] = xi[time[i]] + delta[house[i]];
+          }
+        }
+        model {
+          // house effects
+          delta_raw ~ normal(0., 1.);
+          zeta ~ normal(0., zeta_scale);
+          // latent state innovations
+          omega ~ normal(0., 1.);
+          // scale of innovations
+          tau ~ cauchy(0, tau_scale);
+          // final known effect
+          xi_final ~ normal(xi[T - 1], tau);
+          // daily polls
+          y ~ normal(mu, s);
+        }",
+      "polls.stan")
+
+model <- "polls.stan"
+
+#####Duda#####
+Duda_data <- within(list(), {
+  y <- polls$Duda
+  s <- polls$Duda_se
+  time <- polls$time
+  house <- polls$pollster
+  H <- max(polls$pollster)
+  N <- length(y)
+  T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
+  xi_init <- head(polls$Duda, 1)
+  xi_final <- tail(polls$Duda, 1)
+  delta_loc <- 0
+  tau_scale <- sd(y)
+  zeta_scale <- 5
+})
+
+Duda_fit <- stan(model, data = Duda_data, iter=10000,
+                 chains = 4, control = list(adapt_delta=0.99))
+
+#####Trzaskowski#####
+Trzaskowski_data <- within(list(), {
+  y <- polls$Trzaskowski
+  s <- polls$Trzaskowski_se
+  time <- polls$time
+  house <- polls$pollster
+  H <- max(polls$pollster)
+  N <- length(y)
+  T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) + 1
+  xi_init <- head(polls$Trzaskowski, 1)
+  xi_final <- tail(polls$Trzaskowski, 1)
+  delta_loc <- 0
+  tau_scale <- sd(y)
+  zeta_scale <- 5
+})
+
+Trzaskowski_fit <- stan(model, data = Trzaskowski_data, pars="xi",
+                        iter = 10000, chains = 4, control = list(adapt_delta=0.99))
+
+cols <- c("Duda"="blue4", "Trzaskowski"="orange")
+
+names <- data.frame(as.factor(get_labels(polls$org)))
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
+names$house <- as.factor(names$house)
+names$house <- fct_recode(names$house, "Maison & Partners" = "Maison", "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+names <- paste0(get_labels(names$house), collapse=", ")
+
+#####Trend plot#####
+Trzaskowski_draws <- tidybayes::spread_draws(Trzaskowski_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "Trzaskowski")
+
+Duda_draws <- tidybayes::spread_draws(Duda_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "Duda")
+
+plot_trends <- rbind(Duda_draws, Trzaskowski_draws)
+
+plot_trends$candidate <- fct_reorder(plot_trends$candidate, plot_trends$xi, .fun=median, .desc=TRUE)
+
+plot_points <- polls %>%
+  pivot_longer(c(Duda, Trzaskowski), names_to="candidate", values_to="percent") 
+
+plot_points$candidate <- fct_reorder(plot_points$candidate, plot_points$percent, .fun=median, .desc=TRUE)
+
+plot_trends_r2 <- ggplot(plot_trends) +
+  stat_lineribbon(aes(x = time, y = xi, color=candidate, fill=candidate), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+  geom_point(data=plot_points, aes(x = midDate, y = percent, color=candidate), alpha = 1, size = 2, show.legend = FALSE) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  labs(y = "% of vote", x="", title = "Polish presidential elections, round 2: trends", 
+       subtitle=str_c("Data from ", names), color="", caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  guides(colour = guide_legend(override.aes = list(alpha = 1)))
+ggsave(plot_trends_r2, file = "plot_trends_r2.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+
+#####Latest plot#####
+Trzaskowski_draws <- tidybayes::spread_draws(Trzaskowski_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "Trzaskowski") %>%
+  filter(., time==END_DATE) %>%
+  mutate(over_50 = xi - 50,
+         over_50 = sum(over_50 > 0) / length(over_50))
+
+Duda_draws <- tidybayes::spread_draws(Duda_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "Duda") %>%
+  filter(., time==END_DATE) %>%
+  mutate(over_50 = xi - 50,
+         over_50 = sum(over_50 > 0) / length(over_50))
+
+plot_latest <- rbind(Duda_draws, Trzaskowski_draws)
+
+plot_latest$candidate <- fct_reorder(plot_latest$candidate, plot_latest$xi, .fun=median, .desc=TRUE)
+
+plot_latest_r2 <- ggplot(plot_latest) +
+  geom_vline(aes(xintercept=50), colour="gray60", linetype="dotted") +
+  stat_slabh(aes(y=reorder(candidate, desc(candidate)), x=xi, fill=candidate), normalize="xy") +
+  scale_y_discrete(name="") +
+  scale_fill_manual(name="", values=cols, guide=FALSE) +
+  annotate(geom = "text", label=paste("Probability of Duda winning:", 
+                                      round(mean(plot_latest$over_50[plot_latest$candidate=="Duda"]),2)), 
+           y="Duda", x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), 
+           size=3.75, family="Roboto Condensed Light", vjust=1.4) +
+  annotate(geom = "text", label=paste("Probability of Trzaskowski winning:", 
+                                      round(mean(plot_latest$over_50[plot_latest$candidate=="Trzaskowski"]),2)), 
+           y="Trzaskowski", x=median(plot_latest$xi[plot_latest$candidate=="Trzaskowski"]), 
+           size=3.75, family="Roboto Condensed Light", vjust=1.4) +
+  annotate(geom = "text", label=paste(round(median(plot_latest$xi[plot_latest$candidate=="Duda"]),1)), 
+           y="Duda", x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(median(plot_latest$xi[plot_latest$candidate=="Trzaskowski"]),1)), 
+           y="Trzaskowski", x=median(plot_latest$xi[plot_latest$candidate=="Trzaskowski"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  labs(x = "% of vote", y="", title = "Polish presidential elections, round 2: latest estimates", 
+       subtitle=str_c("Data from ", names), color="", caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc()
+ggsave(plot_latest_r2, file = "plot_latest_r2.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+
+
+####First round####
 import <- drive_download(as_id("https://drive.google.com/file/d/1jgkmVxkddCV-ERanROEZeZA0FM_xvnTj/view?usp=sharing"), overwrite=TRUE)
 1
 polls <- read_excel('pooledpolls_pres_r1_new.xlsx')
@@ -33,8 +234,8 @@ polls <-
          Duda_se = Duda * (100 - Duda) / sampleSize,
          Trzaskowski = 100/((100-DK))*Trzaskowski,
          Trzaskowski_se = Trzaskowski * (100 - Trzaskowski) / sampleSize,
-        `Kosiniak-Kamysz` = 100/((100-DK))*`Kosiniak-Kamysz`,
-        `Kosiniak-Kamysz_se` = `Kosiniak-Kamysz` * (100 - `Kosiniak-Kamysz`) / sampleSize,
+         `Kosiniak-Kamysz` = 100/((100-DK))*`Kosiniak-Kamysz`,
+         `Kosiniak-Kamysz_se` = `Kosiniak-Kamysz` * (100 - `Kosiniak-Kamysz`) / sampleSize,
          Hołownia = 100/((100-DK))*Hołownia,
          Hołownia_se = Hołownia * (100 - Hołownia) / sampleSize,
          Bosak = 100/((100-DK))*Bosak,
@@ -98,7 +299,7 @@ write("data {
           // daily polls
           y ~ normal(mu, s);
         }",
-        "polls.stan")
+      "polls.stan")
 
 model <- "polls.stan"
 
@@ -118,10 +319,10 @@ Duda_data <- within(list(), {
   tau_scale <- sd(y)
   zeta_scale <- 5
 })
-  
+
 
 Duda_fit <- stan(model, data = Duda_data, iter=4000,
-                     chains = 4, control = list(adapt_delta=0.99))
+                 chains = 4, control = list(adapt_delta=0.99))
 
 #####Trzaskowski#####
 Trzaskowski_data <- within(list(), {
@@ -278,7 +479,7 @@ plot_trends$candidate <- fct_reorder(plot_trends$candidate, plot_trends$xi, .fun
 
 plot_points <- polls %>%
   pivot_longer(c(Duda, Trzaskowski, Biedroń, `Kosiniak-Kamysz`, Bosak, Hołownia), names_to="candidate", values_to="percent") 
-  
+
 plot_points$candidate <- fct_reorder(plot_points$candidate, plot_points$percent, .fun=median, .desc=TRUE)
 
 plot_trends_facet_r1 <- ggplot(plot_trends) +
@@ -319,7 +520,7 @@ Trzaskowski_draws <- tidybayes::spread_draws(Trzaskowski_fit, xi[term]) %>%
 
 Duda_draws <- tidybayes::spread_draws(Duda_fit, xi[term]) %>%
   mutate(time = as.Date(term, origin=START_DATE),
-        candidate = "Duda") %>%
+         candidate = "Duda") %>%
   filter(., time==END_DATE) %>%
   mutate(over_50 = xi - 50,
          over_50 = sum(over_50 > 0) / length(over_50))
@@ -395,7 +596,31 @@ plot_latest_r1 <- ggplot(plot_latest) +
   annotate(geom = "text", label=paste(round(median(plot_latest$xi[plot_latest$candidate=="Biedroń"]),0)), 
            y="Biedroń", x=median(plot_latest$xi[plot_latest$candidate=="Biedroń"]), size=4, hjust = "center", vjust=-1, 
            family="Roboto Condensed", color="white") +
-  labs(x = "% of vote", y="", title = "Polish presidential elections, round 1: latest estimates", 
+  geom_segment(aes(x = 43.5, y = "Duda", xend = 43.5, yend = 7), colour = "black", linetype="dotted")+
+  geom_segment(aes(x = 30.46, y = "Trzaskowski", xend = 30.46, yend = 6), colour = "black", linetype="dotted")+
+  geom_segment(aes(x = 13.87, y = "Hołownia", xend = 13.87, yend = 5), colour = "black", linetype="dotted")+
+  geom_segment(aes(x = 6.78, y = "Bosak", xend = 6.78, yend = 4), colour = "grey30", linetype="dotted")+
+  geom_segment(aes(x = 2.36, y = "Kosiniak-Kamysz", xend = 2.36, yend = 3), colour = "black", linetype="dotted")+
+  geom_segment(aes(x = 2.22, y = "Biedroń", xend = 2.22, yend = 2), colour = "black", linetype="dotted")+
+  annotate(geom = "text", label="43.5", size=4,
+           y=6.6, x=43.5, hjust = -0.1, 
+           family="Roboto Condensed", color="black") +
+  annotate(geom = "text", label="30.46", size=4,
+           y=5.6, x=30.46, hjust = -0.1, 
+           family="Roboto Condensed", color="black") +
+  annotate(geom = "text", label="13.87", size=4,
+           y=4.5, x=13.87, hjust = -0.1, 
+           family="Roboto Condensed", color="black") +
+  annotate(geom = "text", label="6.78", size=4,
+           y=3.7, x=6.78, hjust = 1.2, 
+           family="Roboto Condensed", color="black") +
+  annotate(geom = "text", label="2.36", size=4,
+           y=2.5, x=2.36, hjust = 1.2, 
+           family="Roboto Condensed", color="black") +
+  annotate(geom = "text", label="2.22", size=4,
+           y=1.5, x=2.22, hjust = 1.2, 
+           family="Roboto Condensed", color="black") +
+  labs(x = "% of vote", y="", title = "Polish presidential elections, round 1", 
        subtitle=str_c("Data from ", names), color="", caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
   theme_ipsum_rc()
@@ -409,398 +634,3 @@ Holownia_est <- Hołownia_draws %>%
 cand_diff <- `Kosiniak-Kamysz_draws`$xi - Biedroń_draws$xi
 cand_diff <- sum(cand_diff > 0) / length(cand_diff)
 cand_diff <- round(cand_diff, 2)
-
-#####Second round: Duda/Trzaskowski#####
-import <- drive_download(as_id("https://drive.google.com/file/d/1MYtcJEZ4ougvrpCqFj5TkLtVT9UfOm7M/view?usp=sharing"), overwrite=TRUE)
-1
-polls <- read_excel('pooledpolls_pres_r2_new.xlsx')
-
-polls <- unite(polls, org, remark, col="org", sep="_")
-polls$org <-as.factor(polls$org)
-
-polls$startDate <- as.Date(polls$startDate)
-polls$endDate <- as.Date(polls$endDate)
-
-polls <-
-  polls %>%
-  mutate(midDate = as.Date(startDate + (difftime(endDate, startDate)/2)),
-         Duda = 100/((100-DK))*Duda,
-         Duda_se = Duda * (100 - Duda) / sampleSize,
-         Trzaskowski = 100/((100-DK))*Trzaskowski,
-         Trzaskowski_se = Trzaskowski * (100 - Trzaskowski) / sampleSize,
-         time = as.integer(difftime(midDate, min(midDate)-1, units = "days")) + 1L,
-         pollster = as.integer(factor(org)))
-
-START_DATE <- min(polls$midDate)-1
-END_DATE <- max(polls$midDate)
-
-write("data {
-          int N;
-          int T;
-          vector[N] y;
-          vector[N] s;
-          int time[N];
-          int H;
-          int house[N];
-          // initial and final values
-          real xi_init;
-          real xi_final;
-          real delta_loc;
-          real zeta_scale;
-          real tau_scale;
-        }
-        parameters {
-          vector[T - 1] omega;
-          real tau;
-          vector[H] delta_raw;
-          real zeta;
-        }
-        transformed parameters {
-          vector[H] delta;
-          vector[T - 1] xi;
-          vector[N] mu;
-          // this is necessary. If not centered the model is unidentified
-          delta = (delta_raw - mean(delta_raw)) / sd(delta_raw) * zeta;
-          xi[1] = xi_init;
-          for (i in 2:(T - 1)) {
-            xi[i] = xi[i - 1] + tau * omega[i - 1];
-          }
-          for (i in 1:N) {
-            mu[i] = xi[time[i]] + delta[house[i]];
-          }
-        }
-        model {
-          // house effects
-          delta_raw ~ normal(0., 1.);
-          zeta ~ normal(0., zeta_scale);
-          // latent state innovations
-          omega ~ normal(0., 1.);
-          // scale of innovations
-          tau ~ cauchy(0, tau_scale);
-          // final known effect
-          xi_final ~ normal(xi[T - 1], tau);
-          // daily polls
-          y ~ normal(mu, s);
-        }",
-      "polls.stan")
-
-model <- "polls.stan"
-
-#####Duda#####
-Duda_data <- within(list(), {
-  y <- polls$Duda
-  s <- polls$Duda_se
-  time <- polls$time
-  house <- polls$pollster
-  H <- max(polls$pollster)
-  N <- length(y)
-  T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- head(polls$Duda, 1)
-  xi_final <- tail(polls$Duda, 1)
-  delta_loc <- 0
-  tau_scale <- sd(y)
-  zeta_scale <- 5
-})
-
-Duda_fit <- stan(model, data = Duda_data, iter=10000,
-                 chains = 4, control = list(adapt_delta=0.99))
-
-#####Trzaskowski#####
-Trzaskowski_data <- within(list(), {
-  y <- polls$Trzaskowski
-  s <- polls$Trzaskowski_se
-  time <- polls$time
-  house <- polls$pollster
-  H <- max(polls$pollster)
-  N <- length(y)
-  T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) + 1
-  xi_init <- head(polls$Trzaskowski, 1)
-  xi_final <- tail(polls$Trzaskowski, 1)
-  delta_loc <- 0
-  tau_scale <- sd(y)
-  zeta_scale <- 5
-})
-
-Trzaskowski_fit <- stan(model, data = Trzaskowski_data, pars="xi",
-                        iter = 10000, chains = 4, control = list(adapt_delta=0.99))
-
-names <- data.frame(as.factor(get_labels(polls$org)))
-names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
-names$house <- as.factor(names$house)
-names$house <- fct_recode(names$house, "Maison & Partners" = "Maison", "Kantar" = "Kantar") %>%
-  fct_collapse(., Kantar=c("Kantar"))
-names <- paste0(get_labels(names$house), collapse=", ")
-
-#####Trend plot#####
-Trzaskowski_draws <- tidybayes::spread_draws(Trzaskowski_fit, xi[term]) %>%
-  mutate(time = as.Date(term, origin=START_DATE),
-         candidate = "Trzaskowski")
-
-Duda_draws <- tidybayes::spread_draws(Duda_fit, xi[term]) %>%
-  mutate(time = as.Date(term, origin=START_DATE),
-         candidate = "Duda")
-
-plot_trends <- rbind(Duda_draws, Trzaskowski_draws)
-
-plot_trends$candidate <- fct_reorder(plot_trends$candidate, plot_trends$xi, .fun=median, .desc=TRUE)
-
-plot_points <- polls %>%
-  pivot_longer(c(Duda, Trzaskowski), names_to="candidate", values_to="percent") 
-
-plot_points$candidate <- fct_reorder(plot_points$candidate, plot_points$percent, .fun=median, .desc=TRUE)
-
-plot_trends_r2 <- ggplot(plot_trends) +
-  stat_lineribbon(aes(x = time, y = xi, color=candidate, fill=candidate), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
-  geom_point(data=plot_points, aes(x = midDate, y = percent, color=candidate), alpha = 1, size = 2, show.legend = FALSE) +
-  scale_color_manual(values=cols) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  labs(y = "% of vote", x="", title = "Polish presidential elections, round 2: trends", 
-       subtitle=str_c("Data from ", names), color="", caption = "@BDStanley; benstanley.org") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1)))
-ggsave(plot_trends_r2, file = "plot_trends_r2.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
-
-#####Latest plot#####
-Trzaskowski_draws <- tidybayes::spread_draws(Trzaskowski_fit, xi[term]) %>%
-  mutate(time = as.Date(term, origin=START_DATE),
-         candidate = "Trzaskowski") %>%
-  filter(., time==END_DATE) %>%
-  mutate(over_50 = xi - 50,
-         over_50 = sum(over_50 > 0) / length(over_50))
-
-Duda_draws <- tidybayes::spread_draws(Duda_fit, xi[term]) %>%
-  mutate(time = as.Date(term, origin=START_DATE),
-         candidate = "Duda") %>%
-  filter(., time==END_DATE) %>%
-  mutate(over_50 = xi - 50,
-         over_50 = sum(over_50 > 0) / length(over_50))
-
-plot_latest <- rbind(Duda_draws, Trzaskowski_draws)
-
-plot_latest$candidate <- fct_reorder(plot_latest$candidate, plot_latest$xi, .fun=median, .desc=TRUE)
-
-plot_latest_r2 <- ggplot(plot_latest) +
-  geom_vline(aes(xintercept=50), colour="gray60", linetype="dotted") +
-  stat_slabh(aes(y=reorder(candidate, desc(candidate)), x=xi, fill=candidate), normalize="xy") +
-  scale_y_discrete(name="") +
-  scale_fill_manual(name="", values=cols, guide=FALSE) +
-  annotate(geom = "text", label=paste("Probability of Duda winning:", 
-                                      round(mean(plot_latest$over_50[plot_latest$candidate=="Duda"]),2)), 
-           y="Duda", x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), 
-           size=3.75, family="Roboto Condensed Light", vjust=1.4) +
-  annotate(geom = "text", label=paste("Probability of Trzaskowski winning:", 
-                                      round(mean(plot_latest$over_50[plot_latest$candidate=="Trzaskowski"]),2)), 
-           y="Trzaskowski", x=median(plot_latest$xi[plot_latest$candidate=="Trzaskowski"]), 
-           size=3.75, family="Roboto Condensed Light", vjust=1.4) +
-  annotate(geom = "text", label=paste(round(median(plot_latest$xi[plot_latest$candidate=="Duda"]),0)), 
-           y="Duda", x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), size=4, hjust = "center", vjust=-1, 
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(median(plot_latest$xi[plot_latest$candidate=="Trzaskowski"]),0)), 
-           y="Trzaskowski", x=median(plot_latest$xi[plot_latest$candidate=="Trzaskowski"]), size=4, hjust = "center", vjust=-1, 
-           family="Roboto Condensed", color="white") +
-  labs(x = "% of vote", y="", title = "Polish presidential elections, round 2: latest estimates", 
-       subtitle=str_c("Data from ", names), color="", caption = "@BDStanley; benstanley.org") +
-  theme_minimal() +
-  theme_ipsum_rc()
-ggsave(plot_latest_r2, file = "plot_latest_r2.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
-
-
-#####Second round: Duda/Hołownia#####
-import <- drive_download(as_id("https://drive.google.com/file/d/141lnaXXqAbAugDtyWmnv3kgXgHeRI2MY/view?usp=sharing"), overwrite=TRUE)
-1
-polls <- read_excel('pooledpolls_pres_r2_new_SH.xlsx')
-
-polls <- unite(polls, org, remark, col="org", sep="_")
-polls$org <-as.factor(polls$org)
-
-polls$startDate <- as.Date(polls$startDate)
-polls$endDate <- as.Date(polls$endDate)
-
-polls <-
-  polls %>%
-  mutate(midDate = as.Date(startDate + (difftime(endDate, startDate)/2)),
-         Duda = 100/((100-DK))*Duda,
-         Duda_se = Duda * (100 - Duda) / sampleSize,
-         Hołownia = 100/((100-DK))*Hołownia,
-         Hołownia_se = Hołownia * (100 - Hołownia) / sampleSize,
-         time = as.integer(difftime(midDate, min(midDate)-1, units = "days")) + 1L,
-         pollster = as.integer(factor(org)))
-
-START_DATE <- min(polls$midDate)-1
-END_DATE <- max(polls$midDate)
-
-write("data {
-          int N;
-          int T;
-          vector[N] y;
-          vector[N] s;
-          int time[N];
-          int H;
-          int house[N];
-          // initial and final values
-          real xi_init;
-          real xi_final;
-          real delta_loc;
-          real zeta_scale;
-          real tau_scale;
-        }
-        parameters {
-          vector[T - 1] omega;
-          real tau;
-          vector[H] delta_raw;
-          real zeta;
-        }
-        transformed parameters {
-          vector[H] delta;
-          vector[T - 1] xi;
-          vector[N] mu;
-          // this is necessary. If not centered the model is unidentified
-          delta = (delta_raw - mean(delta_raw)) / sd(delta_raw) * zeta;
-          xi[1] = xi_init;
-          for (i in 2:(T - 1)) {
-            xi[i] = xi[i - 1] + tau * omega[i - 1];
-          }
-          for (i in 1:N) {
-            mu[i] = xi[time[i]] + delta[house[i]];
-          }
-        }
-        model {
-          // house effects
-          delta_raw ~ normal(0., 1.);
-          zeta ~ normal(0., zeta_scale);
-          // latent state innovations
-          omega ~ normal(0., 1.);
-          // scale of innovations
-          tau ~ cauchy(0, tau_scale);
-          // final known effect
-          xi_final ~ normal(xi[T - 1], tau);
-          // daily polls
-          y ~ normal(mu, s);
-        }",
-      "polls.stan")
-
-model <- "polls.stan"
-
-#####Duda#####
-Duda_data <- within(list(), {
-  y <- polls$Duda
-  s <- polls$Duda_se
-  time <- polls$time
-  house <- polls$pollster
-  H <- max(polls$pollster)
-  N <- length(y)
-  T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- head(polls$Duda, 1)
-  xi_final <- tail(polls$Duda, 1)
-  delta_loc <- 0
-  tau_scale <- sd(y)
-  zeta_scale <- 5
-})
-
-Duda_fit <- stan(model, data = Duda_data, iter=10000,
-                 chains = 4, control = list(adapt_delta=0.99))
-
-#####Hołownia#####
-Hołownia_data <- within(list(), {
-  y <- polls$Hołownia
-  s <- polls$Hołownia_se
-  time <- polls$time
-  house <- polls$pollster
-  H <- max(polls$pollster)
-  N <- length(y)
-  T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) + 1
-  xi_init <- head(polls$Hołownia, 1)
-  xi_final <- tail(polls$Hołownia, 1)
-  delta_loc <- 0
-  tau_scale <- sd(y)
-  zeta_scale <- 5
-})
-
-Hołownia_fit <- stan(model, data = Hołownia_data, pars="xi",
-                        iter = 10000, chains = 4, control = list(adapt_delta=0.99))
-
-names <- data.frame(as.factor(get_labels(polls$org)))
-names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
-names$house <- as.factor(names$house)
-names$house <- fct_recode(names$house, "Maison & Partners" = "Maison", "Kantar" = "Kantar") %>%
-  fct_collapse(., Kantar=c("Kantar"))
-names <- paste0(get_labels(names$house), collapse=", ")
-
-#####Trend plot#####
-Hołownia_draws <- tidybayes::spread_draws(Hołownia_fit, xi[term]) %>%
-  mutate(time = as.Date(term, origin=START_DATE),
-         candidate = "Hołownia")
-
-Duda_draws <- tidybayes::spread_draws(Duda_fit, xi[term]) %>%
-  mutate(time = as.Date(term, origin=START_DATE),
-         candidate = "Duda")
-
-plot_trends <- rbind(Duda_draws, Hołownia_draws)
-
-plot_trends$candidate <- fct_reorder(plot_trends$candidate, plot_trends$xi, .fun=median, .desc=TRUE)
-
-plot_points <- polls %>%
-  pivot_longer(c(Duda, Hołownia), names_to="candidate", values_to="percent") 
-
-plot_points$candidate <- fct_reorder(plot_points$candidate, plot_points$percent, .fun=median, .desc=TRUE)
-
-plot_trends_r2 <- ggplot(plot_trends) +
-  stat_lineribbon(aes(x = time, y = xi, color=candidate, fill=candidate), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
-  geom_point(data=plot_points, aes(x = midDate, y = percent, color=candidate), alpha = 1, size = 2, show.legend = FALSE) +
-  scale_color_manual(values=cols) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  labs(y = "% of vote", x="", title = "Polish presidential elections, round 2: trends", 
-       subtitle=str_c("Data from ", names), color="", caption = "@BDStanley; benstanley.org") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1)))
-ggsave(plot_trends_r2, file = "plot_trends_r2_SH.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
-
-#####Latest plot#####
-Hołownia_draws <- tidybayes::spread_draws(Hołownia_fit, xi[term]) %>%
-  mutate(time = as.Date(term, origin=START_DATE),
-         candidate = "Hołownia") %>%
-  filter(., time==END_DATE) %>%
-  mutate(over_50 = xi - 50,
-         over_50 = sum(over_50 > 0) / length(over_50))
-
-Duda_draws <- tidybayes::spread_draws(Duda_fit, xi[term]) %>%
-  mutate(time = as.Date(term, origin=START_DATE),
-         candidate = "Duda") %>%
-  filter(., time==END_DATE) %>%
-  mutate(over_50 = xi - 50,
-         over_50 = sum(over_50 > 0) / length(over_50))
-
-plot_latest <- rbind(Duda_draws, Hołownia_draws)
-
-plot_latest$candidate <- fct_reorder(plot_latest$candidate, plot_latest$xi, .fun=median, .desc=TRUE)
-
-plot_latest_r2 <- ggplot(plot_latest) +
-  geom_vline(aes(xintercept=50), colour="gray60", linetype="dotted") +
-  stat_slabh(aes(y=reorder(candidate, desc(candidate)), x=xi, fill=candidate), normalize="xy") +
-  scale_y_discrete(name="") +
-  scale_fill_manual(name="", values=cols, guide=FALSE) +
-  annotate(geom = "text", label=paste("Probability of Duda winning:", 
-                                      round(mean(plot_latest$over_50[plot_latest$candidate=="Duda"]),2)), 
-           y="Duda", x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), 
-           size=3.75, family="Roboto Condensed Light", vjust=1.4) +
-  annotate(geom = "text", label=paste("Probability of Hołownia winning:", 
-                                      round(mean(plot_latest$over_50[plot_latest$candidate=="Hołownia"]),2)), 
-           y="Hołownia", x=median(plot_latest$xi[plot_latest$candidate=="Hołownia"]), 
-           size=3.75, family="Roboto Condensed Light", vjust=1.4) +
-  annotate(geom = "text", label=paste(round(median(plot_latest$xi[plot_latest$candidate=="Duda"]),0)), 
-           y="Duda", x=median(plot_latest$xi[plot_latest$candidate=="Duda"]), size=4, hjust = "center", vjust=-1, 
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(median(plot_latest$xi[plot_latest$candidate=="Hołownia"]),0)), 
-           y="Hołownia", x=median(plot_latest$xi[plot_latest$candidate=="Hołownia"]), size=4, hjust = "center", vjust=-1, 
-           family="Roboto Condensed", color="white") +
-  labs(x = "% of vote", y="", title = "Polish presidential elections, round 2: latest estimates", 
-       subtitle=str_c("Data from ", names), color="", caption = "@BDStanley; benstanley.org") +
-  theme_minimal() +
-  theme_ipsum_rc()
-ggsave(plot_latest_r2, file = "plot_latest_r2_SH.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
