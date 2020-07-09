@@ -9,6 +9,7 @@ library("readxl")
 library("hrbrthemes")
 library("sjlabelled")
 library("tidybayes")
+library("ggrepel")
 
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
@@ -108,7 +109,7 @@ Duda_data <- within(list(), {
   zeta_scale <- 5
 })
 
-Duda_fit <- stan(model, data = Duda_data, iter=10000,
+Duda_fit <- stan(model, data = Duda_data, iter=100000,
                  chains = 4, control = list(adapt_delta=0.99))
 
 #####Trzaskowski#####
@@ -127,8 +128,8 @@ Trzaskowski_data <- within(list(), {
   zeta_scale <- 5
 })
 
-Trzaskowski_fit <- stan(model, data = Trzaskowski_data, pars="xi",
-                        iter = 10000, chains = 4, control = list(adapt_delta=0.99))
+Trzaskowski_fit <- stan(model, data = Trzaskowski_data,
+                        iter = 100000, chains = 4, control = list(adapt_delta=0.99))
 
 cols <- c("Duda"="blue4", "Trzaskowski"="orange")
 
@@ -153,13 +154,16 @@ plot_trends <- rbind(Duda_draws, Trzaskowski_draws)
 plot_trends$candidate <- fct_reorder(plot_trends$candidate, plot_trends$xi, .fun=median, .desc=TRUE)
 
 plot_points <- polls %>%
-  pivot_longer(c(Duda, Trzaskowski), names_to="candidate", values_to="percent") 
-
+  pivot_longer(c(Duda, Trzaskowski), names_to="candidate", values_to="percent") %>%
+  separate(., org, c("house", "method"), sep="_") 
+  
 plot_points$candidate <- fct_reorder(plot_points$candidate, plot_points$percent, .fun=median, .desc=TRUE)
 
 plot_trends_r2 <- ggplot(plot_trends) +
   stat_lineribbon(aes(x = time, y = xi, color=candidate, fill=candidate), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
   geom_point(data=plot_points, aes(x = midDate, y = percent, color=candidate), alpha = 1, size = 2, show.legend = FALSE) +
+  geom_text_repel(data=plot_points, aes(x = midDate, y = percent, color=candidate), label=plot_points$house,
+                   family="Roboto Condensed", size=2, show.legend = FALSE) +
   scale_color_manual(values=cols) +
   scale_fill_manual(values=cols, guide=FALSE) +
   labs(y = "% of vote", x="", title = "Polish presidential elections, round 2: trends", 
@@ -213,6 +217,29 @@ plot_latest_r2 <- ggplot(plot_latest) +
   theme_minimal() +
   theme_ipsum_rc()
 ggsave(plot_latest_r2, file = "plot_latest_r2.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+
+
+Duda_house <- tidybayes::spread_draws(Duda_fit, delta[term]) %>%
+  mutate(candidate="Duda")
+Trzaskowski_house <- tidybayes::spread_draws(Trzaskowski_fit, delta[term]) %>%
+  mutate(candidate="Trzaskowski")
+
+houselevels <- get_labels(droplevels(polls$org))
+
+p_house <- bind_rows(Duda_house, Trzaskowski_house) %>%
+  mutate(house = factor(term, levels=c(1:max(.$term)), labels=houselevels)) %>%
+  separate(., house, c("house", "method"), sep="_") %>%
+  group_by(house, method, candidate) %>%
+  ggplot(aes(x = candidate, y = delta, color=house, shape=method)) +
+  geom_abline(intercept=0, slope=0, colour="gray10", linetype=3) +
+  stat_pointinterval(position = position_dodge(width = .7)) +
+  labs(color="Pollster", shape="Mode", x="", y="Deviation from mean candidate vote share (percent)", 
+       title="Presidential elections, round 2: house and mode effects", 
+       caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc() 
+ggsave(p_house, file = "p_house.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 
