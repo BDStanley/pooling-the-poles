@@ -23,7 +23,15 @@ print(plot_latest_parl)
 ```
 
 ```{r}
+print(plot_latest_parl_P50)
+```
+
+```{r}
 plot_trends_parl
+```
+
+```{r}
+plot_trends_parl_P50
 ```
 
 ```{r}

@@ -696,6 +696,8 @@ p_house <- bind_rows(PiS_house, KO_house, `PSL-Kukiz_house`, Lewica_house, Konfe
   ggplot(aes(x = party, y = delta, color=house, shape=method)) +
   geom_abline(intercept=0, slope=0, colour="gray10", linetype=3) +
   stat_pointinterval(position = position_dodge(width = .7)) +
+  guides(color = guide_legend(override.aes = list(size = 5, shape="|"), keywidth=0.3, keyheight=0.3, default.unit="inch")) +
+  guides(shape = guide_legend(override.aes = list(size = 5, linetype=NULL), keywidth=0.3, keyheight=0.3, default.unit="inch")) +
   labs(color="Pollster", shape="Mode", x="", y="Deviation from mean party vote share (percent)", 
        title="House and mode effects for national election polls - all parties", 
        caption = "@BDStanley; benstanley.org") +
@@ -704,6 +706,381 @@ p_house <- bind_rows(PiS_house, KO_house, `PSL-Kukiz_house`, Lewica_house, Konfe
 ggsave(p_house, file = "p_house.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
+#####With Polska 2050#####
+
+import <- drive_download(as_id("https://drive.google.com/file/d/1ZiaHdyGqkeWaQwpADjBloRSPnfAAhXrC/view?usp=sharing"), overwrite=TRUE)
+1
+polls <- read_excel('pooledpolls_parl_P50.xlsx')
+
+polls <- unite(polls, org, remark, col="org", sep="_")
+polls$org <-as.factor(polls$org)
+
+polls$startDate <- as.Date(polls$startDate)
+polls$endDate <- as.Date(polls$endDate)
+
+polls <-
+  polls %>%
+  mutate(midDate = as.Date(startDate + difftime(endDate, startDate)),
+         midDate_int=as.integer(midDate)) %>%
+  filter(midDate_int > (max(midDate_int)-150)) %>%
+  mutate(PiS = 100/((100-DK))*PiS,
+         PiS_se = PiS * (100 - PiS) / sampleSize,
+         KO = 100/((100-DK))*KO,
+         KO_se = KO * (100 - KO) / sampleSize,
+         Lewica = 100/((100-DK))*Lewica,
+         Lewica_se = Lewica * (100 - Lewica) / sampleSize,
+         `PSL-Kukiz` = 100/((100-DK))*`PSL-Kukiz`,
+         `PSL-Kukiz_se` = `PSL-Kukiz` * (100 - `PSL-Kukiz`) / sampleSize,
+         Konfederacja = 100/((100-DK))*Konfederacja,
+         Konfederacja_se = Konfederacja * (100 - Konfederacja) / sampleSize,
+         `Polska 2050` = 100/((100-DK))*`Polska 2050`,
+         `Polska 2050_se` = `Polska 2050` * (100 - `Polska 2050`) / sampleSize,
+         Other = 100/((100-DK))*Other,
+         Other_se = Other * (100 - Other) / sampleSize,
+         time = as.integer(difftime(midDate, min(midDate)-1, units = "days")) + 1L,
+         pollster = as.integer(factor(org)))
+
+START_DATE <- min(polls$midDate)-1
+END_DATE <- max(polls$midDate)
+
+write("data {
+          int N;
+          int T;
+          vector[N] y;
+          vector[N] s;
+          int time[N];
+          int H;
+          int house[N];
+          // initial and final values
+          real xi_init;
+          real xi_final;
+          real delta_loc;
+          real zeta_scale;
+          real tau_scale;
+        }
+        parameters {
+          vector[T - 1] omega;
+          real tau;
+          vector[H] delta_raw;
+          real zeta;
+        }
+        transformed parameters {
+          vector[H] delta;
+          vector[T - 1] xi;
+          vector[N] mu;
+          // this is necessary. If not centered the model is unidentified
+          delta = (delta_raw - mean(delta_raw)) / sd(delta_raw) * zeta;
+          xi[1] = xi_init;
+          for (i in 2:(T - 1)) {
+            xi[i] = xi[i - 1] + tau * omega[i - 1];
+          }
+          for (i in 1:N) {
+            mu[i] = xi[time[i]] + delta[house[i]];
+          }
+        }
+        model {
+          // house effects
+          delta_raw ~ normal(0., 1.);
+          zeta ~ normal(0., zeta_scale);
+          // latent state innovations
+          omega ~ normal(0., 1.);
+          // scale of innovations
+          tau ~ cauchy(0, tau_scale);
+          // final known effect
+          xi_final ~ normal(xi[T - 1], tau);
+          // daily polls
+          y ~ normal(mu, s);
+        }",
+      "polls.stan")
+
+model <- "polls.stan"
+
+#####PiS#####
+PiS_data <- within(list(), {
+  y <- polls$PiS
+  s <- polls$PiS_se
+  time <- polls$time
+  house <- polls$pollster
+  H <- max(polls$pollster)
+  N <- length(y)
+  T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) + 1
+  xi_init <- head(polls$PiS, 1)
+  xi_final <- tail(polls$PiS, 1)
+  delta_loc <- 0
+  tau_scale <- sd(y)
+  zeta_scale <- 5
+})
+
+PiS_fit <- stan(model, data = PiS_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+
+#####KO#####
+KO_data <- within(list(), {
+  y <- polls$KO
+  s <- polls$KO_se
+  time <- polls$time
+  house <- polls$pollster
+  H <- max(polls$pollster)
+  N <- length(y)
+  T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
+  xi_init <- head(polls$KO, 1)
+  xi_final <- tail(polls$KO, 1)
+  delta_loc <- 0
+  tau_scale <- sd(y)
+  zeta_scale <- 5
+})
+
+KO_fit <- stan(model, data = KO_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+
+#####`PSL-Kukiz`#####
+`PSL-Kukiz_data` <- within(list(), {
+  y <- polls$`PSL-Kukiz`
+  s <- polls$`PSL-Kukiz_se`
+  time <- polls$time
+  house <- polls$pollster
+  H <- max(polls$pollster)
+  N <- length(y)
+  T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
+  xi_init <- head(polls$`PSL-Kukiz`, 1)
+  xi_final <- tail(polls$`PSL-Kukiz`, 1)
+  delta_loc <- 0
+  tau_scale <- sd(y)
+  zeta_scale <- 5
+})
+
+`PSL-Kukiz_fit` <- stan(model, data = `PSL-Kukiz_data`, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+
+#####Lewica#####
+Lewica_data <- within(list(), {
+  y <- polls$Lewica
+  s <- polls$Lewica_se
+  time <- polls$time
+  house <- polls$pollster
+  H <- max(polls$pollster)
+  N <- length(y)
+  T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
+  xi_init <- head(polls$Lewica, 1)
+  xi_final <- tail(polls$Lewica, 1)
+  delta_loc <- 0
+  tau_scale <- sd(y)
+  zeta_scale <- 5
+})
+
+Lewica_fit <- stan(model, data = Lewica_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+
+#####Konfederacja#####
+Konfederacja_data <- within(list(), {
+  y <- polls$Konfederacja
+  s <- polls$Konfederacja_se
+  time <- polls$time
+  house <- polls$pollster
+  H <- max(polls$pollster)
+  N <- length(y)
+  T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
+  xi_init <- head(polls$Konfederacja, 1)
+  xi_final <- tail(polls$Konfederacja, 1)
+  delta_loc <- 0
+  tau_scale <- sd(y)
+  zeta_scale <- 5
+})
+
+Konfederacja_fit <- stan(model, data = Konfederacja_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+
+#####`Polska 2050`#####
+`Polska 2050_data` <- within(list(), {
+  y <- polls$`Polska 2050`
+  s <- polls$`Polska 2050_se`
+  time <- polls$time
+  house <- polls$pollster
+  H <- max(polls$pollster)
+  N <- length(y)
+  T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) + 1
+  xi_init <- head(polls$`Polska 2050`, 1)
+  xi_final <- tail(polls$`Polska 2050`, 1)
+  delta_loc <- 0
+  tau_scale <- sd(y)
+  zeta_scale <- 5
+})
+
+`Polska 2050_fit` <- stan(model, data = `Polska 2050_data`, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+
+# #####Other#####
+# Other_data <- within(list(), {
+#   y <- polls$Other+0.01
+#   s <- polls$Other_se+0.001
+#   time <- polls$time
+#   house <- polls$pollster
+#   H <- max(polls$pollster)
+#   N <- length(y)
+#   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
+#   xi_init <- head(polls$Other, 1)
+#   xi_final <- tail(polls$Other, 1)
+#   delta_loc <- 0
+#   tau_scale <- sd(y)
+#   zeta_scale <- 5
+# })
+# 
+# Other_fit <- stan(model, data = Other_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+
+cols <- c("PiS"="blue4", "KO"="orange", "PSL-Kukiz"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "Other"="gray50", "Polska 2050"="darkgoldenrod")
+names <- data.frame(as.factor(get_labels(polls$org)))
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
+names$house <- as.factor(names$house)
+housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+names <- paste0(get_labels(housenames), collapse=", ")
+
+
+#####Trend plot#####
+PiS_draws <- tidybayes::spread_draws(PiS_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "PiS")
+
+KO_draws <- tidybayes::spread_draws(KO_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "KO")
+
+`PSL-Kukiz_draws` <- tidybayes::spread_draws(`PSL-Kukiz_fit`, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "PSL-Kukiz")
+
+Konfederacja_draws <- tidybayes::spread_draws(Konfederacja_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "Konfederacja")
+
+Lewica_draws <- tidybayes::spread_draws(Lewica_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "Lewica")
+
+`Polska 2050_draws` <- tidybayes::spread_draws(`Polska 2050_fit`, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "Polska 2050")
+
+plot_trends <- rbind(PiS_draws, KO_draws, `PSL-Kukiz_draws`, Lewica_draws, Konfederacja_draws, `Polska 2050_draws`)
+
+plot_trends$candidate <- fct_reorder(plot_trends$candidate, plot_trends$xi, .fun=median, .desc=TRUE)
+
+plot_points <- polls %>%
+  pivot_longer(c(PiS, KO, Lewica, `PSL-Kukiz`, Konfederacja, `Polska 2050`), names_to="candidate", values_to="percent") 
+
+plot_points$candidate <- fct_reorder(plot_points$candidate, plot_points$percent, .fun=median, .desc=TRUE)
+
+plot_trends_parl_P50 <- ggplot(plot_trends) +
+  stat_lineribbon(aes(x = time, y = xi, color=candidate, fill=candidate), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+  geom_point(data=plot_points, aes(x = midDate, y = percent, color=candidate), alpha = 1, size = 2, show.legend = FALSE) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  labs(y = "% of vote", x="", title = "Polish parliamentary elections: trends (including Polska 2050)", 
+       subtitle=str_c("Data from ", names), color="", caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  guides(colour = guide_legend(override.aes = list(alpha = 1)))
+ggsave(plot_trends_parl_P50, file = "plot_trends_parl.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+
+
+#####Latest plot#####
+PiS_draws <- tidybayes::spread_draws(PiS_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "PiS") %>%
+  filter(., time==END_DATE)
+
+KO_draws <- tidybayes::spread_draws(KO_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "KO") %>%
+  filter(., time==END_DATE)
+
+`Polska 2050_draws` <- tidybayes::spread_draws(`Polska 2050_fit`, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "Polska 2050") %>%
+  filter(., time==END_DATE)
+
+Lewica_draws <- tidybayes::spread_draws(Lewica_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "Lewica") %>%
+  filter(., time==END_DATE) %>%
+  mutate(over_5 = xi - 5,
+         over_5 = sum(over_5 > 0) / length(over_5),
+         over_8 = xi - 8,
+         over_8 = sum(over_8 > 0) / length(over_8))
+
+`PSL-Kukiz_draws` <- tidybayes::spread_draws(`PSL-Kukiz_fit`, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "PSL-Kukiz") %>%
+  filter(., time==END_DATE) %>%
+  mutate(over_5 = xi - 5,
+         over_5 = sum(over_5 > 0) / length(over_5),
+         over_8 = xi - 8,
+         over_8 = sum(over_8 > 0) / length(over_8))
+
+Konfederacja_draws <- tidybayes::spread_draws(Konfederacja_fit, xi[term]) %>%
+  mutate(time = as.Date(term, origin=START_DATE),
+         candidate = "Konfederacja") %>%
+  filter(., time==END_DATE) %>%
+  mutate(over_5 = xi - 5,
+         over_5 = sum(over_5 > 0) / length(over_5),
+         over_8 = xi - 8,
+         over_8 = sum(over_8 > 0) / length(over_8))
+
+PiS.KO.diff <- PiS_draws$xi - KO_draws$xi
+PiS.KO.diff <- sum(PiS.KO.diff > 0) / length(PiS.KO.diff)
+PiS.KO.diff <- round(PiS.KO.diff, 2)
+
+KO.P50.diff <- KO_draws$xi - `Polska 2050_draws`$xi
+KO.P50.diff <- sum(KO.P50.diff > 0) / length(KO.P50.diff)
+KO.P50.diff <- round(KO.P50.diff, 2)
+
+plot_latest <- rbind(PiS_draws, KO_draws, `PSL-Kukiz_draws`, Lewica_draws, Konfederacja_draws, `Polska 2050_draws`)
+
+plot_latest$candidate <- fct_reorder(plot_latest$candidate, plot_latest$xi, .fun=median, .desc=TRUE)
+
+plot_latest_parl_P50 <- ggplot(plot_latest, aes(y=candidate, x = xi, fill=candidate)) +
+  geom_vline(aes(xintercept=5), colour="gray40", linetype="dotted") +
+  geom_vline(aes(xintercept=8), colour="gray40", linetype="dashed") +
+  stat_slabh(aes(y=reorder(candidate, dplyr::desc(candidate)), x=xi, fill=candidate), normalize="xy") +
+  scale_y_discrete(name="", position="right") +
+  annotate(geom = "text", label=paste(round(mean(plot_latest$xi[plot_latest$candidate=="PiS"]),0)), 
+           y="PiS", x=mean(plot_latest$xi[plot_latest$candidate=="PiS"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(mean(plot_latest$xi[plot_latest$candidate=="KO"]),0)), 
+           y="KO", x=mean(plot_latest$xi[plot_latest$candidate=="KO"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(mean(plot_latest$xi[plot_latest$candidate=="Lewica"]),0)), 
+           y="Lewica", x=mean(plot_latest$xi[plot_latest$candidate=="Lewica"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(mean(plot_latest$xi[plot_latest$candidate=="Konfederacja"]),0)), 
+           y="Konfederacja", x=mean(plot_latest$xi[plot_latest$candidate=="Konfederacja"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(mean(plot_latest$xi[plot_latest$candidate=="PSL-Kukiz"]),0)), 
+           y="PSL-Kukiz", x=mean(plot_latest$xi[plot_latest$candidate=="PSL-Kukiz"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(mean(plot_latest$xi[plot_latest$candidate=="Polska 2050"]),0)), 
+           y="Polska 2050", x=mean(plot_latest$xi[plot_latest$candidate=="Polska 2050"]), size=4, hjust = "center", vjust=-1, 
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS", 
+           x=quantile(plot_latest$xi[plot_latest$candidate=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(KO > Polska 2050)  = ", KO.P50.diff), y="KO", 
+           x=quantile(plot_latest$xi[plot_latest$candidate=="KO"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", round(median(plot_latest$over_5[plot_latest$candidate=="Lewica"]),2)), y="Lewica", 
+           x=quantile(plot_latest$xi[plot_latest$candidate=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(PSL-Kukiz > 5%)  = ", round(median(plot_latest$over_5[plot_latest$candidate=="PSL-Kukiz"]),2)), y="PSL-Kukiz", 
+           x=quantile(plot_latest$xi[plot_latest$candidate=="PSL-Kukiz"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", round(median(plot_latest$over_5[plot_latest$candidate=="Konfederacja"]),2)), y="Konfederacja", 
+           x=quantile(plot_latest$xi[plot_latest$candidate=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(Lewica > 8%)  = ", round(median(plot_latest$over_8[plot_latest$candidate=="Lewica"]),2)), y="Lewica", 
+           x=quantile(plot_latest$xi[plot_latest$candidate=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-2, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(PSL-Kukiz > 8%)  = ", round(median(plot_latest$over_8[plot_latest$candidate=="PSL-Kukiz"]),2)), y="PSL-Kukiz", 
+           x=quantile(plot_latest$xi[plot_latest$candidate=="PSL-Kukiz"], 0.999), size=3.5, adj=c(0), vjust=-2, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(Konfederacja > 8%)  = ", round(median(plot_latest$over_8[plot_latest$candidate=="Konfederacja"]),2)), y="Konfederacja", 
+           x=quantile(plot_latest$xi[plot_latest$candidate=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-2, family="Roboto Condensed Light") +
+  scale_fill_manual(name=" ", values=cols, guide=FALSE) +
+  scale_x_continuous(breaks=c(0, 5, 8, 10, 20, 30, 40, 50), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
+  expand_limits(x = 0) +
+  labs(caption="@BDStanley; benstanley.org", x="", title="Polish parliamentary elections: latest estimates (including Polska 2050)",
+       subtitle=str_c("Data from ", names)) +
+  theme_minimal() +
+  theme_ipsum_rc() 
+ggsave(plot_latest_parl_P50, file = "polls_latest_parl_P50.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 #####Save image out#####
 save.image("~/Desktop/Personal/PoolingthePoles.RData")
