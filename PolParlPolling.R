@@ -1082,5 +1082,81 @@ plot_latest_parl_P50 <- ggplot(plot_latest, aes(y=candidate, x = xi, fill=candid
 ggsave(plot_latest_parl_P50, file = "polls_latest_parl_P50.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
+#####Seats plot#####
+weights <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/2019_elec_percentages.xlsx')
+median_PiS <- median(PiS_draws$xi)
+median_KO <- median(KO_draws$xi)
+`median_PSL-Kukiz` <- median(`PSL-Kukiz_draws`$xi)
+median_Lewica <- median(Lewica_draws$xi)
+median_Konfederacja <- median(Konfederacja_draws$xi)
+`median_Polska 2050` <- median(`Polska 2050_draws`$xi)
+
+PiSpct <- round(weights$PiScoef*median_PiS, digits=2)
+KOpct <- round(weights$KOcoef*median_KO, digits=2)
+PSLpct <- round(weights$PSLcoef*`median_PSL-Kukiz`, digits=2)
+Lewicapct <- round(weights$Lewicacoef*median_Lewica, digits=2)
+Konfederacjapct <- round(weights$Konfcoef*median_Konfederacja, digits=2)
+`Polska 2050pct` <- round(weights$KOcoef*`median_Polska 2050`, digits=2)
+MNpct <- c(0.17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 
+           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+KOest <- (weights$validvotes/100)*KOpct
+PiSest <- (weights$validvotes/100)*PiSpct
+PSLest <- (weights$validvotes/100)*PSLpct
+Lewicaest <- (weights$validvotes/100)*Lewicapct
+Konfederacjaest <- (weights$validvotes/100)*Konfederacjapct
+`Polska 2050est` <- (weights$validvotes/100)*`Polska 2050pct`
+MNest <- (weights$validvotes/100)*MNpct
+
+poldHondt <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42),
+                        `Polska 2050`=rep(1,42), PSL=rep(1,42))
+
+for( i in 1 : 42 ) {
+  poldHondt[i,] <- c(giveseats(v = c(KOest[i], Konfederacjaest[i], Lewicaest[i], MNest[i], PiSest[i], 
+                                     `Polska 2050est`[i], PSLest[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
+}
+
+colnames(poldHondt) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "Polska 2050", "PSL-Kukiz")
+
+frame <- t(rbind(poldHondt[1,], colSums(poldHondt[2:42,])))
+frame <- data.frame(rownames(frame), frame)
+colnames(frame) <- c("Party", "Unweighted", "Weighted")
+frame <- frame[with(frame, order(-Weighted)),]
+frame$in2019[frame$Party=="KO"] <- 134
+frame$in2019[frame$Party=="PiS"] <- 235
+frame$in2019[frame$Party=="Lewica"] <- 49
+frame$in2019[frame$Party=="PSL-Kukiz"] <- 30
+frame$in2019[frame$Party=="MN"] <- 1
+frame$in2019[frame$Party=="Konfederacja"] <- 11
+frame$in2019[frame$Party=="Polska 2050"] <- 0
+frame <- frame[frame$Weighted>0,]
+frame$Party <- factor(frame$Party, levels=c("PiS", "KO", "PSL-Kukiz", "Lewica", "Konfederacja", "Polska 2050", "MN"))
+frame$diffPres <- sprintf("%+d", (frame$Weighted - frame$in2019))
+frame$diffPres <- sprintf("(%s)", frame$diffPres)
+frame$diffPresUn <- sprintf("%+d", (frame$Unweighted - frame$in2019))
+frame$diffPresUn <- sprintf("(%s)", frame$diffPresUn)
+frame$Party <- reorder(frame$Party, -frame$Weighted)
+
+#current seat share
+plot_seats_parl_P50 <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
+  geom_bar(stat="identity", width=.75, show.legend = F) +
+  geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
+  geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
+  geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
+  scale_y_continuous('Number of seats', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
+  scale_fill_manual(name="Party", values = cols)+
+  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
+  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
+  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
+  annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Weighted, size=4, family="Roboto Condensed Light")+
+  annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed Light") +
+  labs(x="", y="% of vote", title="Estimated share of seats (including Polska 2050)",
+       subtitle="Figures in brackets refer to change in seat share since October 2019 election",
+       caption = "@BDStanley; benstanley.org") +
+  theme_minimal() +
+  theme_ipsum_rc()
+ggsave(plot_seats_parl_P50, file = "plot_seats_parl_50.png",
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+
 #####Save image out#####
 save.image("~/Desktop/Personal/PoolingthePoles.RData")

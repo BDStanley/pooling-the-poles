@@ -38,6 +38,10 @@ plot_trends_parl_P50
 plot_seats_parl
 ```
 
+```{r}
+plot_seats_parl_P50
+```
+
 ```{r fig.width=10, fig.height=10}
 p_pis
 ```
