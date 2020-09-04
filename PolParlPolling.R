@@ -974,7 +974,7 @@ plot_trends_parl_P50 <- ggplot(plot_trends) +
   theme_minimal() +
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
-ggsave(plot_trends_parl_P50, file = "plot_trends_parl.png", 
+ggsave(plot_trends_parl_P50, file = "plot_trends_parl_P50.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 
