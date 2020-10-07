@@ -15,7 +15,7 @@ library(hrbrthemes)
 ```
 
 ```{r echo = F, eval = T, include=F}
-load("~/Desktop/Personal/PoolingthePoles.RData")
+load("~/Desktop/PoolingthePoles.RData")
 ```
 
 ```{r}

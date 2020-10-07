@@ -116,14 +116,14 @@ PiS_data <- within(list(), {
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) + 1
-  xi_init <- head(polls$PiS, 1)
-  xi_final <- tail(polls$PiS, 1)
+  xi_init <- median(head(polls$PiS, 1))
+  xi_final <- median(tail(polls$PiS, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
 })
 
-PiS_fit <- stan(model, data = PiS_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+PiS_fit <- stan(model, data = PiS_data, chains = 4, control = list(adapt_delta=0.999999, max_treedepth=15), iter=10000)
 
 #####KO#####
 KO_data <- within(list(), {
@@ -134,8 +134,8 @@ KO_data <- within(list(), {
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- head(polls$KO, 1)
-  xi_final <- tail(polls$KO, 1)
+  xi_init <- median(head(polls$KO, 7))
+  xi_final <- median(tail(polls$KO, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
@@ -152,8 +152,8 @@ KO_fit <- stan(model, data = KO_data, chains = 4, control = list(adapt_delta=0.9
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- head(polls$`PSL-Kukiz`, 1)
-  xi_final <- tail(polls$`PSL-Kukiz`, 1)
+  xi_init <- median(head(polls$`PSL-Kukiz`, 7))
+  xi_final <- median(tail(polls$`PSL-Kukiz`, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
@@ -170,8 +170,8 @@ Lewica_data <- within(list(), {
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- head(polls$Lewica, 1)
-  xi_final <- tail(polls$Lewica, 1)
+  xi_init <- median(head(polls$Lewica, 7))
+  xi_final <- median(tail(polls$Lewica, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
@@ -188,8 +188,8 @@ Konfederacja_data <- within(list(), {
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- head(polls$Konfederacja, 1)
-  xi_final <- tail(polls$Konfederacja, 1)
+  xi_init <- median(head(polls$Konfederacja, 1))
+  xi_final <- median(tail(polls$Konfederacja, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
@@ -216,6 +216,7 @@ Konfederacja_fit <- stan(model, data = Konfederacja_data, chains = 4, control = 
 # Other_fit <- stan(model, data = Other_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
 
 cols <- c("PiS"="blue4", "KO"="orange", "PSL-Kukiz"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "Other"="gray50")
+plot_cols <- c("PiS"="#C6C7CB", "KO"="#A29B93", "PSL-Kukiz"="#491215", "Konfederacja" = "#6C6461", "Lewica" = "#805914", "MN" = "yellow", "Other"="gray50")
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
 names$house <- as.factor(names$house)
@@ -804,8 +805,8 @@ PiS_data <- within(list(), {
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) + 1
-  xi_init <- head(polls$PiS, 1)
-  xi_final <- tail(polls$PiS, 1)
+  xi_init <- median(head(polls$PiS, 7))
+  xi_final <- median(tail(polls$PiS, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
@@ -822,8 +823,8 @@ KO_data <- within(list(), {
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- head(polls$KO, 1)
-  xi_final <- tail(polls$KO, 1)
+  xi_init <- median(head(polls$KO, 1))
+  xi_final <- median(tail(polls$KO, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
@@ -840,8 +841,8 @@ KO_fit <- stan(model, data = KO_data, chains = 4, control = list(adapt_delta=0.9
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- head(polls$`PSL-Kukiz`, 1)
-  xi_final <- tail(polls$`PSL-Kukiz`, 1)
+  xi_init <- median(head(polls$`PSL-Kukiz`, 7))
+  xi_final <- median(tail(polls$`PSL-Kukiz`, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
@@ -858,8 +859,8 @@ Lewica_data <- within(list(), {
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- head(polls$Lewica, 1)
-  xi_final <- tail(polls$Lewica, 1)
+  xi_init <- median(head(polls$Lewica, 7))
+  xi_final <- median(tail(polls$Lewica, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
@@ -876,8 +877,8 @@ Konfederacja_data <- within(list(), {
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- head(polls$Konfederacja, 1)
-  xi_final <- tail(polls$Konfederacja, 1)
+  xi_init <- median(head(polls$Konfederacja, 1))
+  xi_final <- median(tail(polls$Konfederacja, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
@@ -894,8 +895,8 @@ Konfederacja_fit <- stan(model, data = Konfederacja_data, chains = 4, control = 
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) + 1
-  xi_init <- head(polls$`Polska 2050`, 1)
-  xi_final <- tail(polls$`Polska 2050`, 1)
+  xi_init <- median(head(polls$`Polska 2050`, 7))
+  xi_final <- median(tail(polls$`Polska 2050`, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
@@ -1159,4 +1160,4 @@ ggsave(plot_seats_parl_P50, file = "plot_seats_parl_50.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 #####Save image out#####
-save.image("~/Desktop/Personal/PoolingthePoles.RData")
+save.image("~/Desktop/PoolingthePoles.RData")
