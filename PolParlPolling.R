@@ -18,7 +18,7 @@ library("xtable")
 
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
-    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.0.2") {
+    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.0.3") {
   parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
 }
 
@@ -29,7 +29,7 @@ polls <- read_excel('pooledpolls_parl.xlsx')
 polls <- unite(polls, org, remark, col="org", sep="_")
 polls$org <-as.factor(polls$org)
 
-polls$startDate <- as.Date(polls$startDate)
+polls$startDate <- as.Date(polls$startDate-7)
 polls$endDate <- as.Date(polls$endDate)
 
 polls <-
@@ -99,13 +99,15 @@ write("data {
           // scale of innovations
           tau ~ cauchy(0, tau_scale);
           // final known effect
-          xi_final ~ normal(xi[T - 1], tau);
+          xi_final ~ normal(xi[T - 1], 10);
           // daily polls
           y ~ normal(mu, s);
         }",
       "polls.stan")
 
 model <- "polls.stan"
+
+#xi_final ~ normal(xi[T - 1], tau);
 
 #####PiS#####
 PiS_data <- within(list(), {
@@ -116,14 +118,14 @@ PiS_data <- within(list(), {
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) + 1
-  xi_init <- median(head(polls$PiS, 1))
+  xi_init <- median(head(polls$PiS, 7))
   xi_final <- median(tail(polls$PiS, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
 })
 
-PiS_fit <- stan(model, data = PiS_data, chains = 4, control = list(adapt_delta=0.999999, max_treedepth=15), iter=10000)
+PiS_fit <- stan(model, data = PiS_data, chains = 6, control = list(adapt_delta=0.999999), iter=20000)
 
 #####KO#####
 KO_data <- within(list(), {
@@ -141,7 +143,7 @@ KO_data <- within(list(), {
   zeta_scale <- 5
 })
 
-KO_fit <- stan(model, data = KO_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+KO_fit <- stan(model, data = KO_data, chains = 6, control = list(adapt_delta=0.999999), iter=20000)
 
 #####`PSL-Kukiz`#####
 `PSL-Kukiz_data` <- within(list(), {
@@ -159,7 +161,7 @@ KO_fit <- stan(model, data = KO_data, chains = 4, control = list(adapt_delta=0.9
   zeta_scale <- 5
 })
 
-`PSL-Kukiz_fit` <- stan(model, data = `PSL-Kukiz_data`, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+`PSL-Kukiz_fit` <- stan(model, data = `PSL-Kukiz_data`, chains = 6, control = list(adapt_delta=0.999999), iter=20000)
 
 #####Lewica#####
 Lewica_data <- within(list(), {
@@ -177,7 +179,7 @@ Lewica_data <- within(list(), {
   zeta_scale <- 5
 })
 
-Lewica_fit <- stan(model, data = Lewica_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+Lewica_fit <- stan(model, data = Lewica_data, chains = 6, control = list(adapt_delta=0.999999), iter=20000)
 
 #####Konfederacja#####
 Konfederacja_data <- within(list(), {
@@ -188,14 +190,14 @@ Konfederacja_data <- within(list(), {
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- median(head(polls$Konfederacja, 1))
+  xi_init <- median(head(polls$Konfederacja, 7))
   xi_final <- median(tail(polls$Konfederacja, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
 })
 
-Konfederacja_fit <- stan(model, data = Konfederacja_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+Konfederacja_fit <- stan(model, data = Konfederacja_data, chains = 6, control = list(adapt_delta=0.999999), iter=20000)
 
 # #####Other#####
 # Other_data <- within(list(), {
@@ -213,7 +215,7 @@ Konfederacja_fit <- stan(model, data = Konfederacja_data, chains = 4, control = 
 #   zeta_scale <- 5
 # })
 # 
-# Other_fit <- stan(model, data = Other_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+# Other_fit <- stan(model, data = Other_data, chains = 6, control = list(adapt_delta=0.999999), iter=20000)
 
 cols <- c("PiS"="blue4", "KO"="orange", "PSL-Kukiz"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "Other"="gray50")
 plot_cols <- c("PiS"="#C6C7CB", "KO"="#A29B93", "PSL-Kukiz"="#491215", "Konfederacja" = "#6C6461", "Lewica" = "#805914", "MN" = "yellow", "Other"="gray50")
@@ -741,7 +743,7 @@ polls <-
          time = as.integer(difftime(midDate, min(midDate)-1, units = "days")) + 1L,
          pollster = as.integer(factor(org)))
 
-START_DATE <- min(polls$midDate)-1
+START_DATE <- min(polls$midDate)-7
 END_DATE <- max(polls$midDate)
 
 write("data {
@@ -788,13 +790,15 @@ write("data {
           // scale of innovations
           tau ~ cauchy(0, tau_scale);
           // final known effect
-          xi_final ~ normal(xi[T - 1], tau);
+          xi_final ~ normal(xi[T - 1], 10);
           // daily polls
           y ~ normal(mu, s);
         }",
       "polls.stan")
 
 model <- "polls.stan"
+
+#xi_final ~ normal(xi[T - 1], tau);
 
 #####PiS#####
 PiS_data <- within(list(), {
@@ -812,7 +816,7 @@ PiS_data <- within(list(), {
   zeta_scale <- 5
 })
 
-PiS_fit <- stan(model, data = PiS_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+PiS_fit <- stan(model, data = PiS_data, chains = 6, control = list(adapt_delta=0.999999), iter=20000)
 
 #####KO#####
 KO_data <- within(list(), {
@@ -823,14 +827,14 @@ KO_data <- within(list(), {
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- median(head(polls$KO, 1))
+  xi_init <- median(head(polls$KO, 7))
   xi_final <- median(tail(polls$KO, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
 })
 
-KO_fit <- stan(model, data = KO_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+KO_fit <- stan(model, data = KO_data, chains = 6, control = list(adapt_delta=0.999999), iter=20000)
 
 #####`PSL-Kukiz`#####
 `PSL-Kukiz_data` <- within(list(), {
@@ -848,7 +852,7 @@ KO_fit <- stan(model, data = KO_data, chains = 4, control = list(adapt_delta=0.9
   zeta_scale <- 5
 })
 
-`PSL-Kukiz_fit` <- stan(model, data = `PSL-Kukiz_data`, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+`PSL-Kukiz_fit` <- stan(model, data = `PSL-Kukiz_data`, chains = 6, control = list(adapt_delta=0.999999), iter=20000)
 
 #####Lewica#####
 Lewica_data <- within(list(), {
@@ -866,7 +870,7 @@ Lewica_data <- within(list(), {
   zeta_scale <- 5
 })
 
-Lewica_fit <- stan(model, data = Lewica_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+Lewica_fit <- stan(model, data = Lewica_data, chains = 4, control = list(adapt_delta=0.999999), iter=20000)
 
 #####Konfederacja#####
 Konfederacja_data <- within(list(), {
@@ -877,14 +881,14 @@ Konfederacja_data <- within(list(), {
   H <- max(polls$pollster)
   N <- length(y)
   T <- as.integer(difftime(Sys.Date(), START_DATE, units = "days")) +1
-  xi_init <- median(head(polls$Konfederacja, 1))
+  xi_init <- median(head(polls$Konfederacja, 7))
   xi_final <- median(tail(polls$Konfederacja, 7))
   delta_loc <- 0
   tau_scale <- sd(y)
   zeta_scale <- 5
 })
 
-Konfederacja_fit <- stan(model, data = Konfederacja_data, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+Konfederacja_fit <- stan(model, data = Konfederacja_data, chains = 6, control = list(adapt_delta=0.999999), iter=20000)
 
 #####`Polska 2050`#####
 `Polska 2050_data` <- within(list(), {
@@ -902,7 +906,7 @@ Konfederacja_fit <- stan(model, data = Konfederacja_data, chains = 4, control = 
   zeta_scale <- 5
 })
 
-`Polska 2050_fit` <- stan(model, data = `Polska 2050_data`, chains = 4, control = list(adapt_delta=0.99), iter=4000)
+`Polska 2050_fit` <- stan(model, data = `Polska 2050_data`, chains = 6, control = list(adapt_delta=0.999999), iter=20000)
 
 # #####Other#####
 # Other_data <- within(list(), {

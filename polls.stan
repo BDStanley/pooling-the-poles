@@ -42,7 +42,7 @@ data {
           // scale of innovations
           tau ~ cauchy(0, tau_scale);
           // final known effect
-          xi_final ~ normal(xi[T - 1], tau);
+          xi_final ~ normal(xi[T - 1], 10);
           // daily polls
           y ~ normal(mu, s);
         }
