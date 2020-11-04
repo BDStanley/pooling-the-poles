@@ -23,23 +23,11 @@ print(plot_latest_parl)
 ```
 
 ```{r}
-print(plot_latest_parl_P50)
-```
-
-```{r}
 plot_trends_parl
 ```
 
 ```{r}
-plot_trends_parl_P50
-```
-
-```{r}
 plot_seats_parl
-```
-
-```{r}
-plot_seats_parl_P50
 ```
 
 ```{r fig.width=10, fig.height=10}
@@ -52,6 +40,10 @@ p_ko
 
 ```{r fig.width=10, fig.height=10}
 p_pis_ko
+```
+
+```{r fig.width=10, fig.height=10}
+p_p2050
 ```
 
 ```{r fig.width=10, fig.height=10}
