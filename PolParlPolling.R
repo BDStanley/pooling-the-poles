@@ -38,7 +38,7 @@ theme_changes_map <- theme(axis.title.y = element_blank(), axis.title.x = elemen
 #####Read in, adjust and subset data#####
 import <- drive_download(as_id("https://drive.google.com/file/d/1ZiaHdyGqkeWaQwpADjBloRSPnfAAhXrC/view?usp=sharing"), overwrite=TRUE)
 1
-polls <- read_excel('pooledpolls_parl_P50.xlsx')
+polls <- read_excel('polldata.xlsx')
 
 polls <- unite(polls, org, remark, col="org", sep="_")
 polls$org <-as.factor(polls$org)
@@ -125,7 +125,7 @@ write("data {
           // scale of innovations
           tau ~ cauchy(0, tau_scale);
           // final known effect
-          xi_final ~ normal(xi[T - 1], 10);
+          xi_final ~ normal(xi[T - 1], 1);
           // daily polls
           y ~ normal(mu, s);
         }",
@@ -413,7 +413,7 @@ plot_latest_parl <- ggplot(plot_latest, aes(y=candidate, x = xi, fill=candidate)
        subtitle=str_c("Data from ", names)) +
   theme_minimal() +
   theme_ipsum_rc() +
-  theme_changes +
+  theme_changes 
 ggsave(plot_latest_parl, file = "polls_latest_parl.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
@@ -786,17 +786,8 @@ ggsave(p_house, file = "p_house.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 
-
-
-
-
-
-
-
-#####Including Don't Knows#####
-import <- drive_download(as_id("https://drive.google.com/file/d/1ZiaHdyGqkeWaQwpADjBloRSPnfAAhXrC/view?usp=sharing"), overwrite=TRUE)
-1
-polls <- read_excel('pooledpolls_parl_P50.xlsx')
+#####INCLUDING DON'T KNOWS#####
+polls <- read_excel('polldata.xlsx')
 
 polls <- unite(polls, org, remark, col="org", sep="_")
 polls$org <-as.factor(polls$org)
@@ -823,6 +814,14 @@ polls <-
 
 START_DATE <- min(polls$midDate)-7
 END_DATE <- max(polls$midDate)
+
+cols <- c("PiS"="blue4", "KO"="orange", "PSL-Kukiz"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "DK"="gray50", "Polska 2050"="darkgoldenrod")
+names <- data.frame(as.factor(get_labels(polls$org)))
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
+names$house <- as.factor(names$house)
+housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+names <- paste0(get_labels(housenames), collapse=", ")
 
 write("data {
           int N;
@@ -868,7 +867,7 @@ write("data {
           // scale of innovations
           tau ~ cauchy(0, tau_scale);
           // final known effect
-          xi_final ~ normal(xi[T - 1], 0.5);
+          xi_final ~ normal(xi[T - 1], 5);
           // daily polls
           y ~ normal(mu, s);
         }",
@@ -1002,15 +1001,7 @@ DK_data <- within(list(), {
   zeta_scale <- 5
 })
 
-DK_fit <- stan(model, data = DK_data, chains = 6, control = list(adapt_delta=0.99999999999999), iter=500000, init=1)
-
-cols <- c("PiS"="blue4", "KO"="orange", "PSL-Kukiz"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "DK"="gray50", "Polska 2050"="darkgoldenrod")
-names <- data.frame(as.factor(get_labels(polls$org)))
-names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
-names$house <- as.factor(names$house)
-housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
-  fct_collapse(., Kantar=c("Kantar"))
-names <- paste0(get_labels(housenames), collapse=", ")
+DK_fit <- stan(model, data = DK_data, chains = 6, control = list(adapt_delta=0.99999999999999), iter=100000, init=1)
 
 
 #####Trend plot#####
@@ -1051,19 +1042,20 @@ plot_points <- polls %>%
 
 plot_points$candidate <- fct_reorder(plot_points$candidate, plot_points$percent, .fun=median, .desc=TRUE)
 
-plot_trends_parl_P50_DK <- plot_trends %>%
+plot_trends_parl_DK <- plot_trends %>%
   filter(., candidate %in% c("PiS", "KO", "DK")) %>%
   ggplot() +
   stat_lineribbon(aes(x = time, y = xi, color=candidate, fill=candidate), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
-  geom_point(data=filter(plot_points, candidate %in% c("PiS", "KO", "DK")), aes(x = midDate, y = percent, color=candidate), alpha = 1, size = 2, show.legend = FALSE) +
+  geom_point(data=filter(plot_points, candidate %in% c("PiS", "KO", "DK")), aes(x = midDate, y = percent, color=candidate), alpha = 1/3, size = 2, show.legend = FALSE) +
   scale_color_manual(values=cols) +
   scale_fill_manual(values=cols, guide=FALSE) +
-  labs(y = "% of vote", x="", title = "Polish parliamentary elections: trends (including undecided voters)", 
+  labs(y = "% of vote", x="", title = "Trends (including undecided voters)", 
        subtitle=str_c("Data from ", names), color="", caption = "@BDStanley; benstanley.org") +
   theme_minimal() +
   theme_ipsum_rc() +
+  theme_changes +
   guides(colour = guide_legend(override.aes = list(alpha = 1)))
-ggsave(plot_trends_parl_P50_DK, file = "plot_trends_parl_P50_DK.png", 
+ggsave(plot_trends_parl_DK, file = "plot_trends_parl_DK.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 
@@ -1123,7 +1115,7 @@ plot_latest <- rbind(PiS_draws, KO_draws, `PSL-Kukiz_draws`, Lewica_draws, Konfe
 
 plot_latest$candidate <- fct_reorder(plot_latest$candidate, plot_latest$xi, .fun=median, .desc=TRUE)
 
-plot_latest_parl_P50_DK <- ggplot(plot_latest, aes(y=candidate, x = xi, fill=candidate)) +
+plot_latest_parl_DK <- ggplot(plot_latest, aes(y=candidate, x = xi, fill=candidate)) +
   stat_slabh(aes(y=reorder(candidate, dplyr::desc(candidate)), x=xi, fill=candidate), normalize="xy") +
   scale_y_discrete(name="", position="right") +
   annotate(geom = "text", label=paste(round(mean(plot_latest$xi[plot_latest$candidate=="PiS"]),0)), 
@@ -1150,11 +1142,12 @@ plot_latest_parl_P50_DK <- ggplot(plot_latest, aes(y=candidate, x = xi, fill=can
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 10, 20, 30, 40), labels=c("0","10", "20", "30", "40")) +
   expand_limits(x = 0) +
-  labs(caption="@BDStanley; benstanley.org", x="", title="Polish parliamentary elections: latest estimates (including undecided voters)",
+  labs(caption="@BDStanley; benstanley.org", x="", title="Latest estimates (including undecided voters)",
        subtitle=str_c("Data from ", names)) +
   theme_minimal() +
-  theme_ipsum_rc() 
-ggsave(plot_latest_parl_P50_DK, file = "polls_latest_parl_P50_DK.png", 
+  theme_ipsum_rc() +
+  theme_changes
+ggsave(plot_latest_parl_DK, file = "polls_latest_parl_DK.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 #####Save image out#####
