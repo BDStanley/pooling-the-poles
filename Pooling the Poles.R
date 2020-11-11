@@ -208,7 +208,7 @@ plot_trends_parl <-
   scale_color_manual(values=cols) +
   scale_fill_manual(values=cols, guide=FALSE) +
   labs(y = "", x="", title = "Trends", 
-       subtitle=str_c("Data from ", names), color="", caption = "@BDStanley; benstanley.org") +
+       subtitle=str_c("Data from ", names), color="", caption = "Ben Stanley (@BDStanley; benstanley.org). Based on code written by Jack Bailey (@PoliSciJack).") +
   theme_minimal() +
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1))) +
@@ -329,7 +329,7 @@ plot_latest_parl <-
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.5, 0.8, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
-  labs(caption="@BDStanley; benstanley.org", x="", title="Latest estimates",
+  labs(caption="Ben Stanley (@BDStanley; benstanley.org). Based on code written by Jack Bailey (@PoliSciJack).", x="", title="Latest estimates",
        subtitle=str_c("Data from ", names)) +
   theme_minimal() +
   theme_ipsum_rc() +
@@ -406,7 +406,7 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Part
   annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed Light") +
   labs(x="", y="% of vote", title="Estimated share of seats",
        subtitle="Figures in brackets refer to change in seat share since October 2019 election",
-       caption = "@BDStanley; benstanley.org") +
+       caption = "Ben Stanley (@BDStanley; benstanley.org). Based on code written by Jack Bailey (@PoliSciJack)") +
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes
@@ -568,7 +568,7 @@ p_p2050 <- ggplot(plotdata) +
   scale_fill_gradient(name="Polska 2050", limits=c(min=0, max=20), low = "white", high = "darkgoldenrod", guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=`Polska 2050`, label=`Polska 2050`), fill="white", family="Roboto Condensed Light") +
   labs(title="Constituency-level share of seats for Polska 2050", subtitle="Seat distribution reflects regional levels of support for Szymon Hołownia at 2020 presidential election", 
-       caption = "@BDStanley; benstanley.org", family="Roboto Condensed") +
+       caption = "Ben Stanley (@BDStanley; benstanley.org). Based on code written by Jack Bailey (@PoliSciJack).", family="Roboto Condensed") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_p2050, file = "Polska_2050_seats.png", 
@@ -582,7 +582,7 @@ p_lewica <- ggplot(plotdata) +
   scale_fill_gradient(name="Lewica", limits=c(min=0, max=20), low = "white", high = "red", guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=Lewica, label=Lewica), fill="white", family="Roboto Condensed Light") +
   labs(title="Constituency-level share of seats for Lewica", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
-       caption = "@BDStanley; benstanley.org", family="Roboto Condensed") +
+       caption = "Ben Stanley (@BDStanley; benstanley.org). Based on code written by Jack Bailey (@PoliSciJack).", family="Roboto Condensed") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_lewica, file = "Lewica_seats.png", 
@@ -596,7 +596,7 @@ p_pis <- ggplot(plotdata) +
   scale_fill_gradient(name="PiS", limits=c(min=0, max=20), low = "white", high = "blue4", guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiS, label=PiS), fill="white", family="Roboto Condensed Light") +
   labs(title="Constituency-level share of seats for PiS", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
-       caption = "@BDStanley; benstanley.org", family="Roboto Condensed")+
+       caption = "Ben Stanley (@BDStanley; benstanley.org). Based on code written by Jack Bailey (@PoliSciJack)", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_pis, file = "PiS_seats.png", 
@@ -610,7 +610,7 @@ p_ko <- ggplot(plotdata) +
   scale_fill_gradient(name="KO", limits=c(min=0, max=20), low = "white", high = "orange", guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=KO, label=KO), fill="white", family="Roboto Condensed Light") +
   labs(title="Constituency-level share of seats for Koalicja Obywatelska", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
-       caption = "@BDStanley; benstanley.org", family="Roboto Condensed")+
+       caption = "Ben Stanley (@BDStanley; benstanley.org). Based on code written by Jack Bailey (@PoliSciJack).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_ko, file = "KO_seats.png", 
@@ -624,7 +624,7 @@ p_psl <- ggplot(plotdata) +
   scale_fill_gradient(name="PSL-Kukiz", limits=c(min=0, max=20), low = "white", high = "darkgreen", guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=`PSL-Kukiz`, label=`PSL-Kukiz`), fill="white", family="Roboto Condensed Light") +
   labs(title="Constituency-level share of seats for PSL-Kukiz", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
-       caption = "@BDStanley; benstanley.org", family="Roboto Condensed")+
+       caption = "Ben Stanley (@BDStanley; benstanley.org). Based on code written by Jack Bailey (@PoliSciJack).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_psl, file = "PSL_seats.png", 
@@ -638,7 +638,7 @@ p_konf <- ggplot(plotdata) +
   scale_fill_gradient(name="Konfederacja", limits=c(min=0, max=20), low = "white", high = "midnightblue", guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=Konfederacja, label=Konfederacja), fill="white", family="Roboto Condensed Light") +
   labs(title="Constituency-level share of seats for Konfederacja", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
-       caption = "@BDStanley; benstanley.org", family="Roboto Condensed")+
+       caption = "Ben Stanley (@BDStanley; benstanley.org). Based on code written by Jack Bailey (@PoliSciJack).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_konf, file = "Konf_seats.png", 
@@ -651,7 +651,7 @@ p_pis_ko <- ggplot(plotdata) +
   scale_fill_gradient2(name="PiSKO", limits=c(min=-20, max=20), low = "orange", mid="white", high = "blue4", midpoint=0, guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiSKO, label=PiSKO), fill="white", family="Roboto Condensed Light") +
   labs(title="Constituency-level differences in share of seats for PiS and Koalicja Obywatelska", subtitle="Constituencies in shades of blue have more PiS MPs; constituencies in orange have more KO MPs", 
-       caption = "@BDStanley; benstanley.org", family="Roboto Condensed")+
+       caption = "Ben Stanley (@BDStanley; benstanley.org). Based on code written by Jack Bailey (@PoliSciJack).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_pis_ko, file = "PiSKO_seats.png", 
@@ -825,7 +825,7 @@ plot_trends_parl_DK <-
   scale_color_manual(values=cols) +
   scale_fill_manual(values=cols, guide=FALSE) +
   labs(y = "% of vote", x="", title = "Trends (including undecided voters)", 
-       subtitle=str_c("Data from ", names), color="", caption = "@BDStanley; benstanley.org") +
+       subtitle=str_c("Data from ", names), color="", caption = "Ben Stanley (@BDStanley; benstanley.org). Based on code written by Jack Bailey (@PoliSciJack).") +
   theme_minimal() +
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1))) +
