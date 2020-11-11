@@ -493,7 +493,6 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Part
 ggsave(plot_seats_parl, file = "plot_seats_parl.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
-
 #####Seat maps#####
 # seats table
 seats <- cbind(poldHondt, weights)
