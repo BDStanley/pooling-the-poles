@@ -34,30 +34,34 @@ plot_trends_parl_DK
 plot_seats_parl
 ```
 
-```{r fig.width=10, fig.height=10}
+```{r fig.width=8, fig.height=8}
 p_pis
 ```
 
-```{r fig.width=10, fig.height=10}
+```{r fig.width=8, fig.height=8}
 p_ko
 ```
 
-```{r fig.width=10, fig.height=10}
+```{r fig.width=8, fig.height=8}
 p_pis_ko
 ```
 
-```{r fig.width=10, fig.height=10}
+```{r fig.width=8, fig.height=8}
 p_p2050
 ```
 
-```{r fig.width=10, fig.height=10}
+```{r fig.width=8, fig.height=8}
 p_psl
 ```
 
-```{r fig.width=10, fig.height=10}
+```{r fig.width=8, fig.height=8}
 p_lewica
 ```
 
-```{r fig.width=10, fig.height=10}
+```{r fig.width=8, fig.height=8}
 p_konf
+```
+
+```{r}
+p_house
 ```
