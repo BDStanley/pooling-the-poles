@@ -58,16 +58,16 @@ polls <-
   mutate(PiS = 100/((100-DK))*PiS,
          KO = 100/((100-DK))*KO,
          Lewica = 100/((100-DK))*Lewica,
-         `PSL-Kukiz` = 100/((100-DK))*`PSL-Kukiz`,
+         PSL = 100/((100-DK))*PSL,
          Konfederacja = 100/((100-DK))*Konfederacja,
          `Polska 2050` = 100/((100-DK))*`Polska 2050`,
          Other = 100/((100-DK))*Other,
-    PSL = `PSL-Kukiz`,
+    PSL = PSL,
          Polska2050 = `Polska 2050`,
     time = as.integer(difftime(midDate, min(midDate), units = "days")),
          pollster = as.integer(factor(org)))
 
-cols <- c("PiS"="blue4", "KO"="orange", "PSL-Kukiz"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "Other"="gray50", "Polska 2050"="darkgoldenrod")
+cols <- c("PiS"="blue4", "KO"="orange", "PSL"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "Other"="gray50", "Polska 2050"="darkgoldenrod")
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
 names$house <- as.factor(names$house)
@@ -165,7 +165,7 @@ pred_dta <-
             "Lewica",
             "Konfederacja",
             "Other",
-            "PSL-Kukiz",
+            "PSL",
             "Polska 2050"
           )
       )
@@ -190,7 +190,7 @@ point_dta <-
             "Lewica",
             "Konfederacja",
             "Other",
-            "PSL-Kukiz",
+            "PSL",
             "Polska 2050"
           )
       )
@@ -227,7 +227,7 @@ plotdraws <- add_fitted_draws(
   group_by(.category) %>%
   mutate(.category = factor(.category,
                             levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
-                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL-Kukiz","Polska 2050")))
+                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Polska 2050")))
 
 medians <- plotdraws %>%
   summarise(est = median(.value)*100, .groups = "drop")
@@ -266,7 +266,7 @@ Lewica_5 <- plotdraws %>%
 
 PSL_5 <- plotdraws %>%
   pivot_wider(names_from=.category, values_from=.value) %>%
-  mutate(., PSL_5 = `PSL-Kukiz`-0.05,
+  mutate(., PSL_5 = PSL-0.05,
          PSL_5 = sum((PSL_5 > 0) / length(PSL_5)),
          PSL_5 = round(PSL_5, 2)) %>%
   pull(PSL_5) %>%
@@ -290,7 +290,7 @@ plot_latest_parl <-
   group_by(.category) %>%
   mutate(.category = factor(.category,
     levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
-    labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL-Kukiz","Polska 2050"))) %>%
+    labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Polska 2050"))) %>%
   ggplot() +
   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
   stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
@@ -311,8 +311,8 @@ plot_latest_parl <-
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
            family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL-Kukiz"],0)),
-           y="PSL-Kukiz", x=medians$est[medians$.category=="PSL-Kukiz"]/100, size=4, hjust = "center", vjust=-1,
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
+           y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
            x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
@@ -322,8 +322,8 @@ plot_latest_parl <-
            x=quantile(plotdraws$.value[plotdraws$.category=="Polska 2050"], 0.99), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica_5), y="Lewica",
            x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(PSL-Kukiz > 5%)  = ", PSL_5), y="PSL-Kukiz",
-           x=quantile(plotdraws$.value[plotdraws$.category=="PSL-Kukiz"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL_5), y="PSL",
+           x=quantile(plotdraws$.value[plotdraws$.category=="PSL"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja_5), y="Konfederacja",
            x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
@@ -341,14 +341,14 @@ ggsave(plot_latest_parl, file = "polls_latest_parl.png",
 weights <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/2019_elec_percentages.xlsx')
 median_PiS <- ifelse(medians$est[medians$.category=="PiS"] >=5, medians$est[medians$.category=="PiS"], 0)
 median_KO <- ifelse(medians$est[medians$.category=="KO"] >=5, medians$est[medians$.category=="KO"], 0)
-`median_PSL-Kukiz` <- ifelse(medians$est[medians$.category=="PSL-Kukiz"] >=5, medians$est[medians$.category=="PSL-Kukiz"], 0)
+`median_PSL` <- ifelse(medians$est[medians$.category=="PSL"] >=5, medians$est[medians$.category=="PSL"], 0)
 median_Lewica <- ifelse(medians$est[medians$.category=="Lewica"] >=5, medians$est[medians$.category=="Lewica"], 0)
 median_Konfederacja <- ifelse(medians$est[medians$.category=="Konfederacja"] >=5, medians$est[medians$.category=="Konfederacja"], 0)
 `median_Polska 2050` <- ifelse(medians$est[medians$.category=="Polska 2050"] >=5, medians$est[medians$.category=="Polska 2050"], 0)
 
 PiSpct <- round(weights$PiScoef*median_PiS, digits=2)
 KOpct <- round(weights$KOcoef*median_KO, digits=2)
-PSLpct <- round(weights$PSLcoef*`median_PSL-Kukiz`, digits=2)
+PSLpct <- round(weights$PSLcoef*`median_PSL`, digits=2)
 Lewicapct <- round(weights$Lewicacoef*median_Lewica, digits=2)
 Konfederacjapct <- round(weights$Konfcoef*median_Konfederacja, digits=2)
 `Polska 2050pct` <- round(weights$KOcoef*`median_Polska 2050`, digits=2)
@@ -371,7 +371,7 @@ for( i in 1 : 42 ) {
                                      `Polska 2050est`[i], PSLest[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
 }
 
-colnames(poldHondt) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "Polska 2050", "PSL-Kukiz")
+colnames(poldHondt) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "Polska 2050", "PSL")
 
 frame <- t(rbind(poldHondt[1,], colSums(poldHondt[2:42,])))
 frame <- data.frame(rownames(frame), frame)
@@ -380,12 +380,12 @@ frame <- frame[with(frame, order(-Weighted)),]
 frame$in2019[frame$Party=="KO"] <- 134
 frame$in2019[frame$Party=="PiS"] <- 235
 frame$in2019[frame$Party=="Lewica"] <- 49
-frame$in2019[frame$Party=="PSL-Kukiz"] <- 30
+frame$in2019[frame$Party=="PSL"] <- 30
 frame$in2019[frame$Party=="MN"] <- 1
 frame$in2019[frame$Party=="Konfederacja"] <- 11
 frame$in2019[frame$Party=="Polska 2050"] <- 0
 frame <- frame[frame$Weighted>0,]
-frame$Party <- factor(frame$Party, levels=c("PiS", "KO", "PSL-Kukiz", "Lewica", "Konfederacja", "Polska 2050", "MN"))
+frame$Party <- factor(frame$Party, levels=c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "Polska 2050", "MN"))
 frame$diffPres <- sprintf("%+d", (frame$Weighted - frame$in2019))
 frame$diffPres <- sprintf("(%s)", frame$diffPres)
 frame$diffPresUn <- sprintf("%+d", (frame$Unweighted - frame$in2019))
@@ -417,7 +417,7 @@ ggsave(plot_seats_parl, file = "plot_seats_parl.png",
 # seats table
 seats <- cbind(poldHondt, weights)
 row.names(seats) <- weights$name
-keep <- c("KO","PiS","PSL-Kukiz","Lewica", "Konfederacja", "MN", "Polska 2050")
+keep <- c("KO","PiS","PSL","Lewica", "Konfederacja", "MN", "Polska 2050")
 seats <- seats[keep]
 seats <- seats[-1,]
 seats$id <- 1:41
@@ -617,13 +617,13 @@ ggsave(p_ko, file = "KO_seats.png",
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
 
 p_psl <- ggplot(plotdata) + 
-  aes(long,lat,group=group,fill=as.integer(`PSL-Kukiz`)) + 
+  aes(long,lat,group=group,fill=as.integer(PSL)) + 
   geom_polygon() +
   geom_path(color="black") +
   theme(aspect.ratio=1) +
-  scale_fill_gradient(name="PSL-Kukiz", limits=c(min=0, max=20), low = "white", high = "darkgreen", guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=`PSL-Kukiz`, label=`PSL-Kukiz`), fill="white", family="Roboto Condensed Light") +
-  labs(title="Constituency-level share of seats for PSL-Kukiz", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
+  scale_fill_gradient(name="PSL", limits=c(min=0, max=20), low = "white", high = "darkgreen", guide="colorbar") +
+  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PSL, label=PSL), fill="white", family="Roboto Condensed Light") +
+  labs(title="Constituency-level share of seats for PSL", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
@@ -670,10 +670,10 @@ KO_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal
   setNames(houselevels) %>%
   mutate(party="KO")
 
-`PSL-Kukiz_house` <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
+`PSL_house` <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
   select(.,contains("PSL", ignore.case = F)) %>%
   setNames(houselevels) %>%
-  mutate(party="PSL-Kukiz")
+  mutate(party="PSL")
 
 Lewica_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
   select(.,contains("Lewica", ignore.case = F)) %>%
@@ -690,7 +690,7 @@ Konfederacja_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_name
   setNames(houselevels) %>%
   mutate(party="Polska 2050")
 
-p_house <- bind_rows(PiS_house, KO_house, `PSL-Kukiz_house`, Lewica_house, Konfederacja_house, `Polska 2050_house`) %>%
+p_house <- bind_rows(PiS_house, KO_house, `PSL_house`, Lewica_house, Konfederacja_house, `Polska 2050_house`) %>%
   pivot_longer(., cols=where(is.numeric), names_to="house") %>%
   separate(., house, c("house", "method"), sep="_") %>%
   ggplot(aes(x = party, y = 10*value, color=house, shape=method)) +
@@ -726,12 +726,12 @@ polls <-
   mutate(midDate = as.Date(startDate + difftime(endDate, startDate)),
          midDate_int=as.integer(midDate)) %>%
   filter(midDate_int > (max(midDate_int)-150)) %>%
-  mutate(PSL = `PSL-Kukiz`,
+  mutate(PSL = PSL,
          Polska2050 = `Polska 2050`,
          time = as.integer(difftime(midDate, min(midDate), units = "days")),
          pollster = as.integer(factor(org)))
 
-cols <- c("PiS"="blue4", "KO"="orange", "PSL-Kukiz"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", 
+cols <- c("PiS"="blue4", "KO"="orange", "PSL"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", 
           "MN" = "yellow", "Other"="gray50", "Polska 2050"="darkgoldenrod", "Don't know" = "gray50")
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
@@ -829,7 +829,7 @@ pred_dta <-
             "Lewica",
             "Konfederacja",
             "Don't know",
-            "PSL-Kukiz",
+            "PSL",
             "Polska 2050"
           )
       )
@@ -854,7 +854,7 @@ point_dta <-
             "Lewica",
             "Konfederacja",
             "Don't know",
-            "PSL-Kukiz",
+            "PSL",
             "Polska 2050"
           )
       )
