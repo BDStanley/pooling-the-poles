@@ -52,9 +52,9 @@ polls$endDate <- as.Date(polls$endDate)
 
 polls <-
   polls %>%
-  mutate(midDate = as.Date(startDate + difftime(endDate, startDate)),
+  mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
-  filter(midDate_int > (max(midDate_int)-150)) %>%
+  #filter(midDate_int > (max(midDate_int)-150)) %>%
   mutate(PiS = 100/((100-DK))*PiS,
          KO = 100/((100-DK))*KO,
          Lewica = 100/((100-DK))*Lewica,
@@ -126,8 +126,7 @@ m1 <-
       data = polls,
       seed = 780045,
       iter = 5000,
-      chains = 6,
-      cores = 6,
+      backend="cmdstanr", chains=6, cores=6, threads = threading(3),
       refresh = 5,
       control =
         list(
@@ -215,7 +214,6 @@ plot_trends_parl <-
   theme_changes
 ggsave(plot_trends_parl, file = "plot_trends_parl.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
-
 
 #####Latest plot#####
 plotdraws <- add_fitted_draws(
@@ -723,9 +721,9 @@ polls$endDate <- as.Date(polls$endDate)
 
 polls <-
   polls %>%
-  mutate(midDate = as.Date(startDate + difftime(endDate, startDate)),
+  mutate(midDate = as.Date(startDate + (difftime(endDate, startDate)/2)),
          midDate_int=as.integer(midDate)) %>%
-  filter(midDate_int > (max(midDate_int)-150)) %>%
+  #filter(midDate_int > (max(midDate_int)-150)) %>%
   mutate(PSL = PSL,
          Polska2050 = `Polska 2050`,
          time = as.integer(difftime(midDate, min(midDate), units = "days")),
@@ -884,3 +882,114 @@ ggsave(plot_trends_parl_DK, file = "plot_trends_parl_DK.png",
 
 #####Save image out#####
 save.image("~/Desktop/PoolingthePoles.RData")
+
+
+#####Run model by pollster#####
+
+m1 <-
+  brm(formula = bf(outcome ~ 1 + s(time) + org),
+      family = dirichlet(link = "logit", refcat = "Other"),
+      prior =
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muPiS") +
+        prior(normal(0, 0.5), class = "b", dpar = "muPiS") +
+        prior(exponential(2), class = "sds", dpar = "muPiS") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muKO") +
+        prior(normal(0, 0.5), class = "b", dpar = "muKO") +
+        prior(exponential(2), class = "sds", dpar = "muKO") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muLewica") +
+        prior(normal(0, 0.5), class = "b", dpar = "muLewica") +
+        prior(exponential(2), class = "sds", dpar = "muLewica") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muPSL") +
+        prior(normal(0, 0.5), class = "b", dpar = "muPSL") +
+        prior(exponential(2), class = "sds", dpar = "muPSL") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muKonfederacja") +
+        prior(normal(0, 0.5), class = "b", dpar = "muKonfederacja") +
+        prior(exponential(2), class = "sds", dpar = "muKonfederacja") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muPolska2050") +
+        prior(normal(0, 0.5), class = "b", dpar = "muPolska2050") +
+        prior(exponential(2), class = "sds", dpar = "muPolska2050") +
+        prior(gamma(1, 0.01), class = "phi"),
+      data = polls,
+      seed = 780045,
+      iter = 5000,
+      backend="cmdstanr", chains=6, cores=6, threads = threading(3),
+      refresh = 5,
+      control =
+        list(
+          adapt_delta = .95,
+          max_treedepth = 15
+        )
+  )
+
+today <- interval(min(polls$midDate), Sys.Date())/years(1)
+
+pred_dta <-
+  tibble(
+    time = seq(0, today, length.out = nrow(polls)),
+    date = as.Date(time*365, origin = min(polls$midDate)),
+    org = polls$org
+  )
+
+pred_dta <-
+  add_fitted_draws(
+    model = m1,
+    newdata = pred_dta
+  ) %>%
+  group_by(date, .category, org) %>%
+  rename(party = .category) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+        labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska 2050")),
+    org =
+      org %>%
+      factor(
+        levels = c("CBOS_Mixed", "Estymator_CATI", "IBRIS_CATI", "IPSOS_CATI", "Kantar_CAPI", "Kantar_CATI", "Kantar_CAWI", "PGB Opinium_CATI", "Pollster_CATI", "Social Changes_CAWI", "United Surveys_CATI"),
+        labels = c("CBOS, mixed", "Estymator, CATI", "IBRIS, CATI", "IPSOS, CATI", "Kantar, CAPI", "Kantar, CATI", "Kantar, CAWI", "PGB Opinium, CATI", "Pollster, CATI", "Social Changes, CAWI", "United Surveys, CATI")
+      )
+  )
+
+point_dta <- polls %>%
+  select(org, midDate, PiS, KO, Lewica, Konfederacja, Other, PSL, Polska2050) %>%
+  pivot_longer(
+    cols = c(-midDate, -org),
+    names_to = "party",
+    values_to = "est"
+  ) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+        labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska 2050")),
+    org =
+      org %>%
+      factor(
+        levels = c("CBOS_Mixed", "Estymator_CATI", "IBRIS_CATI", "IPSOS_CATI", "Kantar_CAPI", "Kantar_CATI", "Kantar_CAWI", "PGB Opinium_CATI", "Pollster_CATI", "Social Changes_CAWI", "United Surveys_CATI"),
+        labels = c("CBOS, mixed", "Estymator, CATI", "IBRIS, CATI", "IPSOS, CATI", "Kantar, CAPI", "Kantar, CATI", "Kantar, CAWI", "PGB Opinium, CATI", "Pollster, CATI", "Social Changes, CAWI", "United Surveys, CATI")
+      )
+  )
+
+
+plot_trends_pollster <-
+  ggplot() +
+  geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
+  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_date(date_breaks = "1 month",
+               date_labels = "%b") +
+  facet_wrap(~org, nrow=3) +
+  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+                  ylim = c(0, .5)) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  labs(y = "% of vote", x="", title = "Trends (by pollster)", 
+       subtitle=str_c("Data from ", names), color="", caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  theme_changes
+ggsave(plot_trends_pollster , file = "plot_trends_pollster.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
