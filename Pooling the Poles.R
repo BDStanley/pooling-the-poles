@@ -336,24 +336,20 @@ plot_latest_parl <-
 ggsave(plot_latest_parl, file = "polls_latest_parl.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
-#####Seats plot#####
-weights <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/2019_elec_percentages.xlsx')
+#####Seat maps#####
 median_PiS <- ifelse(medians$est[medians$.category=="PiS"] >=5, medians$est[medians$.category=="PiS"], 0)
 median_KO <- ifelse(medians$est[medians$.category=="KO"] >=5, medians$est[medians$.category=="KO"], 0)
 `median_PSL` <- ifelse(medians$est[medians$.category=="PSL"] >=5, medians$est[medians$.category=="PSL"], 0)
 median_Lewica <- ifelse(medians$est[medians$.category=="Lewica"] >=5, medians$est[medians$.category=="Lewica"], 0)
 median_Konfederacja <- ifelse(medians$est[medians$.category=="Konfederacja"] >=5, medians$est[medians$.category=="Konfederacja"], 0)
 `median_Polska 2050` <- ifelse(medians$est[medians$.category=="Polska 2050"] >=5, medians$est[medians$.category=="Polska 2050"], 0)
-
 PiSpct <- round(weights$PiScoef*median_PiS, digits=2)
 KOpct <- round(weights$KOcoef*median_KO, digits=2)
 PSLpct <- round(weights$PSLcoef*`median_PSL`, digits=2)
 Lewicapct <- round(weights$Lewicacoef*median_Lewica, digits=2)
 Konfederacjapct <- round(weights$Konfcoef*median_Konfederacja, digits=2)
 `Polska 2050pct` <- round(weights$KOcoef*`median_Polska 2050`, digits=2)
-MNpct <- c(0.17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 
-           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
+MNpct <- c(0.17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 KOest <- (weights$validvotes/100)*KOpct
 PiSest <- (weights$validvotes/100)*PiSpct
 PSLest <- (weights$validvotes/100)*PSLpct
@@ -361,62 +357,18 @@ Lewicaest <- (weights$validvotes/100)*Lewicapct
 Konfederacjaest <- (weights$validvotes/100)*Konfederacjapct
 `Polska 2050est` <- (weights$validvotes/100)*`Polska 2050pct`
 MNest <- (weights$validvotes/100)*MNpct
-
-poldHondt <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42),
-                        `Polska 2050`=rep(1,42), PSL=rep(1,42))
+poldHondt <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42), `Polska 2050`=rep(1,42), PSL=rep(1,42))
 
 for( i in 1 : 42 ) {
   poldHondt[i,] <- c(giveseats(v = c(KOest[i], Konfederacjaest[i], Lewicaest[i], MNest[i], PiSest[i], 
                                      `Polska 2050est`[i], PSLest[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
 }
 
-colnames(poldHondt) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "Polska 2050", "PSL")
-
-frame <- t(rbind(poldHondt[1,], colSums(poldHondt[2:42,])))
-frame <- data.frame(rownames(frame), frame)
-colnames(frame) <- c("Party", "Unweighted", "Weighted")
-frame <- frame[with(frame, order(-Weighted)),]
-frame$in2019[frame$Party=="KO"] <- 134
-frame$in2019[frame$Party=="PiS"] <- 235
-frame$in2019[frame$Party=="Lewica"] <- 49
-frame$in2019[frame$Party=="PSL"] <- 30
-frame$in2019[frame$Party=="MN"] <- 1
-frame$in2019[frame$Party=="Konfederacja"] <- 11
-frame$in2019[frame$Party=="Polska 2050"] <- 0
-frame <- frame[frame$Weighted>0,]
-frame$Party <- factor(frame$Party, levels=c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "Polska 2050", "MN"))
-frame$diffPres <- sprintf("%+d", (frame$Weighted - frame$in2019))
-frame$diffPres <- sprintf("(%s)", frame$diffPres)
-frame$diffPresUn <- sprintf("%+d", (frame$Unweighted - frame$in2019))
-frame$diffPresUn <- sprintf("(%s)", frame$diffPresUn)
-frame$Party <- reorder(frame$Party, -frame$Weighted)
-
-plot_seats_parl <- ggplot(data=frame, mapping=aes(x=Party, y=Weighted, fill=Party)) +
-  geom_bar(stat="identity", width=.75, show.legend = F) +
-  geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
-  geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
-  geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
-  scale_y_continuous('Number of seats', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
-  scale_fill_manual(name="Party", values = cols)+
-  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
-  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
-  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
-  annotate("text", x=frame$Party, y=c(frame$Weighted+18), label=frame$Weighted, size=4, family="Roboto Condensed Light")+
-  annotate("text", x=frame$Party, y=c(frame$Weighted+8), label=frame$diffPres, size=3, family="Roboto Condensed Light") +
-  labs(x="", y="% of vote", title="Estimated share of seats",
-       subtitle="Figures in brackets refer to change in seat share since October 2019 election",
-       caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  theme_changes
-ggsave(plot_seats_parl, file = "plot_seats_parl.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
-
-#####Seat maps#####
 # seats table
 seats <- cbind(poldHondt, weights)
 row.names(seats) <- weights$name
-keep <- c("KO","PiS","PSL","Lewica", "Konfederacja", "MN", "Polska 2050")
+keep <- c("KO","Konfederacja","Lewica","MN", "PiS", "Polska 2050", "PSL")
+colnames(seats) <- c("KO", "Konfederacja","Lewica","MN", "PiS", "Polska 2050", "PSL")
 seats <- seats[keep]
 seats <- seats[-1,]
 seats$id <- 1:41
@@ -656,58 +608,9 @@ p_pis_ko <- ggplot(plotdata) +
 ggsave(p_pis_ko, file = "PiSKO_seats.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
 
-#####House effects#####
-houselevels <- get_labels(droplevels(polls$org))
 
-PiS_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
-  select(.,contains("PiS")) %>%
-  setNames(houselevels) %>%
-  mutate(party="PiS")
-
-KO_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
-  select(.,contains("KO", ignore.case = F)) %>%
-  setNames(houselevels) %>%
-  mutate(party="KO")
-
-`PSL_house` <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
-  select(.,contains("PSL", ignore.case = F)) %>%
-  setNames(houselevels) %>%
-  mutate(party="PSL")
-
-Lewica_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
-  select(.,contains("Lewica", ignore.case = F)) %>%
-  setNames(houselevels) %>%
-  mutate(party="Lewica")
-
-Konfederacja_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
-  select(.,contains("Konfederacja", ignore.case = F)) %>%
-  setNames(houselevels) %>%
-  mutate(party="Konfederacja")
-
-`Polska 2050_house` <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
-  select(.,contains("Polska2050", ignore.case = F)) %>%
-  setNames(houselevels) %>%
-  mutate(party="Polska 2050")
-
-p_house <- bind_rows(PiS_house, KO_house, `PSL_house`, Lewica_house, Konfederacja_house, `Polska 2050_house`) %>%
-  pivot_longer(., cols=where(is.numeric), names_to="house") %>%
-  separate(., house, c("house", "method"), sep="_") %>%
-  ggplot(aes(x = party, y = 10*value, color=house, shape=method)) +
-  geom_abline(intercept=0, slope=0, colour="gray10", linetype=3) +
-  stat_pointinterval(position = position_dodge(width = .7)) +
-  guides(color = guide_legend(override.aes = list(size = 5, shape="|"), keywidth=0.3, keyheight=0.3, default.unit="inch")) +
-  guides(shape = guide_legend(override.aes = list(size = 5, linetype=NULL), keywidth=0.3, keyheight=0.3, default.unit="inch")) +
-  labs(color="Pollster", shape="Mode", x="", y="Deviation from mean party vote share (percent)", 
-       title="House and mode effects", 
-       caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  theme_changes
-ggsave(p_house, file = "p_house.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
-
-
-##### New seats estimate
+#####Seats plot#####
+weights <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/2019_elec_percentages.xlsx')
 plotdraws <- add_fitted_draws(
   model = m1,
   newdata =
@@ -780,313 +683,302 @@ consts <- consts %>%
                                okreg==39 ~ weights$magnitude[weights$okreg==39],
                                okreg==40 ~ weights$magnitude[weights$okreg==40],
                                okreg==41 ~ weights$magnitude[weights$okreg==41]
-                               ),
-         PiS = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*PiS*weights$PiScoef[weights$okreg==1],
-                         okreg==2 ~ (weights$validvotes[weights$okreg==2])*PiS*weights$PiScoef[weights$okreg==2],
-                               okreg==3 ~ (weights$validvotes[weights$okreg==3])*PiS*weights$PiScoef[weights$okreg==3],
-                               okreg==4 ~ (weights$validvotes[weights$okreg==4])*PiS*weights$PiScoef[weights$okreg==4],
-                               okreg==5 ~ (weights$validvotes[weights$okreg==5])*PiS*weights$PiScoef[weights$okreg==5],
-                               okreg==6 ~ (weights$validvotes[weights$okreg==6])*PiS*weights$PiScoef[weights$okreg==6],
-                               okreg==7 ~ (weights$validvotes[weights$okreg==7])*PiS*weights$PiScoef[weights$okreg==7],
-                               okreg==8 ~ (weights$validvotes[weights$okreg==8])*PiS*weights$PiScoef[weights$okreg==8],
-                               okreg==9 ~ (weights$validvotes[weights$okreg==9])*PiS*weights$PiScoef[weights$okreg==9],
-                               okreg==10 ~ (weights$validvotes[weights$okreg==10])*PiS*weights$PiScoef[weights$okreg==10],
-                               okreg==11 ~ (weights$validvotes[weights$okreg==11])*PiS*weights$PiScoef[weights$okreg==11],
-                               okreg==12 ~ (weights$validvotes[weights$okreg==12])*PiS*weights$PiScoef[weights$okreg==12],
-                               okreg==13 ~ (weights$validvotes[weights$okreg==13])*PiS*weights$PiScoef[weights$okreg==13],
-                               okreg==14 ~ (weights$validvotes[weights$okreg==14])*PiS*weights$PiScoef[weights$okreg==14],
-                               okreg==15 ~ (weights$validvotes[weights$okreg==15])*PiS*weights$PiScoef[weights$okreg==15],
-                               okreg==16 ~ (weights$validvotes[weights$okreg==16])*PiS*weights$PiScoef[weights$okreg==16],
-                               okreg==17 ~ (weights$validvotes[weights$okreg==17])*PiS*weights$PiScoef[weights$okreg==17],
-                               okreg==18 ~ (weights$validvotes[weights$okreg==18])*PiS*weights$PiScoef[weights$okreg==18],
-                               okreg==19 ~ (weights$validvotes[weights$okreg==19])*PiS*weights$PiScoef[weights$okreg==19],
-                               okreg==20 ~ (weights$validvotes[weights$okreg==20])*PiS*weights$PiScoef[weights$okreg==20],
-                               okreg==21 ~ (weights$validvotes[weights$okreg==21])*PiS*weights$PiScoef[weights$okreg==21],
-                               okreg==22 ~ (weights$validvotes[weights$okreg==22])*PiS*weights$PiScoef[weights$okreg==22],
-                               okreg==23 ~ (weights$validvotes[weights$okreg==23])*PiS*weights$PiScoef[weights$okreg==23],
-                               okreg==24 ~ (weights$validvotes[weights$okreg==24])*PiS*weights$PiScoef[weights$okreg==24],
-                               okreg==25 ~ (weights$validvotes[weights$okreg==25])*PiS*weights$PiScoef[weights$okreg==25],
-                               okreg==26 ~ (weights$validvotes[weights$okreg==26])*PiS*weights$PiScoef[weights$okreg==26],
-                               okreg==27 ~ (weights$validvotes[weights$okreg==27])*PiS*weights$PiScoef[weights$okreg==27],
-                               okreg==28 ~ (weights$validvotes[weights$okreg==28])*PiS*weights$PiScoef[weights$okreg==28],
-                               okreg==29 ~ (weights$validvotes[weights$okreg==29])*PiS*weights$PiScoef[weights$okreg==29],
-                               okreg==30 ~ (weights$validvotes[weights$okreg==30])*PiS*weights$PiScoef[weights$okreg==30],
-                               okreg==31 ~ (weights$validvotes[weights$okreg==31])*PiS*weights$PiScoef[weights$okreg==31],
-                               okreg==32 ~ (weights$validvotes[weights$okreg==32])*PiS*weights$PiScoef[weights$okreg==32],
-                               okreg==33 ~ (weights$validvotes[weights$okreg==33])*PiS*weights$PiScoef[weights$okreg==33],
-                               okreg==34 ~ (weights$validvotes[weights$okreg==34])*PiS*weights$PiScoef[weights$okreg==34],
-                               okreg==35 ~ (weights$validvotes[weights$okreg==35])*PiS*weights$PiScoef[weights$okreg==35],
-                               okreg==36 ~ (weights$validvotes[weights$okreg==36])*PiS*weights$PiScoef[weights$okreg==36],
-                               okreg==37 ~ (weights$validvotes[weights$okreg==37])*PiS*weights$PiScoef[weights$okreg==37],
-                               okreg==38 ~ (weights$validvotes[weights$okreg==38])*PiS*weights$PiScoef[weights$okreg==38],
-                               okreg==39 ~ (weights$validvotes[weights$okreg==39])*PiS*weights$PiScoef[weights$okreg==39],
-                               okreg==40 ~ (weights$validvotes[weights$okreg==40])*PiS*weights$PiScoef[weights$okreg==40],
-                               okreg==41 ~ (weights$validvotes[weights$okreg==41])*PiS*weights$PiScoef[weights$okreg==41]
-                         ),
-         KO = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*KO*weights$KOcoef[weights$okreg==1],
-                         okreg==2 ~ (weights$validvotes[weights$okreg==2])*KO*weights$KOcoef[weights$okreg==2],
-                         okreg==3 ~ (weights$validvotes[weights$okreg==3])*KO*weights$KOcoef[weights$okreg==3],
-                         okreg==4 ~ (weights$validvotes[weights$okreg==4])*KO*weights$KOcoef[weights$okreg==4],
-                         okreg==5 ~ (weights$validvotes[weights$okreg==5])*KO*weights$KOcoef[weights$okreg==5],
-                         okreg==6 ~ (weights$validvotes[weights$okreg==6])*KO*weights$KOcoef[weights$okreg==6],
-                         okreg==7 ~ (weights$validvotes[weights$okreg==7])*KO*weights$KOcoef[weights$okreg==7],
-                         okreg==8 ~ (weights$validvotes[weights$okreg==8])*KO*weights$KOcoef[weights$okreg==8],
-                         okreg==9 ~ (weights$validvotes[weights$okreg==9])*KO*weights$KOcoef[weights$okreg==9],
-                         okreg==10 ~ (weights$validvotes[weights$okreg==10])*KO*weights$KOcoef[weights$okreg==10],
-                         okreg==11 ~ (weights$validvotes[weights$okreg==11])*KO*weights$KOcoef[weights$okreg==11],
-                         okreg==12 ~ (weights$validvotes[weights$okreg==12])*KO*weights$KOcoef[weights$okreg==12],
-                         okreg==13 ~ (weights$validvotes[weights$okreg==13])*KO*weights$KOcoef[weights$okreg==13],
-                         okreg==14 ~ (weights$validvotes[weights$okreg==14])*KO*weights$KOcoef[weights$okreg==14],
-                         okreg==15 ~ (weights$validvotes[weights$okreg==15])*KO*weights$KOcoef[weights$okreg==15],
-                         okreg==16 ~ (weights$validvotes[weights$okreg==16])*KO*weights$KOcoef[weights$okreg==16],
-                         okreg==17 ~ (weights$validvotes[weights$okreg==17])*KO*weights$KOcoef[weights$okreg==17],
-                         okreg==18 ~ (weights$validvotes[weights$okreg==18])*KO*weights$KOcoef[weights$okreg==18],
-                         okreg==19 ~ (weights$validvotes[weights$okreg==19])*KO*weights$KOcoef[weights$okreg==19],
-                         okreg==20 ~ (weights$validvotes[weights$okreg==20])*KO*weights$KOcoef[weights$okreg==20],
-                         okreg==21 ~ (weights$validvotes[weights$okreg==21])*KO*weights$KOcoef[weights$okreg==21],
-                         okreg==22 ~ (weights$validvotes[weights$okreg==22])*KO*weights$KOcoef[weights$okreg==22],
-                         okreg==23 ~ (weights$validvotes[weights$okreg==23])*KO*weights$KOcoef[weights$okreg==23],
-                         okreg==24 ~ (weights$validvotes[weights$okreg==24])*KO*weights$KOcoef[weights$okreg==24],
-                         okreg==25 ~ (weights$validvotes[weights$okreg==25])*KO*weights$KOcoef[weights$okreg==25],
-                         okreg==26 ~ (weights$validvotes[weights$okreg==26])*KO*weights$KOcoef[weights$okreg==26],
-                         okreg==27 ~ (weights$validvotes[weights$okreg==27])*KO*weights$KOcoef[weights$okreg==27],
-                         okreg==28 ~ (weights$validvotes[weights$okreg==28])*KO*weights$KOcoef[weights$okreg==28],
-                         okreg==29 ~ (weights$validvotes[weights$okreg==29])*KO*weights$KOcoef[weights$okreg==29],
-                         okreg==30 ~ (weights$validvotes[weights$okreg==30])*KO*weights$KOcoef[weights$okreg==30],
-                         okreg==31 ~ (weights$validvotes[weights$okreg==31])*KO*weights$KOcoef[weights$okreg==31],
-                         okreg==32 ~ (weights$validvotes[weights$okreg==32])*KO*weights$KOcoef[weights$okreg==32],
-                         okreg==33 ~ (weights$validvotes[weights$okreg==33])*KO*weights$KOcoef[weights$okreg==33],
-                         okreg==34 ~ (weights$validvotes[weights$okreg==34])*KO*weights$KOcoef[weights$okreg==34],
-                         okreg==35 ~ (weights$validvotes[weights$okreg==35])*KO*weights$KOcoef[weights$okreg==35],
-                         okreg==36 ~ (weights$validvotes[weights$okreg==36])*KO*weights$KOcoef[weights$okreg==36],
-                         okreg==37 ~ (weights$validvotes[weights$okreg==37])*KO*weights$KOcoef[weights$okreg==37],
-                         okreg==38 ~ (weights$validvotes[weights$okreg==38])*KO*weights$KOcoef[weights$okreg==38],
-                         okreg==39 ~ (weights$validvotes[weights$okreg==39])*KO*weights$KOcoef[weights$okreg==39],
-                         okreg==40 ~ (weights$validvotes[weights$okreg==40])*KO*weights$KOcoef[weights$okreg==40],
-                         okreg==41 ~ (weights$validvotes[weights$okreg==41])*KO*weights$KOcoef[weights$okreg==41]
-         ),
-         `Polska 2050` = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*`Polska 2050`*weights$KOcoef[weights$okreg==1],
-                         okreg==2 ~ (weights$validvotes[weights$okreg==2])*`Polska 2050`*weights$KOcoef[weights$okreg==2],
-                         okreg==3 ~ (weights$validvotes[weights$okreg==3])*`Polska 2050`*weights$KOcoef[weights$okreg==3],
-                         okreg==4 ~ (weights$validvotes[weights$okreg==4])*`Polska 2050`*weights$KOcoef[weights$okreg==4],
-                         okreg==5 ~ (weights$validvotes[weights$okreg==5])*`Polska 2050`*weights$KOcoef[weights$okreg==5],
-                         okreg==6 ~ (weights$validvotes[weights$okreg==6])*`Polska 2050`*weights$KOcoef[weights$okreg==6],
-                         okreg==7 ~ (weights$validvotes[weights$okreg==7])*`Polska 2050`*weights$KOcoef[weights$okreg==7],
-                         okreg==8 ~ (weights$validvotes[weights$okreg==8])*`Polska 2050`*weights$KOcoef[weights$okreg==8],
-                         okreg==9 ~ (weights$validvotes[weights$okreg==9])*`Polska 2050`*weights$KOcoef[weights$okreg==9],
-                         okreg==10 ~ (weights$validvotes[weights$okreg==10])*`Polska 2050`*weights$KOcoef[weights$okreg==10],
-                         okreg==11 ~ (weights$validvotes[weights$okreg==11])*`Polska 2050`*weights$KOcoef[weights$okreg==11],
-                         okreg==12 ~ (weights$validvotes[weights$okreg==12])*`Polska 2050`*weights$KOcoef[weights$okreg==12],
-                         okreg==13 ~ (weights$validvotes[weights$okreg==13])*`Polska 2050`*weights$KOcoef[weights$okreg==13],
-                         okreg==14 ~ (weights$validvotes[weights$okreg==14])*`Polska 2050`*weights$KOcoef[weights$okreg==14],
-                         okreg==15 ~ (weights$validvotes[weights$okreg==15])*`Polska 2050`*weights$KOcoef[weights$okreg==15],
-                         okreg==16 ~ (weights$validvotes[weights$okreg==16])*`Polska 2050`*weights$KOcoef[weights$okreg==16],
-                         okreg==17 ~ (weights$validvotes[weights$okreg==17])*`Polska 2050`*weights$KOcoef[weights$okreg==17],
-                         okreg==18 ~ (weights$validvotes[weights$okreg==18])*`Polska 2050`*weights$KOcoef[weights$okreg==18],
-                         okreg==19 ~ (weights$validvotes[weights$okreg==19])*`Polska 2050`*weights$KOcoef[weights$okreg==19],
-                         okreg==20 ~ (weights$validvotes[weights$okreg==20])*`Polska 2050`*weights$KOcoef[weights$okreg==20],
-                         okreg==21 ~ (weights$validvotes[weights$okreg==21])*`Polska 2050`*weights$KOcoef[weights$okreg==21],
-                         okreg==22 ~ (weights$validvotes[weights$okreg==22])*`Polska 2050`*weights$KOcoef[weights$okreg==22],
-                         okreg==23 ~ (weights$validvotes[weights$okreg==23])*`Polska 2050`*weights$KOcoef[weights$okreg==23],
-                         okreg==24 ~ (weights$validvotes[weights$okreg==24])*`Polska 2050`*weights$KOcoef[weights$okreg==24],
-                         okreg==25 ~ (weights$validvotes[weights$okreg==25])*`Polska 2050`*weights$KOcoef[weights$okreg==25],
-                         okreg==26 ~ (weights$validvotes[weights$okreg==26])*`Polska 2050`*weights$KOcoef[weights$okreg==26],
-                         okreg==27 ~ (weights$validvotes[weights$okreg==27])*`Polska 2050`*weights$KOcoef[weights$okreg==27],
-                         okreg==28 ~ (weights$validvotes[weights$okreg==28])*`Polska 2050`*weights$KOcoef[weights$okreg==28],
-                         okreg==29 ~ (weights$validvotes[weights$okreg==29])*`Polska 2050`*weights$KOcoef[weights$okreg==29],
-                         okreg==30 ~ (weights$validvotes[weights$okreg==30])*`Polska 2050`*weights$KOcoef[weights$okreg==30],
-                         okreg==31 ~ (weights$validvotes[weights$okreg==31])*`Polska 2050`*weights$KOcoef[weights$okreg==31],
-                         okreg==32 ~ (weights$validvotes[weights$okreg==32])*`Polska 2050`*weights$KOcoef[weights$okreg==32],
-                         okreg==33 ~ (weights$validvotes[weights$okreg==33])*`Polska 2050`*weights$KOcoef[weights$okreg==33],
-                         okreg==34 ~ (weights$validvotes[weights$okreg==34])*`Polska 2050`*weights$KOcoef[weights$okreg==34],
-                         okreg==35 ~ (weights$validvotes[weights$okreg==35])*`Polska 2050`*weights$KOcoef[weights$okreg==35],
-                         okreg==36 ~ (weights$validvotes[weights$okreg==36])*`Polska 2050`*weights$KOcoef[weights$okreg==36],
-                         okreg==37 ~ (weights$validvotes[weights$okreg==37])*`Polska 2050`*weights$KOcoef[weights$okreg==37],
-                         okreg==38 ~ (weights$validvotes[weights$okreg==38])*`Polska 2050`*weights$KOcoef[weights$okreg==38],
-                         okreg==39 ~ (weights$validvotes[weights$okreg==39])*`Polska 2050`*weights$KOcoef[weights$okreg==39],
-                         okreg==40 ~ (weights$validvotes[weights$okreg==40])*`Polska 2050`*weights$KOcoef[weights$okreg==40],
-                         okreg==41 ~ (weights$validvotes[weights$okreg==41])*`Polska 2050`*weights$KOcoef[weights$okreg==41]
-         ),
-         PSL = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*PSL*weights$PSLcoef[weights$okreg==1],
-                         okreg==2 ~ (weights$validvotes[weights$okreg==2])*PSL*weights$PSLcoef[weights$okreg==2],
-                         okreg==3 ~ (weights$validvotes[weights$okreg==3])*PSL*weights$PSLcoef[weights$okreg==3],
-                         okreg==4 ~ (weights$validvotes[weights$okreg==4])*PSL*weights$PSLcoef[weights$okreg==4],
-                         okreg==5 ~ (weights$validvotes[weights$okreg==5])*PSL*weights$PSLcoef[weights$okreg==5],
-                         okreg==6 ~ (weights$validvotes[weights$okreg==6])*PSL*weights$PSLcoef[weights$okreg==6],
-                         okreg==7 ~ (weights$validvotes[weights$okreg==7])*PSL*weights$PSLcoef[weights$okreg==7],
-                         okreg==8 ~ (weights$validvotes[weights$okreg==8])*PSL*weights$PSLcoef[weights$okreg==8],
-                         okreg==9 ~ (weights$validvotes[weights$okreg==9])*PSL*weights$PSLcoef[weights$okreg==9],
-                         okreg==10 ~ (weights$validvotes[weights$okreg==10])*PSL*weights$PSLcoef[weights$okreg==10],
-                         okreg==11 ~ (weights$validvotes[weights$okreg==11])*PSL*weights$PSLcoef[weights$okreg==11],
-                         okreg==12 ~ (weights$validvotes[weights$okreg==12])*PSL*weights$PSLcoef[weights$okreg==12],
-                         okreg==13 ~ (weights$validvotes[weights$okreg==13])*PSL*weights$PSLcoef[weights$okreg==13],
-                         okreg==14 ~ (weights$validvotes[weights$okreg==14])*PSL*weights$PSLcoef[weights$okreg==14],
-                         okreg==15 ~ (weights$validvotes[weights$okreg==15])*PSL*weights$PSLcoef[weights$okreg==15],
-                         okreg==16 ~ (weights$validvotes[weights$okreg==16])*PSL*weights$PSLcoef[weights$okreg==16],
-                         okreg==17 ~ (weights$validvotes[weights$okreg==17])*PSL*weights$PSLcoef[weights$okreg==17],
-                         okreg==18 ~ (weights$validvotes[weights$okreg==18])*PSL*weights$PSLcoef[weights$okreg==18],
-                         okreg==19 ~ (weights$validvotes[weights$okreg==19])*PSL*weights$PSLcoef[weights$okreg==19],
-                         okreg==20 ~ (weights$validvotes[weights$okreg==20])*PSL*weights$PSLcoef[weights$okreg==20],
-                         okreg==21 ~ (weights$validvotes[weights$okreg==21])*PSL*weights$PSLcoef[weights$okreg==21],
-                         okreg==22 ~ (weights$validvotes[weights$okreg==22])*PSL*weights$PSLcoef[weights$okreg==22],
-                         okreg==23 ~ (weights$validvotes[weights$okreg==23])*PSL*weights$PSLcoef[weights$okreg==23],
-                         okreg==24 ~ (weights$validvotes[weights$okreg==24])*PSL*weights$PSLcoef[weights$okreg==24],
-                         okreg==25 ~ (weights$validvotes[weights$okreg==25])*PSL*weights$PSLcoef[weights$okreg==25],
-                         okreg==26 ~ (weights$validvotes[weights$okreg==26])*PSL*weights$PSLcoef[weights$okreg==26],
-                         okreg==27 ~ (weights$validvotes[weights$okreg==27])*PSL*weights$PSLcoef[weights$okreg==27],
-                         okreg==28 ~ (weights$validvotes[weights$okreg==28])*PSL*weights$PSLcoef[weights$okreg==28],
-                         okreg==29 ~ (weights$validvotes[weights$okreg==29])*PSL*weights$PSLcoef[weights$okreg==29],
-                         okreg==30 ~ (weights$validvotes[weights$okreg==30])*PSL*weights$PSLcoef[weights$okreg==30],
-                         okreg==31 ~ (weights$validvotes[weights$okreg==31])*PSL*weights$PSLcoef[weights$okreg==31],
-                         okreg==32 ~ (weights$validvotes[weights$okreg==32])*PSL*weights$PSLcoef[weights$okreg==32],
-                         okreg==33 ~ (weights$validvotes[weights$okreg==33])*PSL*weights$PSLcoef[weights$okreg==33],
-                         okreg==34 ~ (weights$validvotes[weights$okreg==34])*PSL*weights$PSLcoef[weights$okreg==34],
-                         okreg==35 ~ (weights$validvotes[weights$okreg==35])*PSL*weights$PSLcoef[weights$okreg==35],
-                         okreg==36 ~ (weights$validvotes[weights$okreg==36])*PSL*weights$PSLcoef[weights$okreg==36],
-                         okreg==37 ~ (weights$validvotes[weights$okreg==37])*PSL*weights$PSLcoef[weights$okreg==37],
-                         okreg==38 ~ (weights$validvotes[weights$okreg==38])*PSL*weights$PSLcoef[weights$okreg==38],
-                         okreg==39 ~ (weights$validvotes[weights$okreg==39])*PSL*weights$PSLcoef[weights$okreg==39],
-                         okreg==40 ~ (weights$validvotes[weights$okreg==40])*PSL*weights$PSLcoef[weights$okreg==40],
-                         okreg==41 ~ (weights$validvotes[weights$okreg==41])*PSL*weights$PSLcoef[weights$okreg==41]
-         ),
-         Konfederacja = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*Konfederacja*weights$Konfcoef[weights$okreg==1],
-                         okreg==2 ~ (weights$validvotes[weights$okreg==2])*Konfederacja*weights$Konfcoef[weights$okreg==2],
-                         okreg==3 ~ (weights$validvotes[weights$okreg==3])*Konfederacja*weights$Konfcoef[weights$okreg==3],
-                         okreg==4 ~ (weights$validvotes[weights$okreg==4])*Konfederacja*weights$Konfcoef[weights$okreg==4],
-                         okreg==5 ~ (weights$validvotes[weights$okreg==5])*Konfederacja*weights$Konfcoef[weights$okreg==5],
-                         okreg==6 ~ (weights$validvotes[weights$okreg==6])*Konfederacja*weights$Konfcoef[weights$okreg==6],
-                         okreg==7 ~ (weights$validvotes[weights$okreg==7])*Konfederacja*weights$Konfcoef[weights$okreg==7],
-                         okreg==8 ~ (weights$validvotes[weights$okreg==8])*Konfederacja*weights$Konfcoef[weights$okreg==8],
-                         okreg==9 ~ (weights$validvotes[weights$okreg==9])*Konfederacja*weights$Konfcoef[weights$okreg==9],
-                         okreg==10 ~ (weights$validvotes[weights$okreg==10])*Konfederacja*weights$Konfcoef[weights$okreg==10],
-                         okreg==11 ~ (weights$validvotes[weights$okreg==11])*Konfederacja*weights$Konfcoef[weights$okreg==11],
-                         okreg==12 ~ (weights$validvotes[weights$okreg==12])*Konfederacja*weights$Konfcoef[weights$okreg==12],
-                         okreg==13 ~ (weights$validvotes[weights$okreg==13])*Konfederacja*weights$Konfcoef[weights$okreg==13],
-                         okreg==14 ~ (weights$validvotes[weights$okreg==14])*Konfederacja*weights$Konfcoef[weights$okreg==14],
-                         okreg==15 ~ (weights$validvotes[weights$okreg==15])*Konfederacja*weights$Konfcoef[weights$okreg==15],
-                         okreg==16 ~ (weights$validvotes[weights$okreg==16])*Konfederacja*weights$Konfcoef[weights$okreg==16],
-                         okreg==17 ~ (weights$validvotes[weights$okreg==17])*Konfederacja*weights$Konfcoef[weights$okreg==17],
-                         okreg==18 ~ (weights$validvotes[weights$okreg==18])*Konfederacja*weights$Konfcoef[weights$okreg==18],
-                         okreg==19 ~ (weights$validvotes[weights$okreg==19])*Konfederacja*weights$Konfcoef[weights$okreg==19],
-                         okreg==20 ~ (weights$validvotes[weights$okreg==20])*Konfederacja*weights$Konfcoef[weights$okreg==20],
-                         okreg==21 ~ (weights$validvotes[weights$okreg==21])*Konfederacja*weights$Konfcoef[weights$okreg==21],
-                         okreg==22 ~ (weights$validvotes[weights$okreg==22])*Konfederacja*weights$Konfcoef[weights$okreg==22],
-                         okreg==23 ~ (weights$validvotes[weights$okreg==23])*Konfederacja*weights$Konfcoef[weights$okreg==23],
-                         okreg==24 ~ (weights$validvotes[weights$okreg==24])*Konfederacja*weights$Konfcoef[weights$okreg==24],
-                         okreg==25 ~ (weights$validvotes[weights$okreg==25])*Konfederacja*weights$Konfcoef[weights$okreg==25],
-                         okreg==26 ~ (weights$validvotes[weights$okreg==26])*Konfederacja*weights$Konfcoef[weights$okreg==26],
-                         okreg==27 ~ (weights$validvotes[weights$okreg==27])*Konfederacja*weights$Konfcoef[weights$okreg==27],
-                         okreg==28 ~ (weights$validvotes[weights$okreg==28])*Konfederacja*weights$Konfcoef[weights$okreg==28],
-                         okreg==29 ~ (weights$validvotes[weights$okreg==29])*Konfederacja*weights$Konfcoef[weights$okreg==29],
-                         okreg==30 ~ (weights$validvotes[weights$okreg==30])*Konfederacja*weights$Konfcoef[weights$okreg==30],
-                         okreg==31 ~ (weights$validvotes[weights$okreg==31])*Konfederacja*weights$Konfcoef[weights$okreg==31],
-                         okreg==32 ~ (weights$validvotes[weights$okreg==32])*Konfederacja*weights$Konfcoef[weights$okreg==32],
-                         okreg==33 ~ (weights$validvotes[weights$okreg==33])*Konfederacja*weights$Konfcoef[weights$okreg==33],
-                         okreg==34 ~ (weights$validvotes[weights$okreg==34])*Konfederacja*weights$Konfcoef[weights$okreg==34],
-                         okreg==35 ~ (weights$validvotes[weights$okreg==35])*Konfederacja*weights$Konfcoef[weights$okreg==35],
-                         okreg==36 ~ (weights$validvotes[weights$okreg==36])*Konfederacja*weights$Konfcoef[weights$okreg==36],
-                         okreg==37 ~ (weights$validvotes[weights$okreg==37])*Konfederacja*weights$Konfcoef[weights$okreg==37],
-                         okreg==38 ~ (weights$validvotes[weights$okreg==38])*Konfederacja*weights$Konfcoef[weights$okreg==38],
-                         okreg==39 ~ (weights$validvotes[weights$okreg==39])*Konfederacja*weights$Konfcoef[weights$okreg==39],
-                         okreg==40 ~ (weights$validvotes[weights$okreg==40])*Konfederacja*weights$Konfcoef[weights$okreg==40],
-                         okreg==41 ~ (weights$validvotes[weights$okreg==41])*Konfederacja*weights$Konfcoef[weights$okreg==41]
-         ),
-         Lewica = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*Lewica*weights$Lewicacoef[weights$okreg==1],
-                         okreg==2 ~ (weights$validvotes[weights$okreg==2])*Lewica*weights$Lewicacoef[weights$okreg==2],
-                         okreg==3 ~ (weights$validvotes[weights$okreg==3])*Lewica*weights$Lewicacoef[weights$okreg==3],
-                         okreg==4 ~ (weights$validvotes[weights$okreg==4])*Lewica*weights$Lewicacoef[weights$okreg==4],
-                         okreg==5 ~ (weights$validvotes[weights$okreg==5])*Lewica*weights$Lewicacoef[weights$okreg==5],
-                         okreg==6 ~ (weights$validvotes[weights$okreg==6])*Lewica*weights$Lewicacoef[weights$okreg==6],
-                         okreg==7 ~ (weights$validvotes[weights$okreg==7])*Lewica*weights$Lewicacoef[weights$okreg==7],
-                         okreg==8 ~ (weights$validvotes[weights$okreg==8])*Lewica*weights$Lewicacoef[weights$okreg==8],
-                         okreg==9 ~ (weights$validvotes[weights$okreg==9])*Lewica*weights$Lewicacoef[weights$okreg==9],
-                         okreg==10 ~ (weights$validvotes[weights$okreg==10])*Lewica*weights$Lewicacoef[weights$okreg==10],
-                         okreg==11 ~ (weights$validvotes[weights$okreg==11])*Lewica*weights$Lewicacoef[weights$okreg==11],
-                         okreg==12 ~ (weights$validvotes[weights$okreg==12])*Lewica*weights$Lewicacoef[weights$okreg==12],
-                         okreg==13 ~ (weights$validvotes[weights$okreg==13])*Lewica*weights$Lewicacoef[weights$okreg==13],
-                         okreg==14 ~ (weights$validvotes[weights$okreg==14])*Lewica*weights$Lewicacoef[weights$okreg==14],
-                         okreg==15 ~ (weights$validvotes[weights$okreg==15])*Lewica*weights$Lewicacoef[weights$okreg==15],
-                         okreg==16 ~ (weights$validvotes[weights$okreg==16])*Lewica*weights$Lewicacoef[weights$okreg==16],
-                         okreg==17 ~ (weights$validvotes[weights$okreg==17])*Lewica*weights$Lewicacoef[weights$okreg==17],
-                         okreg==18 ~ (weights$validvotes[weights$okreg==18])*Lewica*weights$Lewicacoef[weights$okreg==18],
-                         okreg==19 ~ (weights$validvotes[weights$okreg==19])*Lewica*weights$Lewicacoef[weights$okreg==19],
-                         okreg==20 ~ (weights$validvotes[weights$okreg==20])*Lewica*weights$Lewicacoef[weights$okreg==20],
-                         okreg==21 ~ (weights$validvotes[weights$okreg==21])*Lewica*weights$Lewicacoef[weights$okreg==21],
-                         okreg==22 ~ (weights$validvotes[weights$okreg==22])*Lewica*weights$Lewicacoef[weights$okreg==22],
-                         okreg==23 ~ (weights$validvotes[weights$okreg==23])*Lewica*weights$Lewicacoef[weights$okreg==23],
-                         okreg==24 ~ (weights$validvotes[weights$okreg==24])*Lewica*weights$Lewicacoef[weights$okreg==24],
-                         okreg==25 ~ (weights$validvotes[weights$okreg==25])*Lewica*weights$Lewicacoef[weights$okreg==25],
-                         okreg==26 ~ (weights$validvotes[weights$okreg==26])*Lewica*weights$Lewicacoef[weights$okreg==26],
-                         okreg==27 ~ (weights$validvotes[weights$okreg==27])*Lewica*weights$Lewicacoef[weights$okreg==27],
-                         okreg==28 ~ (weights$validvotes[weights$okreg==28])*Lewica*weights$Lewicacoef[weights$okreg==28],
-                         okreg==29 ~ (weights$validvotes[weights$okreg==29])*Lewica*weights$Lewicacoef[weights$okreg==29],
-                         okreg==30 ~ (weights$validvotes[weights$okreg==30])*Lewica*weights$Lewicacoef[weights$okreg==30],
-                         okreg==31 ~ (weights$validvotes[weights$okreg==31])*Lewica*weights$Lewicacoef[weights$okreg==31],
-                         okreg==32 ~ (weights$validvotes[weights$okreg==32])*Lewica*weights$Lewicacoef[weights$okreg==32],
-                         okreg==33 ~ (weights$validvotes[weights$okreg==33])*Lewica*weights$Lewicacoef[weights$okreg==33],
-                         okreg==34 ~ (weights$validvotes[weights$okreg==34])*Lewica*weights$Lewicacoef[weights$okreg==34],
-                         okreg==35 ~ (weights$validvotes[weights$okreg==35])*Lewica*weights$Lewicacoef[weights$okreg==35],
-                         okreg==36 ~ (weights$validvotes[weights$okreg==36])*Lewica*weights$Lewicacoef[weights$okreg==36],
-                         okreg==37 ~ (weights$validvotes[weights$okreg==37])*Lewica*weights$Lewicacoef[weights$okreg==37],
-                         okreg==38 ~ (weights$validvotes[weights$okreg==38])*Lewica*weights$Lewicacoef[weights$okreg==38],
-                         okreg==39 ~ (weights$validvotes[weights$okreg==39])*Lewica*weights$Lewicacoef[weights$okreg==39],
-                         okreg==40 ~ (weights$validvotes[weights$okreg==40])*Lewica*weights$Lewicacoef[weights$okreg==40],
-                         okreg==41 ~ (weights$validvotes[weights$okreg==41])*Lewica*weights$Lewicacoef[weights$okreg==41]
-         ),
-         MN = case_when(okreg==1 ~ 0,
-                         okreg==2 ~ 0,
-                         okreg==3 ~ 0,
-                         okreg==4 ~ 0,
-                         okreg==5 ~ 0,
-                         okreg==6 ~ 0,
-                         okreg==7 ~ 0,
-                         okreg==8 ~ 0,
-                         okreg==9 ~ 0,
-                         okreg==10 ~ 0,
-                         okreg==11 ~ 0,
-                         okreg==12 ~ 0,
-                         okreg==13 ~ 0,
-                         okreg==14 ~ 0,
-                         okreg==15 ~ 0,
-                         okreg==16 ~ 0,
-                         okreg==17 ~ 0,
-                         okreg==18 ~ 0,
-                         okreg==19 ~ 0,
-                         okreg==20 ~ 0,
-                         okreg==21 ~ (weights$validvotes[weights$okreg==21])*MN,
-                         okreg==22 ~ 0,
-                         okreg==23 ~ 0,
-                         okreg==24 ~ 0,
-                         okreg==25 ~ 0,
-                         okreg==26 ~ 0,
-                         okreg==27 ~ 0,
-                         okreg==28 ~ 0,
-                         okreg==29 ~ 0,
-                         okreg==30 ~ 0,
-                         okreg==31 ~ 0,
-                         okreg==32 ~ 0,
-                         okreg==33 ~ 0,
-                         okreg==34 ~ 0,
-                         okreg==35 ~ 0,
-                         okreg==36 ~ 0,
-                         okreg==37 ~ 0,
-                         okreg==38 ~ 0,
-                         okreg==39 ~ 0,
-                         okreg==40 ~ 0,
-                         okreg==41 ~ 0
-         )
-         )
-
-
-# poldHondt <- data.frame(KO=rep(1,1000), Konfederacja=rep(1,1000), Lewica=rep(1,1000), MN=rep(1,1000),  
-#                         PiS=rep(1,1000), `Polska 2050`=rep(1,1000), PSL=rep(1,1000))
-# 
-# for(i in 1:1000) { 
-#   poldHondt[i,] <- giveseats(v = c(plotdraws$KO[i], plotdraws$Konfederacja[i], plotdraws$Lewica[i], plotdraws$MN[i],
-#                   plotdraws$PiS[i], plotdraws$`Polska 2050`[i], plotdraws$PSL[i]), ns = plotdraws$magnitude[i], method="dh", thresh=5)$seats
-#   }
-# 
-# colnames(poldHondt) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "Polska 2050", "PSL")
+  ),
+  PiS = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*PiS*weights$PiScoef[weights$okreg==1],
+                  okreg==2 ~ (weights$validvotes[weights$okreg==2])*PiS*weights$PiScoef[weights$okreg==2],
+                  okreg==3 ~ (weights$validvotes[weights$okreg==3])*PiS*weights$PiScoef[weights$okreg==3],
+                  okreg==4 ~ (weights$validvotes[weights$okreg==4])*PiS*weights$PiScoef[weights$okreg==4],
+                  okreg==5 ~ (weights$validvotes[weights$okreg==5])*PiS*weights$PiScoef[weights$okreg==5],
+                  okreg==6 ~ (weights$validvotes[weights$okreg==6])*PiS*weights$PiScoef[weights$okreg==6],
+                  okreg==7 ~ (weights$validvotes[weights$okreg==7])*PiS*weights$PiScoef[weights$okreg==7],
+                  okreg==8 ~ (weights$validvotes[weights$okreg==8])*PiS*weights$PiScoef[weights$okreg==8],
+                  okreg==9 ~ (weights$validvotes[weights$okreg==9])*PiS*weights$PiScoef[weights$okreg==9],
+                  okreg==10 ~ (weights$validvotes[weights$okreg==10])*PiS*weights$PiScoef[weights$okreg==10],
+                  okreg==11 ~ (weights$validvotes[weights$okreg==11])*PiS*weights$PiScoef[weights$okreg==11],
+                  okreg==12 ~ (weights$validvotes[weights$okreg==12])*PiS*weights$PiScoef[weights$okreg==12],
+                  okreg==13 ~ (weights$validvotes[weights$okreg==13])*PiS*weights$PiScoef[weights$okreg==13],
+                  okreg==14 ~ (weights$validvotes[weights$okreg==14])*PiS*weights$PiScoef[weights$okreg==14],
+                  okreg==15 ~ (weights$validvotes[weights$okreg==15])*PiS*weights$PiScoef[weights$okreg==15],
+                  okreg==16 ~ (weights$validvotes[weights$okreg==16])*PiS*weights$PiScoef[weights$okreg==16],
+                  okreg==17 ~ (weights$validvotes[weights$okreg==17])*PiS*weights$PiScoef[weights$okreg==17],
+                  okreg==18 ~ (weights$validvotes[weights$okreg==18])*PiS*weights$PiScoef[weights$okreg==18],
+                  okreg==19 ~ (weights$validvotes[weights$okreg==19])*PiS*weights$PiScoef[weights$okreg==19],
+                  okreg==20 ~ (weights$validvotes[weights$okreg==20])*PiS*weights$PiScoef[weights$okreg==20],
+                  okreg==21 ~ (weights$validvotes[weights$okreg==21])*PiS*weights$PiScoef[weights$okreg==21],
+                  okreg==22 ~ (weights$validvotes[weights$okreg==22])*PiS*weights$PiScoef[weights$okreg==22],
+                  okreg==23 ~ (weights$validvotes[weights$okreg==23])*PiS*weights$PiScoef[weights$okreg==23],
+                  okreg==24 ~ (weights$validvotes[weights$okreg==24])*PiS*weights$PiScoef[weights$okreg==24],
+                  okreg==25 ~ (weights$validvotes[weights$okreg==25])*PiS*weights$PiScoef[weights$okreg==25],
+                  okreg==26 ~ (weights$validvotes[weights$okreg==26])*PiS*weights$PiScoef[weights$okreg==26],
+                  okreg==27 ~ (weights$validvotes[weights$okreg==27])*PiS*weights$PiScoef[weights$okreg==27],
+                  okreg==28 ~ (weights$validvotes[weights$okreg==28])*PiS*weights$PiScoef[weights$okreg==28],
+                  okreg==29 ~ (weights$validvotes[weights$okreg==29])*PiS*weights$PiScoef[weights$okreg==29],
+                  okreg==30 ~ (weights$validvotes[weights$okreg==30])*PiS*weights$PiScoef[weights$okreg==30],
+                  okreg==31 ~ (weights$validvotes[weights$okreg==31])*PiS*weights$PiScoef[weights$okreg==31],
+                  okreg==32 ~ (weights$validvotes[weights$okreg==32])*PiS*weights$PiScoef[weights$okreg==32],
+                  okreg==33 ~ (weights$validvotes[weights$okreg==33])*PiS*weights$PiScoef[weights$okreg==33],
+                  okreg==34 ~ (weights$validvotes[weights$okreg==34])*PiS*weights$PiScoef[weights$okreg==34],
+                  okreg==35 ~ (weights$validvotes[weights$okreg==35])*PiS*weights$PiScoef[weights$okreg==35],
+                  okreg==36 ~ (weights$validvotes[weights$okreg==36])*PiS*weights$PiScoef[weights$okreg==36],
+                  okreg==37 ~ (weights$validvotes[weights$okreg==37])*PiS*weights$PiScoef[weights$okreg==37],
+                  okreg==38 ~ (weights$validvotes[weights$okreg==38])*PiS*weights$PiScoef[weights$okreg==38],
+                  okreg==39 ~ (weights$validvotes[weights$okreg==39])*PiS*weights$PiScoef[weights$okreg==39],
+                  okreg==40 ~ (weights$validvotes[weights$okreg==40])*PiS*weights$PiScoef[weights$okreg==40],
+                  okreg==41 ~ (weights$validvotes[weights$okreg==41])*PiS*weights$PiScoef[weights$okreg==41]
+  ),
+  KO = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*KO*weights$KOcoef[weights$okreg==1],
+                 okreg==2 ~ (weights$validvotes[weights$okreg==2])*KO*weights$KOcoef[weights$okreg==2],
+                 okreg==3 ~ (weights$validvotes[weights$okreg==3])*KO*weights$KOcoef[weights$okreg==3],
+                 okreg==4 ~ (weights$validvotes[weights$okreg==4])*KO*weights$KOcoef[weights$okreg==4],
+                 okreg==5 ~ (weights$validvotes[weights$okreg==5])*KO*weights$KOcoef[weights$okreg==5],
+                 okreg==6 ~ (weights$validvotes[weights$okreg==6])*KO*weights$KOcoef[weights$okreg==6],
+                 okreg==7 ~ (weights$validvotes[weights$okreg==7])*KO*weights$KOcoef[weights$okreg==7],
+                 okreg==8 ~ (weights$validvotes[weights$okreg==8])*KO*weights$KOcoef[weights$okreg==8],
+                 okreg==9 ~ (weights$validvotes[weights$okreg==9])*KO*weights$KOcoef[weights$okreg==9],
+                 okreg==10 ~ (weights$validvotes[weights$okreg==10])*KO*weights$KOcoef[weights$okreg==10],
+                 okreg==11 ~ (weights$validvotes[weights$okreg==11])*KO*weights$KOcoef[weights$okreg==11],
+                 okreg==12 ~ (weights$validvotes[weights$okreg==12])*KO*weights$KOcoef[weights$okreg==12],
+                 okreg==13 ~ (weights$validvotes[weights$okreg==13])*KO*weights$KOcoef[weights$okreg==13],
+                 okreg==14 ~ (weights$validvotes[weights$okreg==14])*KO*weights$KOcoef[weights$okreg==14],
+                 okreg==15 ~ (weights$validvotes[weights$okreg==15])*KO*weights$KOcoef[weights$okreg==15],
+                 okreg==16 ~ (weights$validvotes[weights$okreg==16])*KO*weights$KOcoef[weights$okreg==16],
+                 okreg==17 ~ (weights$validvotes[weights$okreg==17])*KO*weights$KOcoef[weights$okreg==17],
+                 okreg==18 ~ (weights$validvotes[weights$okreg==18])*KO*weights$KOcoef[weights$okreg==18],
+                 okreg==19 ~ (weights$validvotes[weights$okreg==19])*KO*weights$KOcoef[weights$okreg==19],
+                 okreg==20 ~ (weights$validvotes[weights$okreg==20])*KO*weights$KOcoef[weights$okreg==20],
+                 okreg==21 ~ (weights$validvotes[weights$okreg==21])*KO*weights$KOcoef[weights$okreg==21],
+                 okreg==22 ~ (weights$validvotes[weights$okreg==22])*KO*weights$KOcoef[weights$okreg==22],
+                 okreg==23 ~ (weights$validvotes[weights$okreg==23])*KO*weights$KOcoef[weights$okreg==23],
+                 okreg==24 ~ (weights$validvotes[weights$okreg==24])*KO*weights$KOcoef[weights$okreg==24],
+                 okreg==25 ~ (weights$validvotes[weights$okreg==25])*KO*weights$KOcoef[weights$okreg==25],
+                 okreg==26 ~ (weights$validvotes[weights$okreg==26])*KO*weights$KOcoef[weights$okreg==26],
+                 okreg==27 ~ (weights$validvotes[weights$okreg==27])*KO*weights$KOcoef[weights$okreg==27],
+                 okreg==28 ~ (weights$validvotes[weights$okreg==28])*KO*weights$KOcoef[weights$okreg==28],
+                 okreg==29 ~ (weights$validvotes[weights$okreg==29])*KO*weights$KOcoef[weights$okreg==29],
+                 okreg==30 ~ (weights$validvotes[weights$okreg==30])*KO*weights$KOcoef[weights$okreg==30],
+                 okreg==31 ~ (weights$validvotes[weights$okreg==31])*KO*weights$KOcoef[weights$okreg==31],
+                 okreg==32 ~ (weights$validvotes[weights$okreg==32])*KO*weights$KOcoef[weights$okreg==32],
+                 okreg==33 ~ (weights$validvotes[weights$okreg==33])*KO*weights$KOcoef[weights$okreg==33],
+                 okreg==34 ~ (weights$validvotes[weights$okreg==34])*KO*weights$KOcoef[weights$okreg==34],
+                 okreg==35 ~ (weights$validvotes[weights$okreg==35])*KO*weights$KOcoef[weights$okreg==35],
+                 okreg==36 ~ (weights$validvotes[weights$okreg==36])*KO*weights$KOcoef[weights$okreg==36],
+                 okreg==37 ~ (weights$validvotes[weights$okreg==37])*KO*weights$KOcoef[weights$okreg==37],
+                 okreg==38 ~ (weights$validvotes[weights$okreg==38])*KO*weights$KOcoef[weights$okreg==38],
+                 okreg==39 ~ (weights$validvotes[weights$okreg==39])*KO*weights$KOcoef[weights$okreg==39],
+                 okreg==40 ~ (weights$validvotes[weights$okreg==40])*KO*weights$KOcoef[weights$okreg==40],
+                 okreg==41 ~ (weights$validvotes[weights$okreg==41])*KO*weights$KOcoef[weights$okreg==41]
+  ),
+  `Polska 2050` = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*`Polska 2050`*weights$KOcoef[weights$okreg==1],
+                            okreg==2 ~ (weights$validvotes[weights$okreg==2])*`Polska 2050`*weights$KOcoef[weights$okreg==2],
+                            okreg==3 ~ (weights$validvotes[weights$okreg==3])*`Polska 2050`*weights$KOcoef[weights$okreg==3],
+                            okreg==4 ~ (weights$validvotes[weights$okreg==4])*`Polska 2050`*weights$KOcoef[weights$okreg==4],
+                            okreg==5 ~ (weights$validvotes[weights$okreg==5])*`Polska 2050`*weights$KOcoef[weights$okreg==5],
+                            okreg==6 ~ (weights$validvotes[weights$okreg==6])*`Polska 2050`*weights$KOcoef[weights$okreg==6],
+                            okreg==7 ~ (weights$validvotes[weights$okreg==7])*`Polska 2050`*weights$KOcoef[weights$okreg==7],
+                            okreg==8 ~ (weights$validvotes[weights$okreg==8])*`Polska 2050`*weights$KOcoef[weights$okreg==8],
+                            okreg==9 ~ (weights$validvotes[weights$okreg==9])*`Polska 2050`*weights$KOcoef[weights$okreg==9],
+                            okreg==10 ~ (weights$validvotes[weights$okreg==10])*`Polska 2050`*weights$KOcoef[weights$okreg==10],
+                            okreg==11 ~ (weights$validvotes[weights$okreg==11])*`Polska 2050`*weights$KOcoef[weights$okreg==11],
+                            okreg==12 ~ (weights$validvotes[weights$okreg==12])*`Polska 2050`*weights$KOcoef[weights$okreg==12],
+                            okreg==13 ~ (weights$validvotes[weights$okreg==13])*`Polska 2050`*weights$KOcoef[weights$okreg==13],
+                            okreg==14 ~ (weights$validvotes[weights$okreg==14])*`Polska 2050`*weights$KOcoef[weights$okreg==14],
+                            okreg==15 ~ (weights$validvotes[weights$okreg==15])*`Polska 2050`*weights$KOcoef[weights$okreg==15],
+                            okreg==16 ~ (weights$validvotes[weights$okreg==16])*`Polska 2050`*weights$KOcoef[weights$okreg==16],
+                            okreg==17 ~ (weights$validvotes[weights$okreg==17])*`Polska 2050`*weights$KOcoef[weights$okreg==17],
+                            okreg==18 ~ (weights$validvotes[weights$okreg==18])*`Polska 2050`*weights$KOcoef[weights$okreg==18],
+                            okreg==19 ~ (weights$validvotes[weights$okreg==19])*`Polska 2050`*weights$KOcoef[weights$okreg==19],
+                            okreg==20 ~ (weights$validvotes[weights$okreg==20])*`Polska 2050`*weights$KOcoef[weights$okreg==20],
+                            okreg==21 ~ (weights$validvotes[weights$okreg==21])*`Polska 2050`*weights$KOcoef[weights$okreg==21],
+                            okreg==22 ~ (weights$validvotes[weights$okreg==22])*`Polska 2050`*weights$KOcoef[weights$okreg==22],
+                            okreg==23 ~ (weights$validvotes[weights$okreg==23])*`Polska 2050`*weights$KOcoef[weights$okreg==23],
+                            okreg==24 ~ (weights$validvotes[weights$okreg==24])*`Polska 2050`*weights$KOcoef[weights$okreg==24],
+                            okreg==25 ~ (weights$validvotes[weights$okreg==25])*`Polska 2050`*weights$KOcoef[weights$okreg==25],
+                            okreg==26 ~ (weights$validvotes[weights$okreg==26])*`Polska 2050`*weights$KOcoef[weights$okreg==26],
+                            okreg==27 ~ (weights$validvotes[weights$okreg==27])*`Polska 2050`*weights$KOcoef[weights$okreg==27],
+                            okreg==28 ~ (weights$validvotes[weights$okreg==28])*`Polska 2050`*weights$KOcoef[weights$okreg==28],
+                            okreg==29 ~ (weights$validvotes[weights$okreg==29])*`Polska 2050`*weights$KOcoef[weights$okreg==29],
+                            okreg==30 ~ (weights$validvotes[weights$okreg==30])*`Polska 2050`*weights$KOcoef[weights$okreg==30],
+                            okreg==31 ~ (weights$validvotes[weights$okreg==31])*`Polska 2050`*weights$KOcoef[weights$okreg==31],
+                            okreg==32 ~ (weights$validvotes[weights$okreg==32])*`Polska 2050`*weights$KOcoef[weights$okreg==32],
+                            okreg==33 ~ (weights$validvotes[weights$okreg==33])*`Polska 2050`*weights$KOcoef[weights$okreg==33],
+                            okreg==34 ~ (weights$validvotes[weights$okreg==34])*`Polska 2050`*weights$KOcoef[weights$okreg==34],
+                            okreg==35 ~ (weights$validvotes[weights$okreg==35])*`Polska 2050`*weights$KOcoef[weights$okreg==35],
+                            okreg==36 ~ (weights$validvotes[weights$okreg==36])*`Polska 2050`*weights$KOcoef[weights$okreg==36],
+                            okreg==37 ~ (weights$validvotes[weights$okreg==37])*`Polska 2050`*weights$KOcoef[weights$okreg==37],
+                            okreg==38 ~ (weights$validvotes[weights$okreg==38])*`Polska 2050`*weights$KOcoef[weights$okreg==38],
+                            okreg==39 ~ (weights$validvotes[weights$okreg==39])*`Polska 2050`*weights$KOcoef[weights$okreg==39],
+                            okreg==40 ~ (weights$validvotes[weights$okreg==40])*`Polska 2050`*weights$KOcoef[weights$okreg==40],
+                            okreg==41 ~ (weights$validvotes[weights$okreg==41])*`Polska 2050`*weights$KOcoef[weights$okreg==41]
+  ),
+  PSL = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*PSL*weights$PSLcoef[weights$okreg==1],
+                  okreg==2 ~ (weights$validvotes[weights$okreg==2])*PSL*weights$PSLcoef[weights$okreg==2],
+                  okreg==3 ~ (weights$validvotes[weights$okreg==3])*PSL*weights$PSLcoef[weights$okreg==3],
+                  okreg==4 ~ (weights$validvotes[weights$okreg==4])*PSL*weights$PSLcoef[weights$okreg==4],
+                  okreg==5 ~ (weights$validvotes[weights$okreg==5])*PSL*weights$PSLcoef[weights$okreg==5],
+                  okreg==6 ~ (weights$validvotes[weights$okreg==6])*PSL*weights$PSLcoef[weights$okreg==6],
+                  okreg==7 ~ (weights$validvotes[weights$okreg==7])*PSL*weights$PSLcoef[weights$okreg==7],
+                  okreg==8 ~ (weights$validvotes[weights$okreg==8])*PSL*weights$PSLcoef[weights$okreg==8],
+                  okreg==9 ~ (weights$validvotes[weights$okreg==9])*PSL*weights$PSLcoef[weights$okreg==9],
+                  okreg==10 ~ (weights$validvotes[weights$okreg==10])*PSL*weights$PSLcoef[weights$okreg==10],
+                  okreg==11 ~ (weights$validvotes[weights$okreg==11])*PSL*weights$PSLcoef[weights$okreg==11],
+                  okreg==12 ~ (weights$validvotes[weights$okreg==12])*PSL*weights$PSLcoef[weights$okreg==12],
+                  okreg==13 ~ (weights$validvotes[weights$okreg==13])*PSL*weights$PSLcoef[weights$okreg==13],
+                  okreg==14 ~ (weights$validvotes[weights$okreg==14])*PSL*weights$PSLcoef[weights$okreg==14],
+                  okreg==15 ~ (weights$validvotes[weights$okreg==15])*PSL*weights$PSLcoef[weights$okreg==15],
+                  okreg==16 ~ (weights$validvotes[weights$okreg==16])*PSL*weights$PSLcoef[weights$okreg==16],
+                  okreg==17 ~ (weights$validvotes[weights$okreg==17])*PSL*weights$PSLcoef[weights$okreg==17],
+                  okreg==18 ~ (weights$validvotes[weights$okreg==18])*PSL*weights$PSLcoef[weights$okreg==18],
+                  okreg==19 ~ (weights$validvotes[weights$okreg==19])*PSL*weights$PSLcoef[weights$okreg==19],
+                  okreg==20 ~ (weights$validvotes[weights$okreg==20])*PSL*weights$PSLcoef[weights$okreg==20],
+                  okreg==21 ~ (weights$validvotes[weights$okreg==21])*PSL*weights$PSLcoef[weights$okreg==21],
+                  okreg==22 ~ (weights$validvotes[weights$okreg==22])*PSL*weights$PSLcoef[weights$okreg==22],
+                  okreg==23 ~ (weights$validvotes[weights$okreg==23])*PSL*weights$PSLcoef[weights$okreg==23],
+                  okreg==24 ~ (weights$validvotes[weights$okreg==24])*PSL*weights$PSLcoef[weights$okreg==24],
+                  okreg==25 ~ (weights$validvotes[weights$okreg==25])*PSL*weights$PSLcoef[weights$okreg==25],
+                  okreg==26 ~ (weights$validvotes[weights$okreg==26])*PSL*weights$PSLcoef[weights$okreg==26],
+                  okreg==27 ~ (weights$validvotes[weights$okreg==27])*PSL*weights$PSLcoef[weights$okreg==27],
+                  okreg==28 ~ (weights$validvotes[weights$okreg==28])*PSL*weights$PSLcoef[weights$okreg==28],
+                  okreg==29 ~ (weights$validvotes[weights$okreg==29])*PSL*weights$PSLcoef[weights$okreg==29],
+                  okreg==30 ~ (weights$validvotes[weights$okreg==30])*PSL*weights$PSLcoef[weights$okreg==30],
+                  okreg==31 ~ (weights$validvotes[weights$okreg==31])*PSL*weights$PSLcoef[weights$okreg==31],
+                  okreg==32 ~ (weights$validvotes[weights$okreg==32])*PSL*weights$PSLcoef[weights$okreg==32],
+                  okreg==33 ~ (weights$validvotes[weights$okreg==33])*PSL*weights$PSLcoef[weights$okreg==33],
+                  okreg==34 ~ (weights$validvotes[weights$okreg==34])*PSL*weights$PSLcoef[weights$okreg==34],
+                  okreg==35 ~ (weights$validvotes[weights$okreg==35])*PSL*weights$PSLcoef[weights$okreg==35],
+                  okreg==36 ~ (weights$validvotes[weights$okreg==36])*PSL*weights$PSLcoef[weights$okreg==36],
+                  okreg==37 ~ (weights$validvotes[weights$okreg==37])*PSL*weights$PSLcoef[weights$okreg==37],
+                  okreg==38 ~ (weights$validvotes[weights$okreg==38])*PSL*weights$PSLcoef[weights$okreg==38],
+                  okreg==39 ~ (weights$validvotes[weights$okreg==39])*PSL*weights$PSLcoef[weights$okreg==39],
+                  okreg==40 ~ (weights$validvotes[weights$okreg==40])*PSL*weights$PSLcoef[weights$okreg==40],
+                  okreg==41 ~ (weights$validvotes[weights$okreg==41])*PSL*weights$PSLcoef[weights$okreg==41]
+  ),
+  Konfederacja = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*Konfederacja*weights$Konfcoef[weights$okreg==1],
+                           okreg==2 ~ (weights$validvotes[weights$okreg==2])*Konfederacja*weights$Konfcoef[weights$okreg==2],
+                           okreg==3 ~ (weights$validvotes[weights$okreg==3])*Konfederacja*weights$Konfcoef[weights$okreg==3],
+                           okreg==4 ~ (weights$validvotes[weights$okreg==4])*Konfederacja*weights$Konfcoef[weights$okreg==4],
+                           okreg==5 ~ (weights$validvotes[weights$okreg==5])*Konfederacja*weights$Konfcoef[weights$okreg==5],
+                           okreg==6 ~ (weights$validvotes[weights$okreg==6])*Konfederacja*weights$Konfcoef[weights$okreg==6],
+                           okreg==7 ~ (weights$validvotes[weights$okreg==7])*Konfederacja*weights$Konfcoef[weights$okreg==7],
+                           okreg==8 ~ (weights$validvotes[weights$okreg==8])*Konfederacja*weights$Konfcoef[weights$okreg==8],
+                           okreg==9 ~ (weights$validvotes[weights$okreg==9])*Konfederacja*weights$Konfcoef[weights$okreg==9],
+                           okreg==10 ~ (weights$validvotes[weights$okreg==10])*Konfederacja*weights$Konfcoef[weights$okreg==10],
+                           okreg==11 ~ (weights$validvotes[weights$okreg==11])*Konfederacja*weights$Konfcoef[weights$okreg==11],
+                           okreg==12 ~ (weights$validvotes[weights$okreg==12])*Konfederacja*weights$Konfcoef[weights$okreg==12],
+                           okreg==13 ~ (weights$validvotes[weights$okreg==13])*Konfederacja*weights$Konfcoef[weights$okreg==13],
+                           okreg==14 ~ (weights$validvotes[weights$okreg==14])*Konfederacja*weights$Konfcoef[weights$okreg==14],
+                           okreg==15 ~ (weights$validvotes[weights$okreg==15])*Konfederacja*weights$Konfcoef[weights$okreg==15],
+                           okreg==16 ~ (weights$validvotes[weights$okreg==16])*Konfederacja*weights$Konfcoef[weights$okreg==16],
+                           okreg==17 ~ (weights$validvotes[weights$okreg==17])*Konfederacja*weights$Konfcoef[weights$okreg==17],
+                           okreg==18 ~ (weights$validvotes[weights$okreg==18])*Konfederacja*weights$Konfcoef[weights$okreg==18],
+                           okreg==19 ~ (weights$validvotes[weights$okreg==19])*Konfederacja*weights$Konfcoef[weights$okreg==19],
+                           okreg==20 ~ (weights$validvotes[weights$okreg==20])*Konfederacja*weights$Konfcoef[weights$okreg==20],
+                           okreg==21 ~ (weights$validvotes[weights$okreg==21])*Konfederacja*weights$Konfcoef[weights$okreg==21],
+                           okreg==22 ~ (weights$validvotes[weights$okreg==22])*Konfederacja*weights$Konfcoef[weights$okreg==22],
+                           okreg==23 ~ (weights$validvotes[weights$okreg==23])*Konfederacja*weights$Konfcoef[weights$okreg==23],
+                           okreg==24 ~ (weights$validvotes[weights$okreg==24])*Konfederacja*weights$Konfcoef[weights$okreg==24],
+                           okreg==25 ~ (weights$validvotes[weights$okreg==25])*Konfederacja*weights$Konfcoef[weights$okreg==25],
+                           okreg==26 ~ (weights$validvotes[weights$okreg==26])*Konfederacja*weights$Konfcoef[weights$okreg==26],
+                           okreg==27 ~ (weights$validvotes[weights$okreg==27])*Konfederacja*weights$Konfcoef[weights$okreg==27],
+                           okreg==28 ~ (weights$validvotes[weights$okreg==28])*Konfederacja*weights$Konfcoef[weights$okreg==28],
+                           okreg==29 ~ (weights$validvotes[weights$okreg==29])*Konfederacja*weights$Konfcoef[weights$okreg==29],
+                           okreg==30 ~ (weights$validvotes[weights$okreg==30])*Konfederacja*weights$Konfcoef[weights$okreg==30],
+                           okreg==31 ~ (weights$validvotes[weights$okreg==31])*Konfederacja*weights$Konfcoef[weights$okreg==31],
+                           okreg==32 ~ (weights$validvotes[weights$okreg==32])*Konfederacja*weights$Konfcoef[weights$okreg==32],
+                           okreg==33 ~ (weights$validvotes[weights$okreg==33])*Konfederacja*weights$Konfcoef[weights$okreg==33],
+                           okreg==34 ~ (weights$validvotes[weights$okreg==34])*Konfederacja*weights$Konfcoef[weights$okreg==34],
+                           okreg==35 ~ (weights$validvotes[weights$okreg==35])*Konfederacja*weights$Konfcoef[weights$okreg==35],
+                           okreg==36 ~ (weights$validvotes[weights$okreg==36])*Konfederacja*weights$Konfcoef[weights$okreg==36],
+                           okreg==37 ~ (weights$validvotes[weights$okreg==37])*Konfederacja*weights$Konfcoef[weights$okreg==37],
+                           okreg==38 ~ (weights$validvotes[weights$okreg==38])*Konfederacja*weights$Konfcoef[weights$okreg==38],
+                           okreg==39 ~ (weights$validvotes[weights$okreg==39])*Konfederacja*weights$Konfcoef[weights$okreg==39],
+                           okreg==40 ~ (weights$validvotes[weights$okreg==40])*Konfederacja*weights$Konfcoef[weights$okreg==40],
+                           okreg==41 ~ (weights$validvotes[weights$okreg==41])*Konfederacja*weights$Konfcoef[weights$okreg==41]
+  ),
+  Lewica = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*Lewica*weights$Lewicacoef[weights$okreg==1],
+                     okreg==2 ~ (weights$validvotes[weights$okreg==2])*Lewica*weights$Lewicacoef[weights$okreg==2],
+                     okreg==3 ~ (weights$validvotes[weights$okreg==3])*Lewica*weights$Lewicacoef[weights$okreg==3],
+                     okreg==4 ~ (weights$validvotes[weights$okreg==4])*Lewica*weights$Lewicacoef[weights$okreg==4],
+                     okreg==5 ~ (weights$validvotes[weights$okreg==5])*Lewica*weights$Lewicacoef[weights$okreg==5],
+                     okreg==6 ~ (weights$validvotes[weights$okreg==6])*Lewica*weights$Lewicacoef[weights$okreg==6],
+                     okreg==7 ~ (weights$validvotes[weights$okreg==7])*Lewica*weights$Lewicacoef[weights$okreg==7],
+                     okreg==8 ~ (weights$validvotes[weights$okreg==8])*Lewica*weights$Lewicacoef[weights$okreg==8],
+                     okreg==9 ~ (weights$validvotes[weights$okreg==9])*Lewica*weights$Lewicacoef[weights$okreg==9],
+                     okreg==10 ~ (weights$validvotes[weights$okreg==10])*Lewica*weights$Lewicacoef[weights$okreg==10],
+                     okreg==11 ~ (weights$validvotes[weights$okreg==11])*Lewica*weights$Lewicacoef[weights$okreg==11],
+                     okreg==12 ~ (weights$validvotes[weights$okreg==12])*Lewica*weights$Lewicacoef[weights$okreg==12],
+                     okreg==13 ~ (weights$validvotes[weights$okreg==13])*Lewica*weights$Lewicacoef[weights$okreg==13],
+                     okreg==14 ~ (weights$validvotes[weights$okreg==14])*Lewica*weights$Lewicacoef[weights$okreg==14],
+                     okreg==15 ~ (weights$validvotes[weights$okreg==15])*Lewica*weights$Lewicacoef[weights$okreg==15],
+                     okreg==16 ~ (weights$validvotes[weights$okreg==16])*Lewica*weights$Lewicacoef[weights$okreg==16],
+                     okreg==17 ~ (weights$validvotes[weights$okreg==17])*Lewica*weights$Lewicacoef[weights$okreg==17],
+                     okreg==18 ~ (weights$validvotes[weights$okreg==18])*Lewica*weights$Lewicacoef[weights$okreg==18],
+                     okreg==19 ~ (weights$validvotes[weights$okreg==19])*Lewica*weights$Lewicacoef[weights$okreg==19],
+                     okreg==20 ~ (weights$validvotes[weights$okreg==20])*Lewica*weights$Lewicacoef[weights$okreg==20],
+                     okreg==21 ~ (weights$validvotes[weights$okreg==21])*Lewica*weights$Lewicacoef[weights$okreg==21],
+                     okreg==22 ~ (weights$validvotes[weights$okreg==22])*Lewica*weights$Lewicacoef[weights$okreg==22],
+                     okreg==23 ~ (weights$validvotes[weights$okreg==23])*Lewica*weights$Lewicacoef[weights$okreg==23],
+                     okreg==24 ~ (weights$validvotes[weights$okreg==24])*Lewica*weights$Lewicacoef[weights$okreg==24],
+                     okreg==25 ~ (weights$validvotes[weights$okreg==25])*Lewica*weights$Lewicacoef[weights$okreg==25],
+                     okreg==26 ~ (weights$validvotes[weights$okreg==26])*Lewica*weights$Lewicacoef[weights$okreg==26],
+                     okreg==27 ~ (weights$validvotes[weights$okreg==27])*Lewica*weights$Lewicacoef[weights$okreg==27],
+                     okreg==28 ~ (weights$validvotes[weights$okreg==28])*Lewica*weights$Lewicacoef[weights$okreg==28],
+                     okreg==29 ~ (weights$validvotes[weights$okreg==29])*Lewica*weights$Lewicacoef[weights$okreg==29],
+                     okreg==30 ~ (weights$validvotes[weights$okreg==30])*Lewica*weights$Lewicacoef[weights$okreg==30],
+                     okreg==31 ~ (weights$validvotes[weights$okreg==31])*Lewica*weights$Lewicacoef[weights$okreg==31],
+                     okreg==32 ~ (weights$validvotes[weights$okreg==32])*Lewica*weights$Lewicacoef[weights$okreg==32],
+                     okreg==33 ~ (weights$validvotes[weights$okreg==33])*Lewica*weights$Lewicacoef[weights$okreg==33],
+                     okreg==34 ~ (weights$validvotes[weights$okreg==34])*Lewica*weights$Lewicacoef[weights$okreg==34],
+                     okreg==35 ~ (weights$validvotes[weights$okreg==35])*Lewica*weights$Lewicacoef[weights$okreg==35],
+                     okreg==36 ~ (weights$validvotes[weights$okreg==36])*Lewica*weights$Lewicacoef[weights$okreg==36],
+                     okreg==37 ~ (weights$validvotes[weights$okreg==37])*Lewica*weights$Lewicacoef[weights$okreg==37],
+                     okreg==38 ~ (weights$validvotes[weights$okreg==38])*Lewica*weights$Lewicacoef[weights$okreg==38],
+                     okreg==39 ~ (weights$validvotes[weights$okreg==39])*Lewica*weights$Lewicacoef[weights$okreg==39],
+                     okreg==40 ~ (weights$validvotes[weights$okreg==40])*Lewica*weights$Lewicacoef[weights$okreg==40],
+                     okreg==41 ~ (weights$validvotes[weights$okreg==41])*Lewica*weights$Lewicacoef[weights$okreg==41]
+  ),
+  MN = case_when(okreg==1 ~ 0,
+                 okreg==2 ~ 0,
+                 okreg==3 ~ 0,
+                 okreg==4 ~ 0,
+                 okreg==5 ~ 0,
+                 okreg==6 ~ 0,
+                 okreg==7 ~ 0,
+                 okreg==8 ~ 0,
+                 okreg==9 ~ 0,
+                 okreg==10 ~ 0,
+                 okreg==11 ~ 0,
+                 okreg==12 ~ 0,
+                 okreg==13 ~ 0,
+                 okreg==14 ~ 0,
+                 okreg==15 ~ 0,
+                 okreg==16 ~ 0,
+                 okreg==17 ~ 0,
+                 okreg==18 ~ 0,
+                 okreg==19 ~ 0,
+                 okreg==20 ~ 0,
+                 okreg==21 ~ (weights$validvotes[weights$okreg==21])*MN,
+                 okreg==22 ~ 0,
+                 okreg==23 ~ 0,
+                 okreg==24 ~ 0,
+                 okreg==25 ~ 0,
+                 okreg==26 ~ 0,
+                 okreg==27 ~ 0,
+                 okreg==28 ~ 0,
+                 okreg==29 ~ 0,
+                 okreg==30 ~ 0,
+                 okreg==31 ~ 0,
+                 okreg==32 ~ 0,
+                 okreg==33 ~ 0,
+                 okreg==34 ~ 0,
+                 okreg==35 ~ 0,
+                 okreg==36 ~ 0,
+                 okreg==37 ~ 0,
+                 okreg==38 ~ 0,
+                 okreg==39 ~ 0,
+                 okreg==40 ~ 0,
+                 okreg==41 ~ 0
+  )
+  )
 
 poldHondt <- data.frame(KO=rep(1,41000), Konfederacja=rep(1,41000), Lewica=rep(1,41000), MN=rep(1,41000),  
                         PiS=rep(1,41000), `Polska 2050`=rep(1,41000), PSL=rep(1,41000))
@@ -1109,8 +1001,6 @@ poldHondt <- poldHondt %>%
             `Polska 2050` = sum(`Polska 2050`),
             MN = sum(MN),
             Lewica = sum(Lewica))
-
-
 
 poldHondt <- poldHondt %>%
   pivot_longer(., cols=c("KO", "Konfederacja", "Lewica", "MN", "PiS", "Polska 2050", "PSL"), names_to="party", values_to="seats")
@@ -1148,14 +1038,12 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
-  #stat_pointinterval(data=poldHondt, aes(x=party, y=seats), color="black", alpha=0.7, show.legend = FALSE) +
   scale_y_continuous('Number of seats', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
   scale_fill_manual(name="Party", values = cols)+
   geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
   geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
   geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Roboto Condensed Light")+
-  #annotate("text", x=frame$party, y=c(frame$y+8), label=frame$diffPres, size=3, family="Roboto Condensed Light") +
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Roboto Condensed Light") +
   labs(x="", y="% of vote", title="Estimated share of seats",
        subtitle="Figures in brackets refer to change in seat share since October 2019 election",
@@ -1165,6 +1053,58 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   theme_changes
 ggsave(plot_seats_parl, file = "plot_seats_parl.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+
+
+#####House effects#####
+houselevels <- get_labels(droplevels(polls$org))
+
+PiS_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
+  select(.,contains("PiS")) %>%
+  setNames(houselevels) %>%
+  mutate(party="PiS")
+
+KO_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
+  select(.,contains("KO", ignore.case = F)) %>%
+  setNames(houselevels) %>%
+  mutate(party="KO")
+
+`PSL_house` <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
+  select(.,contains("PSL", ignore.case = F)) %>%
+  setNames(houselevels) %>%
+  mutate(party="PSL")
+
+Lewica_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
+  select(.,contains("Lewica", ignore.case = F)) %>%
+  setNames(houselevels) %>%
+  mutate(party="Lewica")
+
+Konfederacja_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
+  select(.,contains("Konfederacja", ignore.case = F)) %>%
+  setNames(houselevels) %>%
+  mutate(party="Konfederacja")
+
+`Polska 2050_house` <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
+  select(.,contains("Polska2050", ignore.case = F)) %>%
+  setNames(houselevels) %>%
+  mutate(party="Polska 2050")
+
+p_house <- bind_rows(PiS_house, KO_house, `PSL_house`, Lewica_house, Konfederacja_house, `Polska 2050_house`) %>%
+  pivot_longer(., cols=where(is.numeric), names_to="house") %>%
+  separate(., house, c("house", "method"), sep="_") %>%
+  ggplot(aes(x = party, y = 10*value, color=house, shape=method)) +
+  geom_abline(intercept=0, slope=0, colour="gray10", linetype=3) +
+  stat_pointinterval(position = position_dodge(width = .7)) +
+  guides(color = guide_legend(override.aes = list(size = 5, shape="|"), keywidth=0.3, keyheight=0.3, default.unit="inch")) +
+  guides(shape = guide_legend(override.aes = list(size = 5, linetype=NULL), keywidth=0.3, keyheight=0.3, default.unit="inch")) +
+  labs(color="Pollster", shape="Mode", x="", y="Deviation from mean party vote share (percent)", 
+       title="House and mode effects", 
+       caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  theme_changes
+ggsave(p_house, file = "p_house.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+
 
 #####INCLUDING DON'T KNOWS#####
 polls <- read_excel('polldata.xlsx')
@@ -1347,110 +1287,110 @@ save.image("~/Desktop/PoolingthePoles.RData")
 
 #####Run model by pollster#####
 
-m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time) + org),
-      family = dirichlet(link = "logit", refcat = "Other"),
-      prior =
-        prior(normal(0, 1.5), class = "Intercept", dpar = "muPiS") +
-        prior(normal(0, 0.5), class = "b", dpar = "muPiS") +
-        prior(exponential(2), class = "sds", dpar = "muPiS") +
-        prior(normal(0, 1.5), class = "Intercept", dpar = "muKO") +
-        prior(normal(0, 0.5), class = "b", dpar = "muKO") +
-        prior(exponential(2), class = "sds", dpar = "muKO") +
-        prior(normal(0, 1.5), class = "Intercept", dpar = "muLewica") +
-        prior(normal(0, 0.5), class = "b", dpar = "muLewica") +
-        prior(exponential(2), class = "sds", dpar = "muLewica") +
-        prior(normal(0, 1.5), class = "Intercept", dpar = "muPSL") +
-        prior(normal(0, 0.5), class = "b", dpar = "muPSL") +
-        prior(exponential(2), class = "sds", dpar = "muPSL") +
-        prior(normal(0, 1.5), class = "Intercept", dpar = "muKonfederacja") +
-        prior(normal(0, 0.5), class = "b", dpar = "muKonfederacja") +
-        prior(exponential(2), class = "sds", dpar = "muKonfederacja") +
-        prior(normal(0, 1.5), class = "Intercept", dpar = "muPolska2050") +
-        prior(normal(0, 0.5), class = "b", dpar = "muPolska2050") +
-        prior(exponential(2), class = "sds", dpar = "muPolska2050") +
-        prior(gamma(1, 0.01), class = "phi"),
-      data = polls,
-      seed = 780045,
-      iter = 5000,
-      backend="cmdstanr", chains=6, cores=6, threads = threading(3),
-      refresh = 5,
-      control =
-        list(
-          adapt_delta = .95,
-          max_treedepth = 15
-        )
-  )
-
-today <- interval(min(polls$midDate), Sys.Date())/years(1)
-
-pred_dta <-
-  tibble(
-    time = seq(0, today, length.out = nrow(polls)),
-    date = as.Date(time*365, origin = min(polls$midDate)),
-    org = polls$org
-  )
-
-pred_dta <-
-  add_fitted_draws(
-    model = m1,
-    newdata = pred_dta
-  ) %>%
-  group_by(date, .category, org) %>%
-  rename(party = .category) %>%
-  mutate(
-    party =
-      party %>%
-      factor(
-        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
-        labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska 2050")),
-    org =
-      org %>%
-      factor(
-        levels = c("CBOS_Mixed", "Estymator_CATI", "IBRIS_CATI", "IPSOS_CATI", "Kantar_CAPI", "Kantar_CATI", "Kantar_CAWI", "PGB Opinium_CATI", "Pollster_CATI", "Social Changes_CAWI", "United Surveys_CATI"),
-        labels = c("CBOS, mixed", "Estymator, CATI", "IBRIS, CATI", "IPSOS, CATI", "Kantar, CAPI", "Kantar, CATI", "Kantar, CAWI", "PGB Opinium, CATI", "Pollster, CATI", "Social Changes, CAWI", "United Surveys, CATI")
-      )
-  )
-
-point_dta <- polls %>%
-  select(org, midDate, PiS, KO, Lewica, Konfederacja, Other, PSL, Polska2050) %>%
-  pivot_longer(
-    cols = c(-midDate, -org),
-    names_to = "party",
-    values_to = "est"
-  ) %>%
-  mutate(
-    party =
-      party %>%
-      factor(
-        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
-        labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska 2050")),
-    org =
-      org %>%
-      factor(
-        levels = c("CBOS_Mixed", "Estymator_CATI", "IBRIS_CATI", "IPSOS_CATI", "Kantar_CAPI", "Kantar_CATI", "Kantar_CAWI", "PGB Opinium_CATI", "Pollster_CATI", "Social Changes_CAWI", "United Surveys_CATI"),
-        labels = c("CBOS, mixed", "Estymator, CATI", "IBRIS, CATI", "IPSOS, CATI", "Kantar, CAPI", "Kantar, CATI", "Kantar, CAWI", "PGB Opinium, CATI", "Pollster, CATI", "Social Changes, CAWI", "United Surveys, CATI")
-      )
-  )
-
-
-plot_trends_pollster <-
-  ggplot() +
-  geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "1 month",
-               date_labels = "%b") +
-  facet_wrap(~org, nrow=3) +
-  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-                  ylim = c(0, .5)) +
-  scale_color_manual(values=cols) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  labs(y = "% of vote", x="", title = "Trends (by pollster)", 
-       subtitle=str_c("Data from ", names), color="", caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
-  theme_changes
-ggsave(plot_trends_pollster , file = "plot_trends_pollster.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+# m1 <-
+#   brm(formula = bf(outcome ~ 1 + s(time) + org),
+#       family = dirichlet(link = "logit", refcat = "Other"),
+#       prior =
+#         prior(normal(0, 1.5), class = "Intercept", dpar = "muPiS") +
+#         prior(normal(0, 0.5), class = "b", dpar = "muPiS") +
+#         prior(exponential(2), class = "sds", dpar = "muPiS") +
+#         prior(normal(0, 1.5), class = "Intercept", dpar = "muKO") +
+#         prior(normal(0, 0.5), class = "b", dpar = "muKO") +
+#         prior(exponential(2), class = "sds", dpar = "muKO") +
+#         prior(normal(0, 1.5), class = "Intercept", dpar = "muLewica") +
+#         prior(normal(0, 0.5), class = "b", dpar = "muLewica") +
+#         prior(exponential(2), class = "sds", dpar = "muLewica") +
+#         prior(normal(0, 1.5), class = "Intercept", dpar = "muPSL") +
+#         prior(normal(0, 0.5), class = "b", dpar = "muPSL") +
+#         prior(exponential(2), class = "sds", dpar = "muPSL") +
+#         prior(normal(0, 1.5), class = "Intercept", dpar = "muKonfederacja") +
+#         prior(normal(0, 0.5), class = "b", dpar = "muKonfederacja") +
+#         prior(exponential(2), class = "sds", dpar = "muKonfederacja") +
+#         prior(normal(0, 1.5), class = "Intercept", dpar = "muPolska2050") +
+#         prior(normal(0, 0.5), class = "b", dpar = "muPolska2050") +
+#         prior(exponential(2), class = "sds", dpar = "muPolska2050") +
+#         prior(gamma(1, 0.01), class = "phi"),
+#       data = polls,
+#       seed = 780045,
+#       iter = 5000,
+#       backend="cmdstanr", chains=6, cores=6, threads = threading(3),
+#       refresh = 5,
+#       control =
+#         list(
+#           adapt_delta = .95,
+#           max_treedepth = 15
+#         )
+#   )
+# 
+# today <- interval(min(polls$midDate), Sys.Date())/years(1)
+# 
+# pred_dta <-
+#   tibble(
+#     time = seq(0, today, length.out = nrow(polls)),
+#     date = as.Date(time*365, origin = min(polls$midDate)),
+#     org = polls$org
+#   )
+# 
+# pred_dta <-
+#   add_fitted_draws(
+#     model = m1,
+#     newdata = pred_dta
+#   ) %>%
+#   group_by(date, .category, org) %>%
+#   rename(party = .category) %>%
+#   mutate(
+#     party =
+#       party %>%
+#       factor(
+#         levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+#         labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska 2050")),
+#     org =
+#       org %>%
+#       factor(
+#         levels = c("CBOS_Mixed", "Estymator_CATI", "IBRIS_CATI", "IPSOS_CATI", "Kantar_CAPI", "Kantar_CATI", "Kantar_CAWI", "PGB Opinium_CATI", "Pollster_CATI", "Social Changes_CAWI", "United Surveys_CATI"),
+#         labels = c("CBOS, mixed", "Estymator, CATI", "IBRIS, CATI", "IPSOS, CATI", "Kantar, CAPI", "Kantar, CATI", "Kantar, CAWI", "PGB Opinium, CATI", "Pollster, CATI", "Social Changes, CAWI", "United Surveys, CATI")
+#       )
+#   )
+# 
+# point_dta <- polls %>%
+#   select(org, midDate, PiS, KO, Lewica, Konfederacja, Other, PSL, Polska2050) %>%
+#   pivot_longer(
+#     cols = c(-midDate, -org),
+#     names_to = "party",
+#     values_to = "est"
+#   ) %>%
+#   mutate(
+#     party =
+#       party %>%
+#       factor(
+#         levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+#         labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska 2050")),
+#     org =
+#       org %>%
+#       factor(
+#         levels = c("CBOS_Mixed", "Estymator_CATI", "IBRIS_CATI", "IPSOS_CATI", "Kantar_CAPI", "Kantar_CATI", "Kantar_CAWI", "PGB Opinium_CATI", "Pollster_CATI", "Social Changes_CAWI", "United Surveys_CATI"),
+#         labels = c("CBOS, mixed", "Estymator, CATI", "IBRIS, CATI", "IPSOS, CATI", "Kantar, CAPI", "Kantar, CATI", "Kantar, CAWI", "PGB Opinium, CATI", "Pollster, CATI", "Social Changes, CAWI", "United Surveys, CATI")
+#       )
+#   )
+# 
+# 
+# plot_trends_pollster <-
+#   ggplot() +
+#   geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
+#   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+#   scale_x_date(date_breaks = "1 month",
+#                date_labels = "%b") +
+#   facet_wrap(~org, nrow=3) +
+#   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+#                   ylim = c(0, .5)) +
+#   scale_color_manual(values=cols) +
+#   scale_fill_manual(values=cols, guide=FALSE) +
+#   labs(y = "% of vote", x="", title = "Trends (by pollster)", 
+#        subtitle=str_c("Data from ", names), color="", caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
+#   theme_minimal() +
+#   theme_ipsum_rc() +
+#   guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+#   theme_changes
+# ggsave(plot_trends_pollster , file = "plot_trends_pollster.png", 
+#        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
