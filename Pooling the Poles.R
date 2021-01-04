@@ -1019,7 +1019,10 @@ PiS_seats <- poldHondt %>%
 
 frame <- poldHondt %>%
   group_by(party) %>%
-  summarise(median_qi(seats))
+  summarise(mean_qi(seats)) %>%
+  mutate(., y = round(y, 0),
+         ymin = round(ymin, 0),
+         ymax = round(ymax, 0))
 
 frame$in2019[frame$party=="KO"] <- 134
 frame$in2019[frame$party=="PiS"] <- 235
@@ -1046,7 +1049,7 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Roboto Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Roboto Condensed Light") +
   labs(x="", y="% of vote", title="Estimated share of seats",
-       subtitle="Figures in brackets refer to change in seat share since October 2019 election",
+       subtitle="Mean estimated seat share with 95% credible intervals",
        caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
   theme_minimal() +
   theme_ipsum_rc() +
