@@ -19,6 +19,7 @@ library("maptools")
 library("rgeos") 
 library("gpclib")
 
+
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
     Sys.info()["sysname"] == "Darwin" && getRversion() == "4.0.3") {
