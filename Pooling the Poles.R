@@ -638,7 +638,14 @@ plotdraws <- plotdraws %>%
          KO = ifelse(KO<0.05, 0, KO),
          Konfederacja = ifelse(Konfederacja<0.05, 0, Konfederacja),
          Lewica = ifelse(Lewica<0.05, 0, Lewica),
-         `Polska 2050` = ifelse(KO<0.05, 0, `Polska 2050`))
+         `Polska 2050` = ifelse(`Polska 2050`<0.05, 0, `Polska 2050`),
+         PSL = ifelse(median_PSL<5, 0, PSL),
+         PiS = ifelse(median_PiS<5, 0, PiS),
+         KO = ifelse(median_KO<5, 0, KO),
+         Konfederacja = ifelse(median_Konfederacja<5, 0, Konfederacja),
+         Lewica = ifelse(median_Lewica<0.05, 0, Lewica),
+         `Polska 2050` = ifelse(`median_Polska 2050`<5, 0, `Polska 2050`)
+         )
 
 consts <- uncount(tibble(plotdraws), 41, .id="okreg")
 
