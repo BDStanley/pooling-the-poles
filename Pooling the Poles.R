@@ -22,7 +22,7 @@ library("gpclib")
 
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
-    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.0.3") {
+    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.0.4") {
   parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
 }
 
