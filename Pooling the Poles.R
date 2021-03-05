@@ -128,7 +128,7 @@ m1 <-
       data = polls,
       seed = 780045,
       iter = 5000,
-      backend="cmdstanr", chains=6, cores=6, threads = threading(3),
+      backend="cmdstanr", chains=6, cores=12, threads = threading(6),
       refresh = 5,
       control =
         list(
@@ -313,6 +313,9 @@ plot_latest_parl <-
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
            y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
+           y="Other", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
            x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
