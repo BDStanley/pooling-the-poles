@@ -95,6 +95,7 @@ polls <-
     outcome = as.matrix(polls[names(polls) %in% c("PiS", "KO", "Lewica", "PSL", "Konfederacja", "Polska2050", "Other")])
   )
 
+
 #####Run model#####
 m1 <-
   brm(formula = bf(outcome ~ 1 + s(time, k = 10) + (1 | pollster)),
@@ -242,7 +243,7 @@ PiS.KO.diff <- plotdraws %>%
 
 KO.P50.diff <- plotdraws %>%
   pivot_wider(names_from=.category, values_from=.value) %>%
-  mutate(., KOP50 = KO-`Polska 2050`,
+  mutate(., KOP50 = `Polska 2050`-KO,
          KOP50 = sum((KOP50 > 0) / length(KOP50)),
          KOP50 = round(KOP50, 2)) %>%
   pull(KOP50) %>%
@@ -319,10 +320,8 @@ plot_latest_parl <-
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
            x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(KO > Polska 2050)  = ", KO.P50.diff), y="KO",
-           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(Polska 2050 > Lewica)  = ", P50.Lewica.diff), y="Polska 2050",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Polska 2050"], 0.99), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(Polska 2050 > KO)  = ", KO.P50.diff), y="Polska 2050",
+           x=quantile(plotdraws$.value[plotdraws$.category=="Polska 2050"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica_5), y="Lewica",
            x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL_5), y="PSL",
@@ -1541,7 +1540,8 @@ ggsave(p_house, file = "p_house.png",
 #####INCLUDING DON'T KNOWS#####
 polls <- read_excel('polldata.xlsx')
 
-polls <- unite(polls, org, remark, col="org", sep="_")
+polls <- unite(polls, org, remark, col="org", sep="_") %>%
+  filter(., DK!=0)
 polls$org <-as.factor(polls$org)
 
 polls$startDate <- as.Date(polls$startDate)
@@ -1693,9 +1693,9 @@ point_dta <-
 
 plot_trends_parl_DK <-
   ggplot() +
-  geom_point(data=point_dta %>% filter(., party %in% c("PiS", "KO", "Don't know")), 
+  geom_point(data=point_dta %>% filter(., party %in% c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know")), 
              aes(x = midDate, y = est, colour = party, fill = party), alpha = .5, size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta %>% filter(., party %in% c("PiS", "KO", "Don't know")), 
+  stat_lineribbon(data=pred_dta %>% filter(., party %in% c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know")), 
                   aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_date(date_breaks = "1 month",
@@ -1783,7 +1783,7 @@ save.image("~/Desktop/PoolingthePoles.RData")
 #         labels = c("CBOS, mixed", "Estymator, CATI", "IBRIS, CATI", "IPSOS, CATI", "Kantar, CAPI", "Kantar, CATI", "Kantar, CAWI", "PGB Opinium, CATI", "Pollster, CATI", "Social Changes, CAWI", "United Surveys, CATI")
 #       )
 #   )
-# 
+
 # point_dta <- polls %>%
 #   select(org, midDate, PiS, KO, Lewica, Konfederacja, Other, PSL, Polska2050) %>%
 #   pivot_longer(
@@ -1808,7 +1808,7 @@ save.image("~/Desktop/PoolingthePoles.RData")
 # 
 # plot_trends_pollster <-
 #   ggplot() +
-#   geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
+#   #geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
 #   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
 #   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
 #   scale_x_date(date_breaks = "1 month",
@@ -1816,13 +1816,13 @@ save.image("~/Desktop/PoolingthePoles.RData")
 #   facet_wrap(~org, nrow=3) +
 #   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
 #                   ylim = c(0, .5)) +
-#   scale_color_manual(values=cols) +
-#   scale_fill_manual(values=cols, guide=FALSE) +
-#   labs(y = "% of vote", x="", title = "Trends (by pollster)", 
+#   #scale_color_manual(values=cols) +
+#   #scale_fill_manual(values=cols, guide=FALSE) +
+#   labs(y = "% of vote", x="", title = "Trends (by pollster)",
 #        subtitle=str_c("Data from ", names), color="", caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
 #   theme_minimal() +
 #   theme_ipsum_rc() +
 #   guides(colour = guide_legend(override.aes = list(alpha = 1))) +
 #   theme_changes
-# ggsave(plot_trends_pollster , file = "plot_trends_pollster.png", 
+# ggsave(plot_trends_pollster , file = "plot_trends_pollster.png",
 #        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
