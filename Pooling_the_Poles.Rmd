@@ -31,6 +31,10 @@ plot_trends_parl_DK
 ```
 
 ```{r}
+plot_trends_pollster
+```
+
+```{r}
 plot_seats_parl
 ```
 

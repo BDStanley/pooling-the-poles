@@ -163,17 +163,8 @@ pred_dta <-
     party =
       party %>%
       factor(
-        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
-        labels =
-          c(
-            "PiS",
-            "KO",
-            "Lewica",
-            "Konfederacja",
-            "Other",
-            "PSL",
-            "Polska 2050"
-          )
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
       )
   )
 
@@ -188,17 +179,8 @@ point_dta <-
     party =
       party %>%
       factor(
-        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
-        labels =
-          c(
-            "PiS",
-            "KO",
-            "Lewica",
-            "Konfederacja",
-            "Other",
-            "PSL",
-            "Polska 2050"
-          )
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
       )
   )
 
@@ -1482,7 +1464,7 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Roboto Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Roboto Condensed Light") +
   labs(x="", y="% of vote", title="Estimated share of seats",
-       subtitle="Mean estimated seat share with 95% credible intervals",
+       subtitle="Mean estimated seat share with 95% credible intervals. Sum total may not equal 460.",
        caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
   theme_minimal() +
   theme_ipsum_rc() +
@@ -1492,7 +1474,7 @@ ggsave(plot_seats_parl, file = "plot_seats_parl.png",
 
 
 #####House effects#####
-houselevels <- get_labels(droplevels(polls$org))
+houselevels <- get_labels(polls$org)
 
 PiS_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
   select(.,contains("PiS")) %>%
@@ -1575,8 +1557,9 @@ pred_dta <-
     party =
       party %>%
       factor(
-        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
-        labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska 2050"))
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+  )
   )
 
 point_dta <- polls %>%
@@ -1590,8 +1573,9 @@ point_dta <- polls %>%
     party =
       party %>%
       factor(
-        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
-        labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska 2050"))
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+      )
   )
 
 
@@ -1607,8 +1591,8 @@ plot_trends_pollster <-
                   ylim = c(0, .5)) +
   scale_color_manual(values=cols) +
   scale_fill_manual(values=cols, guide=FALSE) +
-  labs(y = "% of vote", x="", title = "Trends (by pollsters with at least five polls)",
-       subtitle=str_c(""), color="", caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
+  labs(y = "% of vote", x="", title = "Trends by pollster",
+       subtitle="Only pollsters with at least five polls are included.", color="", caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
   theme_minimal() +
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1))) +
@@ -1649,7 +1633,8 @@ names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"),
 names$house <- as.factor(names$house)
 housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
   fct_collapse(., Kantar=c("Kantar"))
-names <- paste0(get_labels(housenames), collapse=", ")
+names <- glue_collapse(get_labels(housenames), ", ", last = " and ")
+polls$org <- str_replace_all(polls$org, "_", ", ")
 
 polls <-
   polls %>%
@@ -1731,18 +1716,9 @@ pred_dta <-
   mutate(
     party =
       party %>%
-      factor(
-        levels = c("PiS", "KO", "Lewica", "Konfederacja", "DK", "PSL", "Polska2050"),
-        labels =
-          c(
-            "PiS",
-            "KO",
-            "Lewica",
-            "Konfederacja",
-            "Don't know",
-            "PSL",
-            "Polska 2050"
-          )
+        factor(
+          levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "DK"),
+          labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know")
       )
   )
 
@@ -1757,17 +1733,8 @@ point_dta <-
     party =
       party %>%
       factor(
-        levels = c("PiS", "KO", "Lewica", "Konfederacja", "DK", "PSL", "Polska2050"),
-        labels =
-          c(
-            "PiS",
-            "KO",
-            "Lewica",
-            "Konfederacja",
-            "Don't know",
-            "PSL",
-            "Polska 2050"
-          )
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "DK"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know")
       )
   )
 
@@ -1785,7 +1752,7 @@ plot_trends_parl_DK <-
   scale_color_manual(values=cols) +
   scale_fill_manual(values=cols, guide=FALSE) +
   labs(y = "% of vote", x="", title = "Trends (including undecided voters)", 
-       subtitle=str_c("Data from ", names), color="", caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
+       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.org). Model based on code written by Jack Bailey (@PoliSciJack).") +
   theme_minimal() +
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1))) +
