@@ -65,7 +65,3 @@ p_lewica
 ```{r fig.width=8, fig.height=8}
 p_konf
 ```
-
-```{r}
-p_house
-```
