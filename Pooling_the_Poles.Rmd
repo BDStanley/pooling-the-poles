@@ -1,7 +1,7 @@
 ---
 title: "Pooling the Poles"
 subtitle: "Pooled polls of intended voting at parliamentary elections."
-author: "[Ben Stanley](https://www.benstanley.org/)"
+author: "[Ben Stanley](https://www.benstanley.pl/)"
 date: "`r format(Sys.time(), '%A %d %b')`"
 output: 
   html_document:
