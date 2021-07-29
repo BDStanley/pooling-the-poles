@@ -56,6 +56,7 @@ polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
+  filter(midDate >= as.Date('2021-01-01')) %>%
   #filter(midDate_int > (max(midDate_int)-150)) %>%
   mutate(PiS = 100/((100-DK))*PiS,
          KO = 100/((100-DK))*KO,
@@ -198,10 +199,10 @@ plot_trends_parl <-
        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_minimal() +
   theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
 ggsave(plot_trends_parl, file = "plot_trends_parl.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
 #####Latest plot#####
@@ -229,7 +230,7 @@ PiS.KO.diff <- plotdraws %>%
 
 KO.P50.diff <- plotdraws %>%
   pivot_wider(names_from=.category, values_from=.value) %>%
-  mutate(., KOP50 = `Polska 2050`-KO,
+  mutate(., KOP50 = KO-`Polska 2050`,
          KOP50 = sum((KOP50 > 0) / length(KOP50)),
          KOP50 = round(KOP50, 2)) %>%
   pull(KOP50) %>%
@@ -306,8 +307,8 @@ plot_latest_parl <-
            family="Roboto Condensed", color="white") +
   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
            x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(Polska 2050 > KO)  = ", KO.P50.diff), y="Polska 2050",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Polska 2050"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(KO > Polska 2050)  = ", KO.P50.diff), y="KO",
+           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica_5), y="Lewica",
            x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL_5), y="PSL",
@@ -323,7 +324,7 @@ plot_latest_parl <-
   theme_ipsum_rc() +
   theme_changes 
 ggsave(plot_latest_parl, file = "polls_latest_parl.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 #####Seat maps#####
 median_PiS <- ifelse(medians$est[medians$.category=="PiS"] >=5, medians$est[medians$.category=="PiS"], 0)
@@ -512,7 +513,7 @@ p_p2050 <- ggplot(plotdata) +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_p2050, file = "Polska_2050_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_lewica <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(Lewica)) + 
@@ -526,7 +527,7 @@ p_lewica <- ggplot(plotdata) +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_lewica, file = "Lewica_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_pis <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(PiS)) + 
@@ -540,7 +541,7 @@ p_pis <- ggplot(plotdata) +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_pis, file = "PiS_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_ko <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(KO)) + 
@@ -554,7 +555,7 @@ p_ko <- ggplot(plotdata) +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_ko, file = "KO_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_psl <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(PSL)) + 
@@ -568,7 +569,7 @@ p_psl <- ggplot(plotdata) +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_psl, file = "PSL_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_konf <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(Konfederacja)) + 
@@ -582,7 +583,7 @@ p_konf <- ggplot(plotdata) +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_konf, file = "Konf_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_pis_ko <- ggplot(plotdata) + 
   aes(long,lat,group=group,fill=as.integer(PiSmKO)) + 
@@ -595,7 +596,7 @@ p_pis_ko <- ggplot(plotdata) +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
 ggsave(p_pis_ko, file = "PiSKO_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4)
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
 #####Seats plot#####
@@ -1469,7 +1470,7 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   theme_ipsum_rc() +
   theme_changes
 ggsave(plot_seats_parl, file = "plot_seats_parl.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
 #####House effects#####
@@ -1594,10 +1595,10 @@ plot_trends_pollster <-
        subtitle="Only pollsters with at least five polls are included.", color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_minimal() +
   theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
 ggsave(plot_trends_pollster , file = "plot_trends_pollster.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
 #####INCLUDING DON'T KNOWS#####
@@ -1619,6 +1620,7 @@ polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate)/2)),
          midDate_int=as.integer(midDate)) %>%
+  filter(midDate >= as.Date('2021-01-01')) %>%
   #filter(midDate_int > (max(midDate_int)-150)) %>%
   mutate(PSL = PSL,
          Polska2050 = `Polska 2050`,
@@ -1754,10 +1756,10 @@ plot_trends_parl_DK <-
        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_minimal() +
   theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
 ggsave(plot_trends_parl_DK, file = "plot_trends_parl_DK.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 #####Save image out#####
 save.image("~/Desktop/PoolingthePoles.RData")
