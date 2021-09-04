@@ -18,6 +18,7 @@ library(tidyverse)
 library(tidybayes)
 library(stringr)
 ```
+
 # Pooling the Poles
 
 ```{r, echo=F, results='asis'}
@@ -103,30 +104,7 @@ ggplot() +
                   ylim = c(0, .5)) +
   scale_color_manual(values=cols) +
   scale_fill_manual(values=cols, guide=FALSE) +
-  labs(y = "", x="") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_changes
-```
-
-## Trends by pollster  
-
-Only pollsters with more than five polls are included.
-
-```{r, fig.align='center', fig.width=12}
-ggplot() +
-  geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "1 month",
-               date_labels = "%b") +
-  facet_wrap(~org, nrow=3) +
-  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-                  ylim = c(0, .5)) +
-  scale_color_manual(values=cols) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  labs(y = "% of vote", x="", color="") +
+  labs(y = "", x="", color="") +
   theme_minimal() +
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
@@ -134,7 +112,7 @@ ggplot() +
 ```
 
 ## Estimated share of seats  
-
+\
 Mean estimated seat share with 95% credible intervals. Sum total may not equal 460.
 
 ```{r, fig.align='center'}
@@ -153,5 +131,28 @@ ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   labs(x="", y="% of vote") +
   theme_minimal() +
   theme_ipsum_rc() +
+  theme_changes
+```
+
+## Trends by pollster  
+\
+Only pollsters with more than five polls are included.
+
+```{r, fig.align='center', fig.width=12}
+ggplot() +
+  geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
+  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_date(date_breaks = "1 month",
+               date_labels = "%b") +
+  facet_wrap(~org, nrow=3) +
+  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+                  ylim = c(0, .5)) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  labs(y = "% of vote", x="", color="") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
 ```
