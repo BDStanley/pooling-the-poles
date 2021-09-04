@@ -13,10 +13,25 @@ output:
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(fig.width=10, fig.height=8, fig.align = 'center',
                       echo=FALSE, warning=FALSE, message=FALSE)
-library(hrbrthemes)
 library(tidyverse)
+library(patchwork)
 library(tidybayes)
-library(stringr)
+library(lubridate)
+library(htmltab)
+library(brms)
+library(here)
+library(glue)
+library("stringr")
+library("googledrive")
+library("rio")
+library("readxl")
+library("hrbrthemes")
+library("sjlabelled")
+library("seatdist")
+library("rgdal")
+library("maptools") 
+library("rgeos") 
+library("gpclib")
 ```
 
 # Pooling the Poles
@@ -94,6 +109,47 @@ add_fitted_draws(
 ## Trends
 
 ```{r, fig.align='center'}
+today <- interval(min(polls$midDate), Sys.Date())/years(1)
+
+pred_dta <-
+  tibble(
+    time = seq(0, today, length.out = nrow(polls)),
+    date = as.Date(time*365, origin = min(polls$midDate))
+  )
+
+pred_dta <-
+  add_fitted_draws(
+    model = m1,
+    newdata = pred_dta,
+    re_formula = NA
+  ) %>%
+  group_by(date, .category) %>%
+  rename(party = .category) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+      )
+  )
+
+point_dta <-
+  polls[names(polls) %in% c("midDate", "PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050")] %>%
+  pivot_longer(
+    cols = -midDate,
+    names_to = "party",
+    values_to = "est"
+  ) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+      )
+  )
+
 ggplot() +
   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
@@ -139,6 +195,59 @@ ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
 Only pollsters with more than five polls are included.
 
 ```{r, fig.align='center', fig.width=12}
+tab <- table(polls$org)
+polls <- polls[polls$org %in% names(tab)[tab >= 5], ]
+
+names <- data.frame(as.factor(get_labels(polls$org)))
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
+names$house <- as.factor(names$house)
+housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+orgnames <- glue_collapse(get_labels(housenames), ", ", last = " and ")
+polls$org <- str_replace_all(polls$org, "_", ", ")
+
+today <- interval(min(polls$midDate), Sys.Date())/years(1)
+
+pred_dta <-
+  tibble(
+    time = seq(0, today, length.out = nrow(polls)),
+    date = as.Date(time*365, origin = min(polls$midDate)),
+    org = polls$org,
+    pollster = polls$pollster
+  )
+
+pred_dta <-
+  add_fitted_draws(
+    model = m1,
+    newdata = pred_dta
+  ) %>%
+  group_by(date, .category, org) %>%
+  rename(party = .category) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+  )
+  )
+
+point_dta <- polls %>%
+  select(org, midDate, PiS, KO, Lewica, Konfederacja, Other, PSL, Polska2050) %>%
+  pivot_longer(
+    cols = c(-midDate, -org),
+    names_to = "party",
+    values_to = "est"
+  ) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+      )
+  )
+
 ggplot() +
   geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
