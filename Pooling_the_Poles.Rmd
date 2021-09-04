@@ -1,5 +1,9 @@
 ---
 title: "Pooling the Poles"
+knit: (function(input_file, encoding) {
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), 'index.html'))})
 subtitle: "Pooled polls of intended voting at parliamentary elections."
 author: "[Ben Stanley](https://www.benstanley.pl/)"
 date: "`r format(Sys.time(), '%A %d %b')`"
