@@ -9,7 +9,9 @@ author: "[Ben Stanley](https://www.benstanley.pl/)"
 date: "`r format(Sys.time(), '%A %d %b')`"
 output: 
   html_document:
-    theme: cosmo
+    theme: null
+    highlight: null
+    css: styles.css
 ---
 
 ```{r global_options, include=FALSE}
