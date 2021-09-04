@@ -34,6 +34,18 @@ library("rgeos")
 library("gpclib")
 ```
 
+```{r echo = F, eval = T, include=F}
+load("~/Desktop/PoolingthePoles.RData")
+names <- data.frame(as.factor(get_labels(polls$org)))
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
+names$house <- as.factor(names$house)
+housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+#names <- paste0(get_labels(housenames), collapse=", ")
+names <- glue_collapse(get_labels(housenames), ", ", last = " and ")
+polls$org <- str_replace_all(polls$org, "_", ", ")
+```
+
 # Pooling the Poles
 
 ```{r, echo=F, results='asis'}
@@ -41,11 +53,8 @@ cat("Pooled polls of intended voting at parliamentary elections in Poland, ", gs
 ```
 
 ```{r, echo=F, results='asis'}
-cat("Data from CBM Indicator, CBOS, Estymator, IBRIS, IBSP, IPSOS, Kantar, Opinia24, PGB Opinium, Pollster, Research Partner, Social Changes, UCE Research and United Survey.", sep="")
-```
-
-```{r echo = F, eval = T, include=F}
-load("~/Desktop/PoolingthePoles.RData")
+#cat("Data from CBM Indicator, CBOS, Estymator, IBRIS, IBSP, IPSOS, Kantar, Opinia24, PGB Opinium, Pollster, Research Partner, Social Changes, UCE Research and United Survey.", sep="")
+cat(str_c("Data from ", names, "."))
 ```
 
 ## Latest estimates
