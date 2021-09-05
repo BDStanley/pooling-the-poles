@@ -37,7 +37,7 @@ library("gpclib")
 ```{r echo = F, eval = T, include=F}
 load("~/Desktop/PoolingthePoles.RData")
 names <- data.frame(as.factor(get_labels(polls$org)))
-names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep=",")
 names$house <- as.factor(names$house)
 housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
   fct_collapse(., Kantar=c("Kantar"))
@@ -49,7 +49,7 @@ polls$org <- str_replace_all(polls$org, "_", ", ")
 # Pooling the Poles
 
 ```{r, echo=F, results='asis'}
-cat("Pooled polls of intended voting at parliamentary elections in Poland, ", gsub(" 0", " ", format(Sys.time(), '%A %d %b')),".", sep="")
+cat("Pooled polls of intended voting at parliamentary elections in Poland, ", gsub(" 0", " ", format(Sys.time(), '%A %d %B')),".", sep="")
 ```
 
 ```{r, echo=F, results='asis'}
