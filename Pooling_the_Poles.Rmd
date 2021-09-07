@@ -53,8 +53,71 @@ cat("Pooled polls of intended voting at parliamentary elections in Poland, ", gs
 ```
 
 ```{r, echo=F, results='asis'}
-#cat("Data from CBM Indicator, CBOS, Estymator, IBRIS, IBSP, IPSOS, Kantar, Opinia24, PGB Opinium, Pollster, Research Partner, Social Changes, UCE Research and United Survey.", sep="")
 cat(str_c("Data from ", names, "."))
+```
+
+```{r, echo=F, results='asis'}
+plotdraws <- add_fitted_draws(
+  model = m1,
+  newdata =
+    tibble(time = today),
+  re_formula = NA
+) %>%
+  group_by(.category) %>%
+  mutate(.category = factor(.category,
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Polska 2050")))
+
+medians <- plotdraws %>%
+  summarise(est = median(.value)*100, .groups = "drop")
+
+PiS.KO.diff <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., PiSKO = PiS-KO,
+         PiSKO = sum((PiSKO > 0) / length(PiSKO)),
+         PiSKO = round(PiSKO, 2)) %>%
+  pull(PiSKO) %>%
+  last(.)
+
+KO.P50.diff <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., KOP50 = KO-`Polska 2050`,
+         KOP50 = sum((KOP50 > 0) / length(KOP50)),
+         KOP50 = round(KOP50, 2)) %>%
+  pull(KOP50) %>%
+  last(.)
+
+P50.Lewica.diff <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., P50Lew = `Polska 2050`-Lewica,
+         P50Lew = sum((P50Lew > 0) / length(P50Lew)),
+         P50Lew = round(P50Lew, 2)) %>%
+  pull(P50Lew) %>%
+  last(.)
+
+Lewica_5 <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., Lewica_5 = Lewica-0.05,
+         Lewica_5 = sum((Lewica_5 > 0) / length(Lewica_5)),
+         Lewica_5 = round(Lewica_5, 2)) %>%
+  pull(Lewica_5) %>%
+  last(.)
+
+PSL_5 <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., PSL_5 = PSL-0.05,
+         PSL_5 = sum((PSL_5 > 0) / length(PSL_5)),
+         PSL_5 = round(PSL_5, 2)) %>%
+  pull(PSL_5) %>%
+  last(.)
+
+Konfederacja_5 <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., Konfederacja_5 = Konfederacja-0.05,
+         Konfederacja_5 = sum((Konfederacja_5 > 0) / length(Konfederacja_5)),
+         Konfederacja_5 = round(Konfederacja_5, 2)) %>%
+  pull(Konfederacja_5) %>%
+  last(.)
 ```
 
 ## Latest estimates
