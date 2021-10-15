@@ -1602,203 +1602,203 @@ ggsave(plot_trends_pollster , file = "plot_trends_pollster.png",
 
 
 #####Polish versions#####
-polls <- read_excel('polldata.xlsx')
-polls <- unite(polls, org, remark, col="org", sep="_")
-polls$org <-as.factor(polls$org)
-polls$startDate <- as.Date(polls$startDate)
-polls$endDate <- as.Date(polls$endDate)
-polls <-
-  polls %>%
-  mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
-         midDate_int=as.integer(midDate)) %>%
-  filter(midDate >= as.Date('2021-01-01')) %>%
-  #filter(midDate_int > (max(midDate_int)-150)) %>%
-  mutate(PiS = 100/((100-DK))*PiS,
-         KO = 100/((100-DK))*KO,
-         Lewica = 100/((100-DK))*Lewica,
-         PSL = 100/((100-DK))*PSL,
-         Konfederacja = 100/((100-DK))*Konfederacja,
-         `Polska 2050` = 100/((100-DK))*`Polska 2050`,
-         Other = 100/((100-DK))*Other,
-         PSL = PSL,
-         Polska2050 = `Polska 2050`,
-         time = as.integer(difftime(midDate, min(midDate), units = "days")),
-         pollster = as.integer(factor(org)))
-
-cols <- c("PiS"="blue4", "KO"="orange", "PSL"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "Inni"="gray50", "Polska 2050"="darkgoldenrod")
-names <- data.frame(as.factor(get_labels(polls$org)))
-names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
-names$house <- as.factor(names$house)
-housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
-  fct_collapse(., Kantar=c("Kantar"))
-names <- glue_collapse(get_labels(housenames), ", ")
-polls$org <- str_replace_all(polls$org, "_", ", ")
-
-pred_dta <- pred_dta %>%
-  mutate(party = fct_recode(party, Inni = "Other"))
-point_dta <- point_dta %>%
-  mutate(party = fct_recode(party, Inni = "Other"))
-
-plot_trends_parl <-
-  ggplot() +
-  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "1 month",
-               date_labels = "%b") +
-  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-                  ylim = c(0, .5)) +
-  scale_color_manual(values=cols) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  labs(y = "", x="", title = "Trendy", 
-       subtitle=str_to_upper(str_c("Dane: ", names, ".")), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_changes
-ggsave(plot_trends_parl, file = "plot_trends_parl_PL.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
-
-plotdraws <- add_fitted_draws(
-  model = m1,
-  newdata =
-    tibble(time = today),
-  re_formula = NA
-) %>%
-  group_by(.category) %>%
-  mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
-                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "PSL","Polska 2050")))
-
-medians <- plotdraws %>%
-  summarise(est = median(.value)*100, .groups = "drop")
-
-PiS.KO.diff <- plotdraws %>%
-  pivot_wider(names_from=.category, values_from=.value) %>%
-  mutate(., PiSKO = PiS-KO,
-         PiSKO = sum((PiSKO > 0) / length(PiSKO)),
-         PiSKO = round(PiSKO, 2)) %>%
-  pull(PiSKO) %>%
-  last(.)
-
-KO.P50.diff <- plotdraws %>%
-  pivot_wider(names_from=.category, values_from=.value) %>%
-  mutate(., KOP50 = KO-`Polska 2050`,
-         KOP50 = sum((KOP50 > 0) / length(KOP50)),
-         KOP50 = round(KOP50, 2)) %>%
-  pull(KOP50) %>%
-  last(.)
-
-P50.Lewica.diff <- plotdraws %>%
-  pivot_wider(names_from=.category, values_from=.value) %>%
-  mutate(., P50Lew = `Polska 2050`-Lewica,
-         P50Lew = sum((P50Lew > 0) / length(P50Lew)),
-         P50Lew = round(P50Lew, 2)) %>%
-  pull(P50Lew) %>%
-  last(.)
-
-Lewica_5 <- plotdraws %>%
-  pivot_wider(names_from=.category, values_from=.value) %>%
-  mutate(., Lewica_5 = Lewica-0.05,
-         Lewica_5 = sum((Lewica_5 > 0) / length(Lewica_5)),
-         Lewica_5 = round(Lewica_5, 2)) %>%
-  pull(Lewica_5) %>%
-  last(.)
-
-PSL_5 <- plotdraws %>%
-  pivot_wider(names_from=.category, values_from=.value) %>%
-  mutate(., PSL_5 = PSL-0.05,
-         PSL_5 = sum((PSL_5 > 0) / length(PSL_5)),
-         PSL_5 = round(PSL_5, 2)) %>%
-  pull(PSL_5) %>%
-  last(.)
-
-Konfederacja_5 <- plotdraws %>%
-  pivot_wider(names_from=.category, values_from=.value) %>%
-  mutate(., Konfederacja_5 = Konfederacja-0.05,
-         Konfederacja_5 = sum((Konfederacja_5 > 0) / length(Konfederacja_5)),
-         Konfederacja_5 = round(Konfederacja_5, 2)) %>%
-  pull(Konfederacja_5) %>%
-  last(.)
-
-plot_latest_parl <-
-  add_fitted_draws(
-    model = m1,
-    newdata =
-      tibble(time = today),
-    re_formula = NA
-  ) %>%
-  group_by(.category) %>%
-  mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
-                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "PSL","Polska 2050"))) %>%
-  ggplot() +
-  geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
-  stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
-                x=.value, fill=.category), normalize="xy") +
-  scale_y_discrete(name="", position="right") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
-           y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
-           y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Polska 2050"],0)),
-           y="Polska 2050", x=medians$est[medians$.category=="Polska 2050"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
-           y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
-           y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
-           y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Inni"],0)),
-           y="Inni", x=medians$est[medians$.category=="Inni"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
-           x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(KO > Polska 2050)  = ", KO.P50.diff), y="KO",
-           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica_5), y="Lewica",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL_5), y="PSL",
-           x=quantile(plotdraws$.value[plotdraws$.category=="PSL"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja_5), y="Konfederacja",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
-  scale_fill_manual(name=" ", values=cols, guide=FALSE) +
-  scale_x_continuous(breaks=c(0, 0.5, 0.8, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
-  expand_limits(x = 0) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki",
-       subtitle=str_to_upper(str_c("Dane: ", names,"."))) +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  theme_changes 
-ggsave(plot_latest_parl, file = "polls_latest_parl_PL.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
-
-plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
-  geom_bar(stat="identity", width=.75, show.legend = F) +
-  geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
-  geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
-  geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
-  scale_y_continuous('Liczba miejsc', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
-  scale_fill_manual(name="Party", values = cols)+
-  geom_label(aes(x=2, y=231), label="Większość ustawodawcza", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
-  geom_label(aes(x=2, y=276), label="Większość pozwalająca obalić weto prezydenta", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
-  geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
-  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Roboto Condensed Light")+
-  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Roboto Condensed Light") +
-  labs(x="", y="", title="Szacowany rozkład miejsc w Sejmie",
-       subtitle=str_to_upper("(95%-owy przedział wiarygodności)"),
-       caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  theme_changes
-ggsave(plot_seats_parl, file = "plot_seats_parl_PL.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+# polls <- read_excel('polldata.xlsx')
+# polls <- unite(polls, org, remark, col="org", sep="_")
+# polls$org <-as.factor(polls$org)
+# polls$startDate <- as.Date(polls$startDate)
+# polls$endDate <- as.Date(polls$endDate)
+# polls <-
+#   polls %>%
+#   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
+#          midDate_int=as.integer(midDate)) %>%
+#   filter(midDate >= as.Date('2021-01-01')) %>%
+#   #filter(midDate_int > (max(midDate_int)-150)) %>%
+#   mutate(PiS = 100/((100-DK))*PiS,
+#          KO = 100/((100-DK))*KO,
+#          Lewica = 100/((100-DK))*Lewica,
+#          PSL = 100/((100-DK))*PSL,
+#          Konfederacja = 100/((100-DK))*Konfederacja,
+#          `Polska 2050` = 100/((100-DK))*`Polska 2050`,
+#          Other = 100/((100-DK))*Other,
+#          PSL = PSL,
+#          Polska2050 = `Polska 2050`,
+#          time = as.integer(difftime(midDate, min(midDate), units = "days")),
+#          pollster = as.integer(factor(org)))
+# 
+# cols <- c("PiS"="blue4", "KO"="orange", "PSL"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "Inni"="gray50", "Polska 2050"="darkgoldenrod")
+# names <- data.frame(as.factor(get_labels(polls$org)))
+# names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
+# names$house <- as.factor(names$house)
+# housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+#   fct_collapse(., Kantar=c("Kantar"))
+# names <- glue_collapse(get_labels(housenames), ", ")
+# polls$org <- str_replace_all(polls$org, "_", ", ")
+# 
+# pred_dta <- pred_dta %>%
+#   mutate(party = fct_recode(party, Inni = "Other"))
+# point_dta <- point_dta %>%
+#   mutate(party = fct_recode(party, Inni = "Other"))
+# 
+# plot_trends_parl <-
+#   ggplot() +
+#   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
+#   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+#   scale_x_date(date_breaks = "1 month",
+#                date_labels = "%b") +
+#   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+#                   ylim = c(0, .5)) +
+#   scale_color_manual(values=cols) +
+#   scale_fill_manual(values=cols, guide=FALSE) +
+#   labs(y = "", x="", title = "Trendy", 
+#        subtitle=str_to_upper(str_c("Dane: ", names, ".")), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+#   theme_minimal() +
+#   theme_ipsum_rc() +
+#   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+#   theme_changes
+# ggsave(plot_trends_parl, file = "plot_trends_parl_PL.png", 
+#        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+# 
+# plotdraws <- add_fitted_draws(
+#   model = m1,
+#   newdata =
+#     tibble(time = today),
+#   re_formula = NA
+# ) %>%
+#   group_by(.category) %>%
+#   mutate(.category = factor(.category,
+#                             levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+#                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "PSL","Polska 2050")))
+# 
+# medians <- plotdraws %>%
+#   summarise(est = median(.value)*100, .groups = "drop")
+# 
+# PiS.KO.diff <- plotdraws %>%
+#   pivot_wider(names_from=.category, values_from=.value) %>%
+#   mutate(., PiSKO = PiS-KO,
+#          PiSKO = sum((PiSKO > 0) / length(PiSKO)),
+#          PiSKO = round(PiSKO, 2)) %>%
+#   pull(PiSKO) %>%
+#   last(.)
+# 
+# KO.P50.diff <- plotdraws %>%
+#   pivot_wider(names_from=.category, values_from=.value) %>%
+#   mutate(., KOP50 = KO-`Polska 2050`,
+#          KOP50 = sum((KOP50 > 0) / length(KOP50)),
+#          KOP50 = round(KOP50, 2)) %>%
+#   pull(KOP50) %>%
+#   last(.)
+# 
+# P50.Lewica.diff <- plotdraws %>%
+#   pivot_wider(names_from=.category, values_from=.value) %>%
+#   mutate(., P50Lew = `Polska 2050`-Lewica,
+#          P50Lew = sum((P50Lew > 0) / length(P50Lew)),
+#          P50Lew = round(P50Lew, 2)) %>%
+#   pull(P50Lew) %>%
+#   last(.)
+# 
+# Lewica_5 <- plotdraws %>%
+#   pivot_wider(names_from=.category, values_from=.value) %>%
+#   mutate(., Lewica_5 = Lewica-0.05,
+#          Lewica_5 = sum((Lewica_5 > 0) / length(Lewica_5)),
+#          Lewica_5 = round(Lewica_5, 2)) %>%
+#   pull(Lewica_5) %>%
+#   last(.)
+# 
+# PSL_5 <- plotdraws %>%
+#   pivot_wider(names_from=.category, values_from=.value) %>%
+#   mutate(., PSL_5 = PSL-0.05,
+#          PSL_5 = sum((PSL_5 > 0) / length(PSL_5)),
+#          PSL_5 = round(PSL_5, 2)) %>%
+#   pull(PSL_5) %>%
+#   last(.)
+# 
+# Konfederacja_5 <- plotdraws %>%
+#   pivot_wider(names_from=.category, values_from=.value) %>%
+#   mutate(., Konfederacja_5 = Konfederacja-0.05,
+#          Konfederacja_5 = sum((Konfederacja_5 > 0) / length(Konfederacja_5)),
+#          Konfederacja_5 = round(Konfederacja_5, 2)) %>%
+#   pull(Konfederacja_5) %>%
+#   last(.)
+# 
+# plot_latest_parl <-
+#   add_fitted_draws(
+#     model = m1,
+#     newdata =
+#       tibble(time = today),
+#     re_formula = NA
+#   ) %>%
+#   group_by(.category) %>%
+#   mutate(.category = factor(.category,
+#                             levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+#                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "PSL","Polska 2050"))) %>%
+#   ggplot() +
+#   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
+#   stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
+#                 x=.value, fill=.category), normalize="xy") +
+#   scale_y_discrete(name="", position="right") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
+#            y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
+#            y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Polska 2050"],0)),
+#            y="Polska 2050", x=medians$est[medians$.category=="Polska 2050"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
+#            y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
+#            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
+#            y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Inni"],0)),
+#            y="Inni", x=medians$est[medians$.category=="Inni"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
+#            x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+#   annotate(geom = "text", label=paste("Pr(KO > Polska 2050)  = ", KO.P50.diff), y="KO",
+#            x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+#   annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica_5), y="Lewica",
+#            x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+#   annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL_5), y="PSL",
+#            x=quantile(plotdraws$.value[plotdraws$.category=="PSL"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+#   annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja_5), y="Konfederacja",
+#            x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+#   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
+#   scale_x_continuous(breaks=c(0, 0.5, 0.8, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
+#   expand_limits(x = 0) +
+#   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki",
+#        subtitle=str_to_upper(str_c("Dane: ", names,"."))) +
+#   theme_minimal() +
+#   theme_ipsum_rc() +
+#   theme_changes 
+# ggsave(plot_latest_parl, file = "polls_latest_parl_PL.png", 
+#        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+# 
+# plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
+#   geom_bar(stat="identity", width=.75, show.legend = F) +
+#   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
+#   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
+#   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
+#   scale_y_continuous('Liczba miejsc', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
+#   scale_fill_manual(name="Party", values = cols)+
+#   geom_label(aes(x=2, y=231), label="Większość ustawodawcza", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
+#   geom_label(aes(x=2, y=276), label="Większość pozwalająca obalić weto prezydenta", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
+#   geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
+#   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Roboto Condensed Light")+
+#   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Roboto Condensed Light") +
+#   labs(x="", y="", title="Szacowany rozkład miejsc w Sejmie",
+#        subtitle=str_to_upper("(95%-owy przedział wiarygodności)"),
+#        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+#   theme_minimal() +
+#   theme_ipsum_rc() +
+#   theme_changes
+# ggsave(plot_seats_parl, file = "plot_seats_parl_PL.png",
+#        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 # #####INCLUDING DON'T KNOWS#####
 # polls <- read_excel('polldata.xlsx')
