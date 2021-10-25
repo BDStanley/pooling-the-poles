@@ -178,7 +178,7 @@ add_fitted_draws(
   annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja_5), y="Konfederacja",
            x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
-  scale_x_continuous(breaks=c(0, 0.5, 0.8, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
+  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   labs(x="") +
   theme_minimal() +
