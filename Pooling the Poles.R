@@ -218,7 +218,8 @@ plot_trends_parl_PL <-
                   ylim = c(0, .5)) +
   scale_color_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"),
                      labels=c("PiS", "KO", "Lewica", "Konfederacja",  "PSL", "Polska 2050", "Inni")) +
-  scale_fill_manual(values=cols, guide=FALSE) +
+  scale_fill_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"),
+                    labels=c("PiS", "KO", "Lewica", "Konfederacja",  "PSL", "Polska 2050", "Inni"), guide=FALSE) +
   labs(y = "", x="", title = "Trendy",
        subtitle=str_to_upper(str_c("Dane: ", names_PL, ".")), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_minimal() +
@@ -1628,7 +1629,7 @@ ggsave(p_house, file = "p_house.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
 
 
-#####Run model by pollster#####
+#####By pollster#####
 tab <- table(polls$org)
 polls <- polls[polls$org %in% names(tab)[tab >= 5], ]
 
@@ -1703,6 +1704,31 @@ plot_trends_pollster <-
   theme_changes
 ggsave(plot_trends_pollster , file = "plot_trends_pollster.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+
+Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
+plot_trends_pollster_PL <-
+  ggplot() +
+  geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
+  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_date(date_breaks = "1 month",
+               date_labels = "%b") +
+  facet_wrap(~org, nrow=3) +
+  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+                  ylim = c(0, .5)) +
+  scale_color_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"),
+                     labels=c("PiS", "KO", "Lewica", "Konfederacja",  "PSL", "Polska 2050", "Inni")) +
+  scale_fill_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"),
+                    labels=c("PiS", "KO", "Lewica", "Konfederacja",  "PSL", "Polska 2050", "Inni"), guide=FALSE) +
+  labs(y = "", x="", title = "Trendy według ośrodku badawczego",
+       subtitle=str_to_upper(str_c("Dane: ", names_PL, ".")), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+  theme_changes
+ggsave(plot_trends_pollster_PL , file = "plot_trends_pollster_PL.png",
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
+Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
 
 #####INCLUDING DON'T KNOWS#####
