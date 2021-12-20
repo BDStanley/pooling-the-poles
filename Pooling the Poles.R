@@ -46,6 +46,8 @@ import <- drive_download(as_id("https://drive.google.com/file/d/1ZiaHdyGqkeWaQwp
 1
 polls <- read_excel('polldata.xlsx')
 
+#polls <- polls %>% filter(., org!="Social Changes")
+
 polls <- unite(polls, org, remark, col="org", sep="_")
 polls$org <-as.factor(polls$org)
 
@@ -1579,7 +1581,7 @@ ggsave(plot_seats_parl_PL, file = "plot_seats_parl_PL.png",
 
 
 #####House effects#####
-houselevels <- get_labels(polls$org)
+houselevels <- sort(get_labels(polls$org))
 
 PiS_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
   select(.,contains("PiS")) %>%
@@ -1729,6 +1731,33 @@ plot_trends_pollster_PL <-
 ggsave(plot_trends_pollster_PL , file = "plot_trends_pollster_PL.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
 Sys.setlocale("LC_TIME", "en_GB.UTF-8")
+
+
+pred_dta <-
+  tibble(
+    time = seq(0, today, length.out = nrow(polls)),
+    date = as.Date(time*365, origin = min(polls$midDate)),
+    org = polls$org,
+    pollster = polls$pollster
+  )
+
+pred_dta <-
+  add_fitted_draws(
+    model = m1,
+    newdata = pred_dta
+  ) %>%
+  group_by(date, .category, org) %>%
+  rename(party = .category) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+      )
+  )
+
+
 
 
 #####INCLUDING DON'T KNOWS#####
