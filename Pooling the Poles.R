@@ -18,6 +18,7 @@ library("rgdal")
 library("maptools") 
 library("rgeos") 
 library("gpclib")
+library(rmarkdown)
 
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
@@ -1961,6 +1962,8 @@ pred_dta <-
 # ggsave(plot_trends_parl_DK_PL, file = "plot_trends_parl_DK_PL.png",
 #        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 # Sys.setlocale("LC_TIME", "en_GB.UTF-8")
+
+render('PTP_render.Rmd')
 
 #####Save image out#####
 save.image("~/Desktop/PoolingthePoles.RData")
