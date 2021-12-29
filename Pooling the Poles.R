@@ -45,6 +45,10 @@ import <- drive_download(as_id("https://drive.google.com/file/d/1ZiaHdyGqkeWaQwp
 1
 polls <- read_excel('polldata.xlsx')
 
+import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1cOC1mY4xf0iXgPavA1CNQeSFwqi_0U_m/edit?usp=sharing&ouid=111487015973215379663&rtpof=true&sd=true"), overwrite=TRUE)
+1
+weights <- read_excel('2019_elec_percentages.xlsx')
+
 #polls <- polls %>% filter(., org!="Social Changes")
 
 polls <- unite(polls, org, remark, col="org", sep="_")
@@ -452,7 +456,9 @@ seats$PiSKO <-abs(seats$PiS-seats$KO)
 seats$PiSmKO <- seats$PiS-seats$KO
 
 #regional maps
-const=readOGR("/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/GRED_beta2_20170530_Poland/shapefile/GRED_Poland_2011_beta2.shp")
+import <- drive_download(as_id("https://drive.google.com/file/d/1cDi_0JvR6iE7hDMi6yNsuBZj87a6zDun/view?usp=sharing"), overwrite=TRUE)
+1
+const=readOGR("GRED_Poland_2011_beta2.shp")
 const@data$id = rownames(const@data)
 const.points = fortify(const, region="id")
 const.df = full_join(const.points, const@data, by="id")
