@@ -49,6 +49,13 @@ import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1cOC1mY4x
 1
 weights <- read_excel('2019_elec_percentages.xlsx')
 
+#const=readOGR("/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/GRED_beta2_20170530_Poland/shapefile/GRED_Poland_2011_beta2.shp")
+#saveRDS(const, file="/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/constituencies")
+import <- drive_download(as_id("https://drive.google.com/file/d/1JmF3bjRA_sTaJZ4rqPd1WAQyGm-XM-l7/view?usp=sharing"), overwrite=TRUE)
+1
+const <- readRDS('constituencies')
+
+
 #polls <- polls %>% filter(., org!="Social Changes")
 
 polls <- unite(polls, org, remark, col="org", sep="_")
@@ -456,11 +463,6 @@ seats$PiSKO <-abs(seats$PiS-seats$KO)
 seats$PiSmKO <- seats$PiS-seats$KO
 
 #regional maps
-#const=readOGR("/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/GRED_beta2_20170530_Poland/shapefile/GRED_Poland_2011_beta2.shp")
-#saveRDS(const, file="/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/constituencies")
-import <- drive_download(as_id("https://drive.google.com/file/d/1JmF3bjRA_sTaJZ4rqPd1WAQyGm-XM-l7/view?usp=sharing"), overwrite=TRUE)
-1
-const <- readRDS('constituencies')
 const@data$id = rownames(const@data)
 const.points = fortify(const, region="id")
 const.df = full_join(const.points, const@data, by="id")
@@ -694,7 +696,6 @@ ggsave(p_pis_ko, file = "PiSKO_seats.png",
 
 
 #####Seats plot#####
-weights <- read_excel('~/Google Drive/Resources/Polish materials/Poll data/2019_elec_percentages.xlsx')
 plotdraws <- add_fitted_draws(
   model = m1,
   newdata =
