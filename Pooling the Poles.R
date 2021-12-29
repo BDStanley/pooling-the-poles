@@ -19,6 +19,7 @@ library("maptools")
 library("rgeos") 
 library("gpclib")
 library(rmarkdown)
+library(gitcreds)
 
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
