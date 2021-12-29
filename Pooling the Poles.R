@@ -58,7 +58,7 @@ polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
-  filter(midDate >= as.Date('2021-06-01')) %>%
+  filter(midDate >= as.Date('2021-01-01')) %>%
   #filter(midDate_int > (max(midDate_int)-150)) %>%
   mutate(PiS = 100/((100-DK))*PiS,
          KO = 100/((100-DK))*KO,
@@ -453,7 +453,11 @@ seats$PiSKO <-abs(seats$PiS-seats$KO)
 seats$PiSmKO <- seats$PiS-seats$KO
 
 #regional maps
-const=readOGR("/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/GRED_beta2_20170530_Poland/shapefile/GRED_Poland_2011_beta2.shp")
+#const=readOGR("/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/GRED_beta2_20170530_Poland/shapefile/GRED_Poland_2011_beta2.shp")
+#saveRDS(const, file="/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/constituencies")
+import <- drive_download(as_id("https://drive.google.com/file/d/1JmF3bjRA_sTaJZ4rqPd1WAQyGm-XM-l7/view?usp=sharing"), overwrite=TRUE)
+1
+const <- readRDS('constituencies')
 const@data$id = rownames(const@data)
 const.points = fortify(const, region="id")
 const.df = full_join(const.points, const@data, by="id")
