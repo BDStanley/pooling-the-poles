@@ -295,7 +295,7 @@ seats$PiSKO <-abs(seats$PiS-seats$KO)
 seats$PiSmKO <- seats$PiS-seats$KO
 
 #regional maps
-const=readOGR("/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/GRED_beta2_20170530_Poland/shapefile/GRED_Poland_2011_beta2.shp")
+const <- readRDS('constituencies')
 const@data$id = rownames(const@data)
 const.points = fortify(const, region="id")
 const.df = full_join(const.points, const@data, by="id")
