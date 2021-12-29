@@ -57,7 +57,7 @@ polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
-  filter(midDate >= as.Date('2021-06-01')) %>%
+  filter(midDate >= as.Date('2021-01-01')) %>%
   #filter(midDate_int > (max(midDate_int)-150)) %>%
   mutate(PiS = 100/((100-DK))*PiS,
          KO = 100/((100-DK))*KO,
