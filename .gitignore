@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+<<<<<<< HEAD
 National polls.R
 .Rhistory[Conflict 1]
 .Rhistory[Conflict]
@@ -109,3 +110,5 @@ plot_trends_parl_PL.png
 polls_latest_parl_PL.png
 plot_trends_pollster_PL.png
 plot_trends_parl_DK_PL.png
+=======
+>>>>>>> 1e653899cba538fee926b3aacf004e3314292562

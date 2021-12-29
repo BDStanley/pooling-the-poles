@@ -19,7 +19,6 @@ library("maptools")
 library("rgeos") 
 library("gpclib")
 
-
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
     Sys.info()["sysname"] == "Darwin" && getRversion() == "4.1.1") {
@@ -45,6 +44,10 @@ set.seed(780045)
 import <- drive_download(as_id("https://drive.google.com/file/d/1ZiaHdyGqkeWaQwpADjBloRSPnfAAhXrC/view?usp=sharing"), overwrite=TRUE)
 1
 polls <- read_excel('polldata.xlsx')
+
+import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1cOC1mY4xf0iXgPavA1CNQeSFwqi_0U_m/edit?usp=sharing&ouid=111487015973215379663&rtpof=true&sd=true"), overwrite=TRUE)
+1
+weights <- read_excel('2019_elec_percentages.xlsx')
 
 #polls <- polls %>% filter(., org!="Social Changes")
 
