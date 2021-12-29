@@ -1963,8 +1963,11 @@ pred_dta <-
 #        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 # Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
-render('PTP_render.Rmd')
+render('index.Rmd')
+system("git add index.html")
+system("git commit -m 'PTP new'")
+system("git push")
 
 #####Save image out#####
-save.image("~/Desktop/PoolingthePoles.RData")
+#save.image("~/Desktop/PoolingthePoles.RData")
 
