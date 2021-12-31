@@ -1967,6 +1967,7 @@ pred_dta <-
 render('index.Rmd')
 system("git add index.html")
 system("git commit -m 'PTP new'")
+system("git pull")
 system("git push")
 
 #####Save image out#####
