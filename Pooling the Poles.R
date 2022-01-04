@@ -1965,10 +1965,12 @@ pred_dta <-
 # Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
 render('index.Rmd')
-system("git add index.html")
+system("git add -A")
+#system("git stash")
 system("git commit -m 'PTP new'")
-system("git pull")
+system("git pull --rebase")
 system("git push")
+#system("git stash pop")
 
 #####Save image out#####
 #save.image("~/Desktop/PoolingthePoles.RData")
