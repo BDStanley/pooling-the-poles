@@ -43,9 +43,9 @@ theme_changes_map <- theme(axis.title.y = element_blank(), axis.title.x = elemen
 set.seed(780045)
 
 #####Read in, adjust and subset data#####
-import <- drive_download(as_id("https://drive.google.com/file/d/1ZiaHdyGqkeWaQwpADjBloRSPnfAAhXrC/view?usp=sharing"), overwrite=TRUE)
+import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1aI_JqiQuuO0WmzkMBzSZvufrf-XGr-vmNddDCadGi7Q/edit?usp=sharing"), overwrite=TRUE)
 1
-polls <- read_excel('polldata.xlsx')
+polls <- read_excel('polldata_gs.xlsx')
 
 import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1cOC1mY4xf0iXgPavA1CNQeSFwqi_0U_m/edit?usp=sharing&ouid=111487015973215379663&rtpof=true&sd=true"), overwrite=TRUE)
 1
