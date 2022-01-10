@@ -117,7 +117,7 @@ polls <-
 
 #####Run model#####
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 24) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 24) + (1 + time | pollster)),
       family = dirichlet(link = "logit", refcat = "Other"),
       prior =
         prior(normal(0, 1.5), class = "Intercept", dpar = "muPiS") +
