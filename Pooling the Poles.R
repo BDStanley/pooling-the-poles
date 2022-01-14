@@ -161,6 +161,13 @@ m1 <-
 #####Trend plot#####
 today <- interval(min(polls$midDate), Sys.Date())/years(1)
 
+# time <- seq(0, today, length.out = nrow(polls))
+# 
+# pred_dta <- polls %>%  
+#   modelr::data_grid(time, date = as.Date(time*365, origin=min(polls$midDate)),
+#                     pollster = pollster) %>% 
+#   add_fitted_draws(m1, re_formula = NA)
+
 pred_dta <-
   tibble(
     time = seq(0, today, length.out = nrow(polls)),
