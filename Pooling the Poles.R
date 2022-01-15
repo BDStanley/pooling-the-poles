@@ -267,6 +267,10 @@ plotdraws <- add_fitted_draws(
 medians <- plotdraws %>%
   summarise(est = median(.value)*100, .groups = "drop")
 
+# medians <- plotdraws %>%
+#   summarise(est = median(.value)*100, .groups = "drop") %>%
+#   mutate(est = round(est, 0))
+
 PiS.KO.diff <- plotdraws %>%
   pivot_wider(names_from=.category, values_from=.value) %>%
   mutate(., PiSKO = PiS-KO,
@@ -1597,57 +1601,6 @@ ggsave(plot_seats_parl_PL, file = "plot_seats_parl_PL.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
-#####House effects#####
-houselevels <- sort(get_labels(polls$org))
-
-PiS_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
-  select(.,contains("PiS")) %>%
-  setNames(houselevels) %>%
-  mutate(party="PiS")
-
-KO_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
-  select(.,contains("KO", ignore.case = F)) %>%
-  setNames(houselevels) %>%
-  mutate(party="KO")
-
-`PSL_house` <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
-  select(.,contains("PSL", ignore.case = F)) %>%
-  setNames(houselevels) %>%
-  mutate(party="PSL")
-
-Lewica_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
-  select(.,contains("Lewica", ignore.case = F)) %>%
-  setNames(houselevels) %>%
-  mutate(party="Lewica")
-
-Konfederacja_house <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
-  select(.,contains("Konfederacja", ignore.case = F)) %>%
-  setNames(houselevels) %>%
-  mutate(party="Konfederacja")
-
-`Polska 2050_house` <- as_tibble(as.data.frame(ranef(m1, summary=F)), repair_names("minimal")) %>%
-  select(.,contains("Polska2050", ignore.case = F)) %>%
-  setNames(houselevels) %>%
-  mutate(party="Polska 2050")
-
-p_house <- bind_rows(PiS_house, KO_house, `PSL_house`, Lewica_house, Konfederacja_house, `Polska 2050_house`) %>%
-  pivot_longer(., cols=where(is.numeric), names_to="house") %>%
-  separate(., house, c("house", "method"), sep=", ") %>%
-  ggplot(aes(x = party, y = 10*value, color=house, shape=method)) +
-  geom_abline(intercept=0, slope=0, colour="gray10", linetype=3) +
-  stat_pointinterval(position = position_dodge(width = .7)) +
-  guides(color = guide_legend(override.aes = list(size = 5, shape="|"), keywidth=0.3, keyheight=0.3, default.unit="inch")) +
-  guides(shape = guide_legend(override.aes = list(size = 5, linetype=NULL), keywidth=0.3, keyheight=0.3, default.unit="inch")) +
-  labs(color="Pollster", shape="Mode", x="", y="Deviation from mean party vote share (percent)", 
-       title="House and mode effects", 
-       caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  theme_changes
-ggsave(p_house, file = "p_house.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4)
-
-
 #####By pollster#####
 tab <- table(polls$org)
 polls <- polls[polls$org %in% names(tab)[tab >= 5], ]
@@ -1750,31 +1703,115 @@ ggsave(plot_trends_pollster_PL , file = "plot_trends_pollster_PL.png",
 Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
 
-pred_dta <-
-  tibble(
-    time = seq(0, today, length.out = nrow(polls)),
-    date = as.Date(time*365, origin = min(polls$midDate)),
-    org = polls$org,
-    pollster = polls$pollster
-  )
+plotdraws <- polls %>%  
+  modelr::data_grid(time = today, pollster = pollster) %>%
+  add_fitted_draws(m1)
 
-pred_dta <-
-  add_fitted_draws(
-    model = m1,
-    newdata = pred_dta
+medians <- plotdraws %>%
+  summarise(est = median(.value)*100, .groups = "drop") 
+
+names <- data.frame(as.factor(get_labels(polls$org)))
+names$house <- as.factor(names$as.factor.get_labels.polls.org..)
+names <- separate(names, as.factor.get_labels.polls.org.., sep=",", into=c('org', "label"))
+orgnames <- glue_collapse(get_labels(sort(names$org)), ", ", last = " and ")
+
+plot_latest_parl_pollster <- polls %>%  
+  modelr::data_grid(time = today, pollster = factor(pollster)) %>%
+  add_fitted_draws(m1) %>%
+  group_by(.category, pollster) %>%
+  mutate(.category = factor(.category,
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Polska 2050")),
+         pollster = factor(pollster,
+                           levels = get_labels(factor(polls$pollster)),
+                           labels = get_labels(factor(polls$org)))
+         ) %>%
+  ggplot() +
+  geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
+  stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
+                x=.value, fill=.category), normalize="xy") +
+  scale_y_discrete(name="", position="right") +
+  scale_fill_manual(name=" ", values=cols, guide=FALSE) +
+  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  expand_limits(x = 0) +
+  facet_wrap(vars(pollster), ) +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Latest estimates by pollster",
+       subtitle=str_c("Data from ", orgnames,".")) +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  theme_changes 
+
+plot_latest_parl_pollster <- plot_latest_parl_pollster +
+  geom_text(data=medians %>%
+              mutate(.category = factor(.category,
+                                        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+                                        labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Polska 2050")),
+                     pollster = factor(pollster,
+                                       levels = get_labels(factor(polls$pollster)),
+                                       labels = get_labels(factor(polls$org)))
+              ), 
+            aes(x=est/100, y=.category, label=round(est,0)), check_overlap = TRUE,
+            size=3, hjust = "center", vjust=1.2,
+            family="Roboto Condensed Light")
+
+ggsave(plot_latest_parl_pollster, file = "polls_latest_parl_pollster.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+        
+
+plot_latest_parl_pollster_PL <- polls %>%  
+  modelr::data_grid(time = today, pollster = factor(pollster)) %>%
+  add_fitted_draws(m1) %>%
+  group_by(.category, pollster) %>%
+  mutate(.category = factor(.category,
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "PSL","Polska 2050")),
+         pollster = factor(pollster,
+                           levels = get_labels(factor(polls$pollster)),
+                           labels = get_labels(factor(polls$org)))
   ) %>%
-  group_by(date, .category, org) %>%
-  rename(party = .category) %>%
-  mutate(
-    party =
-      party %>%
-      factor(
-        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
-        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
-      )
-  )
+  ggplot() +
+  geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
+  stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
+                x=.value, fill=.category), normalize="xy") +
+  scale_y_discrete(name="", position="right") +
+  scale_fill_manual(name=" ", values=cols, guide=FALSE) +
+  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  expand_limits(x = 0) +
+  facet_wrap(vars(pollster), ) +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki według ośrodku badawczego",
+       subtitle=str_to_upper(str_c("Dane: ", orgnames,"."))) +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  theme_changes
+
+plot_latest_parl_pollster_PL <- plot_latest_parl_pollster_PL +
+  geom_text(data=medians %>%
+              mutate(.category = factor(.category,
+                                        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+                                        labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "PSL","Polska 2050")),
+                     pollster = factor(pollster,
+                                       levels = get_labels(factor(polls$pollster)),
+                                       labels = get_labels(factor(polls$org)))
+              ), 
+            aes(x=est/100, y=.category, label=round(est,0)), check_overlap=TRUE,
+            size=3, hjust = "center", vjust=1.2,
+            family="Roboto Condensed Light")
+
+ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
+#####Upload to Github#####
+render('index.Rmd')
+system("git pull --rebase")
+system("git add -A")
+#system("git stash")
+system("git commit -m 'PTP new'")
+system("git push")
+#system("git stash pop")
+
+#####Save image out#####
+#save.image("~/Desktop/PoolingthePoles.RData")
 
 
 #####INCLUDING DON'T KNOWS#####
@@ -1971,14 +2008,5 @@ pred_dta <-
 #        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 # Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
-render('index.Rmd')
-system("git add -A")
-#system("git stash")
-system("git commit -m 'PTP new'")
-system("git pull --rebase")
-system("git push")
-#system("git stash pop")
 
-#####Save image out#####
-#save.image("~/Desktop/PoolingthePoles.RData")
 

@@ -519,3 +519,60 @@ ggplot() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
 ```
+
+## Latest figures by pollster  
+\
+Only pollsters with more than five polls are included.
+
+```{r, fig.align='center', fig.width=12}
+plotdraws <- polls %>%  
+  modelr::data_grid(time = today, pollster = pollster) %>%
+  add_fitted_draws(m1)
+
+medians <- plotdraws %>%
+  summarise(est = median(.value)*100, .groups = "drop") 
+
+names <- data.frame(as.factor(get_labels(polls$org)))
+names$house <- as.factor(names$as.factor.get_labels.polls.org..)
+names <- separate(names, as.factor.get_labels.polls.org.., sep=",", into=c('org', "label"))
+orgnames <- glue_collapse(get_labels(sort(names$org)), ", ", last = " and ")
+
+plot_latest_parl_pollster <- polls %>%  
+  modelr::data_grid(time = today, pollster = factor(pollster)) %>%
+  add_fitted_draws(m1) %>%
+  group_by(.category, pollster) %>%
+  mutate(.category = factor(.category,
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Polska 2050")),
+         pollster = factor(pollster,
+                           levels = get_labels(factor(polls$pollster)),
+                           labels = get_labels(factor(polls$org)))
+         ) %>%
+  ggplot() +
+  geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
+  stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
+                x=.value, fill=.category), normalize="xy") +
+  scale_y_discrete(name="", position="right") +
+  scale_fill_manual(name=" ", values=cols, guide=FALSE) +
+  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  expand_limits(x = 0) +
+  facet_wrap(vars(pollster), ) +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Latest estimates by pollster",
+       subtitle=str_c("Data from ", orgnames,".")) +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  theme_changes 
+
+plot_latest_parl_pollster +
+  geom_text(data=medians %>%
+              mutate(.category = factor(.category,
+                                        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+                                        labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Polska 2050")),
+                     pollster = factor(pollster,
+                                       levels = get_labels(factor(polls$pollster)),
+                                       labels = get_labels(factor(polls$org)))
+              ), 
+            aes(x=est/100, y=.category, label=round(est,0)), check_overlap = TRUE,
+            size=3, hjust = "center", vjust=1.2,
+            family="Roboto Condensed Light")
+```
