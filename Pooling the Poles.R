@@ -1714,6 +1714,7 @@ names <- data.frame(as.factor(get_labels(polls$org)))
 names$house <- as.factor(names$as.factor.get_labels.polls.org..)
 names <- separate(names, as.factor.get_labels.polls.org.., sep=",", into=c('org', "label"))
 orgnames <- glue_collapse(get_labels(sort(names$org)), ", ", last = " and ")
+orgnames_PL <- glue_collapse(get_labels(sort(names$org)), ", ", last = " i ")
 
 plot_latest_parl_pollster <- polls %>%  
   modelr::data_grid(time = today, pollster = factor(pollster)) %>%
@@ -1779,7 +1780,7 @@ plot_latest_parl_pollster_PL <- polls %>%
   expand_limits(x = 0) +
   facet_wrap(vars(pollster), ) +
   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki według ośrodku badawczego",
-       subtitle=str_to_upper(str_c("Dane: ", orgnames,"."))) +
+       subtitle=str_to_upper(str_c("Dane: ", orgnames_PL,"."))) +
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes
