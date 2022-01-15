@@ -1803,16 +1803,15 @@ ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png",
 
 #####Upload to Github#####
 render('index.Rmd')
-system("git pull --rebase")
 system("git add -A")
 #system("git stash")
+system("git pull --rebase")
 system("git commit -m 'PTP new'")
 system("git push")
 #system("git stash pop")
 
 #####Save image out#####
 #save.image("~/Desktop/PoolingthePoles.RData")
-
 
 #####INCLUDING DON'T KNOWS#####
 # polls <- read_excel('polldata.xlsx')
