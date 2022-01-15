@@ -1805,8 +1805,8 @@ ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png",
 render('index.Rmd')
 system("git add -A")
 #system("git stash")
-system("git pull --rebase")
 system("git commit -m 'PTP new'")
+system("git pull --rebase")
 system("git push")
 #system("git stash pop")
 
