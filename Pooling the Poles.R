@@ -1806,7 +1806,7 @@ render('index.Rmd')
 system("git add -A")
 #system("git stash")
 system("git commit -m 'PTP new'")
-system("git pull --rebase")
+system("git pull")
 system("git push")
 #system("git stash pop")
 
