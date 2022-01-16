@@ -557,8 +557,7 @@ plot_latest_parl_pollster <- polls %>%
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   facet_wrap(vars(pollster), ) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Latest estimates by pollster",
-       subtitle=str_c("Data from ", orgnames,".")) +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="") +
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes 
