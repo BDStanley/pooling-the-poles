@@ -464,6 +464,51 @@ for( i in 1 : 42 ) {
                                      `Polska 2050est`[i], PSLest[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
 }
 
+# PiSpct <- round(weights$PiScoef*29, digits=2)
+# KOpct <- round(weights$KOcoef*26, digits=2)
+# PSLpct <- round(weights$PSLcoef*4, digits=2)
+# Lewicapct <- round(weights$Lewicacoef*5, digits=2)
+# Konfederacjapct <- round(weights$Konfcoef*9, digits=2)
+# `Polska 2050pct` <- round(weights$KOcoef*15, digits=2)
+# MNpct <- c(0.17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+# KOest <- (weights$validvotes/100)*KOpct
+# PiSest <- (weights$validvotes/100)*PiSpct
+# PSLest <- (weights$validvotes/100)*PSLpct
+# Lewicaest <- (weights$validvotes/100)*Lewicapct
+# Konfederacjaest <- (weights$validvotes/100)*Konfederacjapct
+# `Polska 2050est` <- (weights$validvotes/100)*`Polska 2050pct`
+# MNest <- (weights$validvotes/100)*MNpct
+# poldHondt <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42), `Polska 2050`=rep(1,42), PSL=rep(1,42))
+# 
+# for( i in 1 : 42 ) {
+#   poldHondt[i,] <- c(giveseats(v = c(KOest[i], Konfederacjaest[i], Lewicaest[i], MNest[i], PiSest[i],
+#                                      `Polska 2050est`[i], PSLest[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
+# }
+# 
+# separate <- poldHondt %>%
+#   slice(2:42) %>%
+#   summarise_all(sum)
+# 
+# PiSpct <- round(weights$PiScoef*30, digits=2)
+# KOpct <- round(weights$KOcoef*42, digits=2)
+# Lewicapct <- round(weights$Lewicacoef*6, digits=2)
+# Konfederacjapct <- round(weights$Konfcoef*10, digits=2)
+# MNpct <- c(0.17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+# KOest <- (weights$validvotes/100)*KOpct
+# PiSest <- (weights$validvotes/100)*PiSpct
+# Lewicaest <- (weights$validvotes/100)*Lewicapct
+# Konfederacjaest <- (weights$validvotes/100)*Konfederacjapct
+# MNest <- (weights$validvotes/100)*MNpct
+# poldHondt <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42))
+# 
+# for( i in 1 : 42 ) {
+#   poldHondt[i,] <- c(giveseats(v = c(KOest[i], Konfederacjaest[i], Lewicaest[i], MNest[i], PiSest[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
+# }
+# 
+# together <- poldHondt %>%
+#   slice(2:42) %>%
+#   summarise_all(sum)
+
 # seats table
 seats <- cbind(poldHondt, weights)
 row.names(seats) <- weights$name
