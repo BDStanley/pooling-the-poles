@@ -8,9 +8,6 @@ library(brms)
 library(here)
 library(glue)
 library("stringr")
-library("googledrive")
-library("rio")
-library("readxl")
 library("hrbrthemes")
 library("sjlabelled")
 library("seatdist")
@@ -19,11 +16,29 @@ library("maptools")
 library("rgeos") 
 library("gpclib")
 library(rmarkdown)
-library(gitcreds)
+library("googledrive")
+library("rio")
+library("readxl")
+
+#####Read in, adjust and subset data#####
+import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1aI_JqiQuuO0WmzkMBzSZvufrf-XGr-vmNddDCadGi7Q/edit?usp=sharing"), overwrite=TRUE)
+1
+polls <- read_excel('polldata_gs.xlsx')
+
+import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1cOC1mY4xf0iXgPavA1CNQeSFwqi_0U_m/edit?usp=sharing&ouid=111487015973215379663&rtpof=true&sd=true"), overwrite=TRUE)
+1
+weights <- read_excel('2019_elec_percentages.xlsx')
+
+#const=readOGR("/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/GRED_beta2_20170530_Poland/shapefile/GRED_Poland_2011_beta2.shp")
+#saveRDS(const, file="/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/constituencies")
+import <- drive_download(as_id("https://drive.google.com/file/d/1JmF3bjRA_sTaJZ4rqPd1WAQyGm-XM-l7/view?usp=sharing"), overwrite=TRUE)
+1
+const <- readRDS('constituencies')
+
 
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
-    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.1.1") {
+    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.1.2") {
   parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
 }
 
@@ -41,21 +56,6 @@ theme_changes_map <- theme(axis.title.y = element_blank(), axis.title.x = elemen
                            plot.subtitle = element_text(size=8, family="Roboto Condensed Light"), aspect.ratio=1, legend.position="none")
 
 set.seed(780045)
-
-#####Read in, adjust and subset data#####
-import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1aI_JqiQuuO0WmzkMBzSZvufrf-XGr-vmNddDCadGi7Q/edit?usp=sharing"), overwrite=TRUE)
-1
-polls <- read_excel('polldata_gs.xlsx')
-
-import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1cOC1mY4xf0iXgPavA1CNQeSFwqi_0U_m/edit?usp=sharing&ouid=111487015973215379663&rtpof=true&sd=true"), overwrite=TRUE)
-1
-weights <- read_excel('2019_elec_percentages.xlsx')
-
-#const=readOGR("/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/GRED_beta2_20170530_Poland/shapefile/GRED_Poland_2011_beta2.shp")
-#saveRDS(const, file="/Users/benstanley/Google Drive/Resources/Polish materials/Regional data/constituencies")
-import <- drive_download(as_id("https://drive.google.com/file/d/1JmF3bjRA_sTaJZ4rqPd1WAQyGm-XM-l7/view?usp=sharing"), overwrite=TRUE)
-1
-const <- readRDS('constituencies')
 
 
 #polls <- polls %>% filter(., org!="Social Changes")
