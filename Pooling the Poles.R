@@ -17,7 +17,7 @@ library("rgeos")
 library("gpclib")
 library(rmarkdown)
 library("googledrive")
-library("rio")
+#library("rio")
 library("readxl")
 
 #####Read in, adjust and subset data#####
