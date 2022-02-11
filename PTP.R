@@ -1843,6 +1843,7 @@ ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png",
 
 
 #####Upload to Github#####
+library(rmarkdown)
 render('index.Rmd')
 system("git add -A")
 system("git commit -m 'PTP new'")
