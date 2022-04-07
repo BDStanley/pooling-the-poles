@@ -51,19 +51,18 @@ polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
-  #filter(midDate >= as.Date('2021-06-01')) %>%
   filter(midDate_int > (max(midDate_int)-365)) %>%
   mutate(DKPiS = DK*0.5,
          DKREST = DK-DKPiS, 
          PiSORIG = PiS) %>%
   mutate(PiS = PiS + DKPiS,
          NOPiS = 100-PiS, 
-         KO = KO + (DKREST*((100/NOPiS)*KO)/100),
-         Lewica = Lewica + (DKREST*((100/NOPiS)*Lewica)/100),
-         PSL = PSL + (DKREST*((100/NOPiS)*PSL)/100),
-         Konfederacja = Konfederacja + (DKREST*((100/NOPiS)*Konfederacja)/100),
-         `Polska 2050` = `Polska 2050` + (DKREST*((100/NOPiS)*`Polska 2050`)/100),
-         Other = Other + (DKREST*((100/NOPiS)*Other)/100),
+         KO = KO + ((DKREST/NOPiS)*KO),
+         Lewica = Lewica + ((DKREST/NOPiS)*Lewica),
+         PSL = PSL + ((DKREST/NOPiS)*PSL),
+         Konfederacja = Konfederacja + ((DKREST/NOPiS)*Konfederacja),
+         `Polska 2050` = `Polska 2050` + ((DKREST/NOPiS)*`Polska 2050`),
+         Other = Other + ((DKREST/NOPiS)*Other),
          PSL = PSL,
          Polska2050 = `Polska 2050`,
          time = as.integer(difftime(midDate, min(midDate), units = "days")),
@@ -218,7 +217,7 @@ plot_trends_parl <-
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
-ggsave(plot_trends_parl, file = "plot_trends_parl.png", 
+ggsave(plot_trends_parl, file = "plot_trends_parl_PiS_hi.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
@@ -241,7 +240,7 @@ plot_trends_parl_PL <-
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
-ggsave(plot_trends_parl_PL, file = "plot_trends_parl_PL.png",
+ggsave(plot_trends_parl_PL, file = "plot_trends_parl_PL_PiS_hi.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
@@ -367,7 +366,7 @@ plot_latest_parl <-
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes 
-ggsave(plot_latest_parl, file = "polls_latest_parl.png", 
+ggsave(plot_latest_parl, file = "polls_latest_parl_PiS_hi.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 plot_latest_parl_PL <-
@@ -425,7 +424,7 @@ plot_latest_parl_PL <-
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes
-ggsave(plot_latest_parl_PL, file = "polls_latest_parl_PL.png",
+ggsave(plot_latest_parl_PL, file = "polls_latest_parl_PL_PiS_hi.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
@@ -666,7 +665,7 @@ p_p2050 <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_p2050, file = "Polska_2050_seats.png", 
+ggsave(p_p2050, file = "Polska_2050_seats_PiS_hi.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_lewica <- ggplot(plotdata) + 
@@ -680,7 +679,7 @@ p_lewica <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_lewica, file = "Lewica_seats.png", 
+ggsave(p_lewica, file = "Lewica_seats_PiS_hi.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_pis <- ggplot(plotdata) + 
@@ -694,7 +693,7 @@ p_pis <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_pis, file = "PiS_seats.png", 
+ggsave(p_pis, file = "PiS_seats_PiS_hi.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_ko <- ggplot(plotdata) + 
@@ -708,7 +707,7 @@ p_ko <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_ko, file = "KO_seats.png", 
+ggsave(p_ko, file = "KO_seats_PiS_hi.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_psl <- ggplot(plotdata) + 
@@ -722,7 +721,7 @@ p_psl <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_psl, file = "PSL_seats.png", 
+ggsave(p_psl, file = "PSL_seats_PiS_hi.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_konf <- ggplot(plotdata) + 
@@ -736,7 +735,7 @@ p_konf <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_konf, file = "Konf_seats.png", 
+ggsave(p_konf, file = "Konf_seats_PiS_hi.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_pis_ko <- ggplot(plotdata) + 
@@ -749,7 +748,7 @@ p_pis_ko <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_pis_ko, file = "PiSKO_seats.png", 
+ggsave(p_pis_ko, file = "PiSKO_seats_PiS_hi.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 #####Seats plot#####
@@ -1620,7 +1619,7 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes
-ggsave(plot_seats_parl, file = "plot_seats_parl.png",
+ggsave(plot_seats_parl, file = "plot_seats_parl_PiS_hi.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 plot_seats_parl_PL <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
@@ -1641,7 +1640,7 @@ plot_seats_parl_PL <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) 
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes
-ggsave(plot_seats_parl_PL, file = "plot_seats_parl_PL.png",
+ggsave(plot_seats_parl_PL, file = "plot_seats_parl_PL_PiS_hi.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
@@ -1718,7 +1717,7 @@ plot_trends_pollster <-
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
-ggsave(plot_trends_pollster , file = "plot_trends_pollster.png",
+ggsave(plot_trends_pollster , file = "plot_trends_pollster_PiS_hi.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
@@ -1742,7 +1741,7 @@ plot_trends_pollster_PL <-
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
-ggsave(plot_trends_pollster_PL , file = "plot_trends_pollster_PL.png",
+ggsave(plot_trends_pollster_PL , file = "plot_trends_pollster_PL_PiS_hi.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
 Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
@@ -1799,7 +1798,7 @@ plot_latest_parl_pollster <- plot_latest_parl_pollster +
             size=3, hjust = "center", vjust=1.2,
             family="Roboto Condensed Light")
 
-ggsave(plot_latest_parl_pollster, file = "polls_latest_parl_pollster.png", 
+ggsave(plot_latest_parl_pollster, file = "polls_latest_parl_pollster_PiS_hi.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
@@ -1842,13 +1841,11 @@ plot_latest_parl_pollster_PL <- plot_latest_parl_pollster_PL +
             size=3, hjust = "center", vjust=1.2,
             family="Roboto Condensed Light")
 
-ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png", 
+ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL_PiS_hi.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
 #####Upload to Github#####
-library(rmarkdown)
-render('index.Rmd')
 system("git add -A")
 system("git commit -m 'PTP new'")
 system("git pull")
