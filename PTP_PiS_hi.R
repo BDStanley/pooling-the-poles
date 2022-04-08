@@ -52,7 +52,7 @@ polls <-
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
   filter(midDate_int > (max(midDate_int)-365)) %>%
-  mutate(DKPiS = DK*0.75,
+  mutate(DKPiS = DK*0.66,
          DKREST = DK-DKPiS, 
          PiSORIG = PiS) %>%
   mutate(PiS = PiS + DKPiS,
