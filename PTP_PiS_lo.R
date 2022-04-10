@@ -52,7 +52,7 @@ polls <-
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
   filter(midDate_int > (max(midDate_int)-365)) %>%
-  mutate(DKPiS = DK*0.50,
+  mutate(DKPiS = DK*0.25,
          DKREST = DK-DKPiS, 
          PiSORIG = PiS) %>%
   mutate(PiS = PiS + DKPiS,
@@ -217,7 +217,7 @@ plot_trends_parl <-
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
-ggsave(plot_trends_parl, file = "plot_trends_parl_PiS_hi.png", 
+ggsave(plot_trends_parl, file = "plot_trends_parl_PiS_lo.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
@@ -234,13 +234,13 @@ plot_trends_parl_PL <-
                      labels=c("PiS", "KO", "Lewica", "Konfederacja",  "PSL", "Polska 2050", "Inni")) +
   scale_fill_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"),
                     labels=c("PiS", "KO", "Lewica", "Konfederacja",  "PSL", "Polska 2050", "Inni"), guide=FALSE) +
-  labs(y = "", x="", title = "Trendy, gdy PiS ma poparcie 50 proc. niezdecydowanych wyborców",
+  labs(y = "", x="", title = "Trendy, gdy PiS ma poparcie 25 proc. niezdecydowanych wyborców",
        subtitle=str_to_upper(str_c("Dane: ", names_PL, ".")), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_minimal() +
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
-ggsave(plot_trends_parl_PL, file = "plot_trends_parl_PL_PiS_hi.png",
+ggsave(plot_trends_parl_PL, file = "plot_trends_parl_PL_PiS_lo.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
@@ -366,7 +366,7 @@ plot_latest_parl <-
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes 
-ggsave(plot_latest_parl, file = "polls_latest_parl_PiS_hi.png", 
+ggsave(plot_latest_parl, file = "polls_latest_parl_PiS_lo.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 plot_latest_parl_PL <-
@@ -419,12 +419,12 @@ plot_latest_parl_PL <-
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki, gdy PiS ma poparcie 50 proc. niezdecydowanych wyborców",
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki, gdy PiS ma poparcie 25 proc. niezdecydowanych wyborców",
        subtitle=str_to_upper(str_c("Dane: ", names,"."))) +
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes
-ggsave(plot_latest_parl_PL, file = "polls_latest_parl_PL_PiS_hi.png",
+ggsave(plot_latest_parl_PL, file = "polls_latest_parl_PL_PiS_lo.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
@@ -665,7 +665,7 @@ p_p2050 <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_p2050, file = "Polska_2050_seats_PiS_hi.png", 
+ggsave(p_p2050, file = "Polska_2050_seats_PiS_lo.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_lewica <- ggplot(plotdata) + 
@@ -679,7 +679,7 @@ p_lewica <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed") +
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_lewica, file = "Lewica_seats_PiS_hi.png", 
+ggsave(p_lewica, file = "Lewica_seats_PiS_lo.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_pis <- ggplot(plotdata) + 
@@ -693,7 +693,7 @@ p_pis <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_pis, file = "PiS_seats_PiS_hi.png", 
+ggsave(p_pis, file = "PiS_seats_PiS_lo.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_ko <- ggplot(plotdata) + 
@@ -707,7 +707,7 @@ p_ko <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_ko, file = "KO_seats_PiS_hi.png", 
+ggsave(p_ko, file = "KO_seats_PiS_lo.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_psl <- ggplot(plotdata) + 
@@ -721,7 +721,7 @@ p_psl <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_psl, file = "PSL_seats_PiS_hi.png", 
+ggsave(p_psl, file = "PSL_seats_PiS_lo.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_konf <- ggplot(plotdata) + 
@@ -735,7 +735,7 @@ p_konf <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_konf, file = "Konf_seats_PiS_hi.png", 
+ggsave(p_konf, file = "Konf_seats_PiS_lo.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 
 p_pis_ko <- ggplot(plotdata) + 
@@ -748,7 +748,7 @@ p_pis_ko <- ggplot(plotdata) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).", family="Roboto Condensed")+
   theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
   theme_changes_map
-ggsave(p_pis_ko, file = "PiSKO_seats_PiS_hi.png", 
+ggsave(p_pis_ko, file = "PiSKO_seats_PiS_lo.png", 
        width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
 #####Seats plot#####
 plotdraws <- add_fitted_draws(
@@ -1618,7 +1618,7 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes
-ggsave(plot_seats_parl, file = "plot_seats_parl_PiS_hi.png",
+ggsave(plot_seats_parl, file = "plot_seats_parl_PiS_lo.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 plot_seats_parl_PL <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
@@ -1633,13 +1633,13 @@ plot_seats_parl_PL <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) 
   geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Roboto Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Roboto Condensed Light") +
-  labs(x="", y="", title="Szacowany rozkład miejsc w Sejmie, gdy PiS ma poparcie 50 proc. niezdecydowanych wyborców",
+  labs(x="", y="", title="Szacowany rozkład miejsc w Sejmie, gdy PiS ma poparcie 25 proc. niezdecydowanych wyborców",
        subtitle=str_to_upper("(95%-owy przedział wiarygodności)"),
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes
-ggsave(plot_seats_parl_PL, file = "plot_seats_parl_PL_PiS_hi.png",
+ggsave(plot_seats_parl_PL, file = "plot_seats_parl_PL_PiS_lo.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
@@ -1716,7 +1716,7 @@ plot_trends_pollster <-
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
-ggsave(plot_trends_pollster , file = "plot_trends_pollster_PiS_hi.png",
+ggsave(plot_trends_pollster , file = "plot_trends_pollster_PiS_lo.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
@@ -1740,7 +1740,7 @@ plot_trends_pollster_PL <-
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
-ggsave(plot_trends_pollster_PL , file = "plot_trends_pollster_PL_PiS_hi.png",
+ggsave(plot_trends_pollster_PL , file = "plot_trends_pollster_PL_PiS_lo.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
 Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
@@ -1797,7 +1797,7 @@ plot_latest_parl_pollster <- plot_latest_parl_pollster +
             size=3, hjust = "center", vjust=1.2,
             family="Roboto Condensed Light")
 
-ggsave(plot_latest_parl_pollster, file = "polls_latest_parl_pollster_PiS_hi.png", 
+ggsave(plot_latest_parl_pollster, file = "polls_latest_parl_pollster_PiS_lo.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
@@ -1840,7 +1840,7 @@ plot_latest_parl_pollster_PL <- plot_latest_parl_pollster_PL +
             size=3, hjust = "center", vjust=1.2,
             family="Roboto Condensed Light")
 
-ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL_PiS_hi.png", 
+ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL_PiS_lo.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
