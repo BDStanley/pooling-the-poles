@@ -21,6 +21,7 @@ if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) &&
   parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
 }
 
+
 library(tidyverse)
 
 theme_changes <- theme(axis.title.y = element_text(family="Roboto Condensed Light"), axis.title.x = element_text(family="Roboto Condensed Light"),
