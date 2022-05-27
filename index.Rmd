@@ -1,0 +1,577 @@
+---
+knit: (function(input_file, encoding) {
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), 'index.html'))})
+output: 
+  html_document:
+    theme: null
+    highlight: null
+    css: styles.css
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.align = 'center',
+                      echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+```{r echo = F, eval = T, include=F}
+theme_changes_map <- theme(axis.title.y = element_blank(), axis.title.x = element_blank(),
+                           axis.text.x = element_blank(), axis.text.y = element_blank(),
+                           strip.text.x = element_text(size = 10, family="Roboto Condensed Light"), legend.text = element_text(size=9, family="Roboto Condensed Light"), 
+                           legend.title = element_text(size=10, family="Roboto Condensed Light"), plot.title = element_text(size=14, family="Roboto Condensed Bold"),
+                           plot.subtitle = element_text(size=8, family="Roboto Condensed Light"), aspect.ratio=1, legend.position="none")
+names <- data.frame(as.factor(get_labels(polls$org)))
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep=",")
+names$house <- as.factor(names$house)
+housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+#names <- paste0(get_labels(housenames), collapse=", ")
+names <- glue_collapse(get_labels(housenames), ", ", last = " and ")
+polls$org <- str_replace_all(polls$org, "_", ", ")
+```
+
+# Pooling the Poles
+
+```{r, echo=F, results='asis'}
+cat("Pooled polls of intended voting at parliamentary elections in Poland, ", gsub(" 0", " ", format(Sys.time(), '%A %d %B')),".", sep="")
+```
+
+```{r, echo=F, results='asis'}
+cat(str_c("Data from ", names, "."))
+```
+
+```{r, echo=F, results='asis'}
+plotdraws <- add_fitted_draws(
+  model = m1,
+  newdata =
+    tibble(time = today),
+  re_formula = NA
+) %>%
+  group_by(.category) %>%
+  mutate(.category = factor(.category,
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Polska 2050")))
+
+medians <- plotdraws %>%
+  summarise(est = median(.value)*100, .groups = "drop")
+
+PiS.KO.diff <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., PiSKO = PiS-KO,
+         PiSKO = sum((PiSKO > 0) / length(PiSKO)),
+         PiSKO = round(PiSKO, 2)) %>%
+  pull(PiSKO) %>%
+  last(.)
+
+KO.P50.diff <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., KOP50 = KO-`Polska 2050`,
+         KOP50 = sum((KOP50 > 0) / length(KOP50)),
+         KOP50 = round(KOP50, 2)) %>%
+  pull(KOP50) %>%
+  last(.)
+
+P50.Lewica.diff <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., P50Lew = `Polska 2050`-Lewica,
+         P50Lew = sum((P50Lew > 0) / length(P50Lew)),
+         P50Lew = round(P50Lew, 2)) %>%
+  pull(P50Lew) %>%
+  last(.)
+
+Lewica_5 <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., Lewica_5 = Lewica-0.05,
+         Lewica_5 = sum((Lewica_5 > 0) / length(Lewica_5)),
+         Lewica_5 = round(Lewica_5, 2)) %>%
+  pull(Lewica_5) %>%
+  last(.)
+
+PSL_5 <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., PSL_5 = PSL-0.05,
+         PSL_5 = sum((PSL_5 > 0) / length(PSL_5)),
+         PSL_5 = round(PSL_5, 2)) %>%
+  pull(PSL_5) %>%
+  last(.)
+
+Konfederacja_5 <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., Konfederacja_5 = Konfederacja-0.05,
+         Konfederacja_5 = sum((Konfederacja_5 > 0) / length(Konfederacja_5)),
+         Konfederacja_5 = round(Konfederacja_5, 2)) %>%
+  pull(Konfederacja_5) %>%
+  last(.)
+```
+
+## Latest estimates
+\
+Figures shown in white are median estimates of support per party. Undecided voters are excluded.
+
+```{r, fig.align='center'}
+add_fitted_draws(
+    model = m1,
+    newdata =
+      tibble(time = today),
+    re_formula = NA
+  ) %>%
+  group_by(.category) %>%
+  mutate(.category = factor(.category,
+    levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+    labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska 2050"))) %>%
+  ggplot() +
+  geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
+  stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
+                 x=.value, fill=.category), normalize="xy") +
+  scale_y_discrete(name="", position="right") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
+           y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
+           y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Polska 2050"],0)),
+           y="Polska 2050", x=medians$est[medians$.category=="Polska 2050"]/100, size=4, hjust = "center", vjust=-1,
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
+           y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
+           y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
+           y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
+           y="Other", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
+           family="Roboto Condensed", color="white") +
+  annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
+           x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(KO > Polska 2050)  = ", KO.P50.diff), y="KO",
+           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica_5), y="Lewica",
+           x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL_5), y="PSL",
+           x=quantile(plotdraws$.value[plotdraws$.category=="PSL"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja_5), y="Konfederacja",
+           x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+  scale_fill_manual(name=" ", values=cols, guide=FALSE) +
+  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  expand_limits(x = 0) +
+  labs(x="") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  theme_changes 
+```
+
+## Trends
+\
+The shaded area shows the 95% credible interval.
+
+```{r, fig.align='center'}
+today <- interval(min(polls$midDate), Sys.Date())/years(1)
+
+pred_dta <-
+  tibble(
+    time = seq(0, today, length.out = nrow(polls)),
+    date = as.Date(time*365, origin = min(polls$midDate))
+  )
+
+pred_dta <-
+  add_fitted_draws(
+    model = m1,
+    newdata = pred_dta,
+    re_formula = NA
+  ) %>%
+  group_by(date, .category) %>%
+  rename(party = .category) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+      )
+  )
+
+point_dta <-
+  polls[names(polls) %in% c("midDate", "PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050")] %>%
+  pivot_longer(
+    cols = -midDate,
+    names_to = "party",
+    values_to = "est"
+  ) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+      )
+  )
+
+ggplot() +
+  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
+  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_date(date_breaks = "1 month",
+               date_labels = "%b") +
+  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+                  ylim = c(0, .5)) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  labs(y = "", x="", color="") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+  theme_changes
+```
+
+## Estimated share of seats  
+\
+Mean estimated seat share with 95% credible intervals. Sum total may not equal 460.
+
+```{r, fig.align='center'}
+ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
+  geom_bar(stat="identity", width=.75, show.legend = F) +
+  geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
+  geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
+  geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
+  scale_y_continuous('Number of seats', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
+  scale_fill_manual(name="Party", values = cols)+
+  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
+  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
+  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Roboto Condensed Light") +
+  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Roboto Condensed Light")+
+  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Roboto Condensed Light") +
+  labs(x="", y="% of vote") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  theme_changes
+```
+
+## Constituency-level differences in share of seats for PiS and Koalicja Obywatelska
+\
+Constituencies in shades of blue have more PiS MPs; constituencies in orange have more KO MPs.
+
+```{r echo = F, eval = T, include=F}
+median_PiS <- ifelse(medians$est[medians$.category=="PiS"] >=5, medians$est[medians$.category=="PiS"], 0)
+median_KO <- ifelse(medians$est[medians$.category=="KO"] >=5, medians$est[medians$.category=="KO"], 0)
+`median_PSL` <- ifelse(medians$est[medians$.category=="PSL"] >=5, medians$est[medians$.category=="PSL"], 0)
+median_Lewica <- ifelse(medians$est[medians$.category=="Lewica"] >=5, medians$est[medians$.category=="Lewica"], 0)
+median_Konfederacja <- ifelse(medians$est[medians$.category=="Konfederacja"] >=5, medians$est[medians$.category=="Konfederacja"], 0)
+`median_Polska 2050` <- ifelse(medians$est[medians$.category=="Polska 2050"] >=5, medians$est[medians$.category=="Polska 2050"], 0)
+PiSpct <- round(weights$PiScoef*median_PiS, digits=2)
+KOpct <- round(weights$KOcoef*median_KO, digits=2)
+PSLpct <- round(weights$PSLcoef*`median_PSL`, digits=2)
+Lewicapct <- round(weights$Lewicacoef*median_Lewica, digits=2)
+Konfederacjapct <- round(weights$Konfcoef*median_Konfederacja, digits=2)
+`Polska 2050pct` <- round(weights$KOcoef*`median_Polska 2050`, digits=2)
+MNpct <- c(0.17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+KOest <- (weights$validvotes/100)*KOpct
+PiSest <- (weights$validvotes/100)*PiSpct
+PSLest <- (weights$validvotes/100)*PSLpct
+Lewicaest <- (weights$validvotes/100)*Lewicapct
+Konfederacjaest <- (weights$validvotes/100)*Konfederacjapct
+`Polska 2050est` <- (weights$validvotes/100)*`Polska 2050pct`
+MNest <- (weights$validvotes/100)*MNpct
+poldHondt <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42), `Polska 2050`=rep(1,42), PSL=rep(1,42))
+
+for( i in 1 : 42 ) {
+  poldHondt[i,] <- c(giveseats(v = c(KOest[i], Konfederacjaest[i], Lewicaest[i], MNest[i], PiSest[i], 
+                                     `Polska 2050est`[i], PSLest[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
+}
+
+# seats table
+seats <- cbind(poldHondt, weights)
+row.names(seats) <- weights$name
+keep <- c("KO","Konfederacja","Lewica","MN", "PiS", "Polska 2050", "PSL")
+colnames(seats) <- c("KO", "Konfederacja","Lewica","MN", "PiS", "Polska 2050", "PSL")
+seats <- seats[keep]
+seats <- seats[-1,]
+seats$id <- 1:41
+seats$PiSKO <-abs(seats$PiS-seats$KO)
+seats$PiSmKO <- seats$PiS-seats$KO
+
+#regional maps
+const <- readRDS('constituencies')
+const@data$id = rownames(const@data)
+const.points = fortify(const, region="id")
+const.df = full_join(const.points, const@data, by="id")
+const.df$con[const.df$id==0] <- 13
+const.df$con[const.df$id==1] <- 12
+const.df$con[const.df$id==2] <- 14
+const.df$con[const.df$id==3] <- 15
+const.df$con[const.df$id==4] <- 3
+const.df$con[const.df$id==5] <- 2
+const.df$con[const.df$id==6] <- 1
+const.df$con[const.df$id==7] <- 11
+const.df$con[const.df$id==8] <- 9
+const.df$con[const.df$id==9] <- 10
+const.df$con[const.df$id==10] <- 33
+const.df$con[const.df$id==11] <- 37
+const.df$con[const.df$id==12] <- 38
+const.df$con[const.df$id==13] <- 36
+const.df$con[const.df$id==14] <- 39
+const.df$con[const.df$id==15] <- 4
+const.df$con[const.df$id==16] <- 5
+const.df$con[const.df$id==17] <- 6
+const.df$con[const.df$id==18] <- 7
+const.df$con[const.df$id==19] <- 8
+const.df$con[const.df$id==20] <- 18
+const.df$con[const.df$id==21] <- 16
+const.df$con[const.df$id==22] <- 17
+const.df$con[const.df$id==23] <- 20
+const.df$con[const.df$id==24] <- 19
+const.df$con[const.df$id==25] <- 21
+const.df$con[const.df$id==26] <- 24
+const.df$con[const.df$id==27] <- 26
+const.df$con[const.df$id==28] <- 25
+const.df$con[const.df$id==29] <- 30
+const.df$con[const.df$id==30] <- 31
+const.df$con[const.df$id==31] <- 27
+const.df$con[const.df$id==32] <- 32
+const.df$con[const.df$id==33] <- 29
+const.df$con[const.df$id==34] <- 28
+const.df$con[const.df$id==35] <- 23
+const.df$con[const.df$id==36] <- 22
+const.df$con[const.df$id==37] <- 34
+const.df$con[const.df$id==38] <- 35
+const.df$con[const.df$id==39] <- 41
+const.df$con[const.df$id==40] <- 40
+
+label_points <- coordinates(const)
+colnames(label_points) <- c("x","y")
+label_points <- data.frame(label_points)
+seats$label_point_x[seats$id==12] <- label_points$x[2]
+seats$label_point_y[seats$id==12] <- label_points$y[2]
+seats$label_point_x[seats$id==13] <- label_points$x[1]
+seats$label_point_y[seats$id==13] <- label_points$y[1]
+seats$label_point_x[seats$id==14] <- label_points$x[3]
+seats$label_point_y[seats$id==14] <- label_points$y[3]
+seats$label_point_x[seats$id==15] <- label_points$x[4]
+seats$label_point_y[seats$id==15] <- label_points$y[4]
+seats$label_point_x[seats$id==3] <- label_points$x[5]
+seats$label_point_y[seats$id==3] <- label_points$y[5]
+seats$label_point_x[seats$id==2] <- label_points$x[6]
+seats$label_point_y[seats$id==2] <- label_points$y[6]
+seats$label_point_x[seats$id==1] <- label_points$x[7]
+seats$label_point_y[seats$id==1] <- label_points$y[7]
+seats$label_point_x[seats$id==11] <- label_points$x[8]
+seats$label_point_y[seats$id==11] <- label_points$y[8]
+seats$label_point_x[seats$id==9] <- label_points$x[9]
+seats$label_point_y[seats$id==9] <- label_points$y[9]
+seats$label_point_x[seats$id==10] <- label_points$x[10]
+seats$label_point_y[seats$id==10] <- label_points$y[10]
+seats$label_point_x[seats$id==33] <- label_points$x[11]
+seats$label_point_y[seats$id==33] <- label_points$y[11]
+seats$label_point_x[seats$id==37] <- label_points$x[12]
+seats$label_point_y[seats$id==37] <- label_points$y[12]
+seats$label_point_x[seats$id==38] <- label_points$x[13]
+seats$label_point_y[seats$id==38] <- label_points$y[13]
+seats$label_point_x[seats$id==36] <- label_points$x[14]
+seats$label_point_y[seats$id==36] <- label_points$y[14]
+seats$label_point_x[seats$id==39] <- label_points$x[15]
+seats$label_point_y[seats$id==39] <- label_points$y[15]
+seats$label_point_x[seats$id==4] <- label_points$x[16]
+seats$label_point_y[seats$id==4] <- label_points$y[16]
+seats$label_point_x[seats$id==5] <- label_points$x[17]
+seats$label_point_y[seats$id==5] <- label_points$y[17]
+seats$label_point_x[seats$id==6] <- label_points$x[18]
+seats$label_point_y[seats$id==6] <- label_points$y[18]
+seats$label_point_x[seats$id==7] <- label_points$x[19]+0.2
+seats$label_point_y[seats$id==7] <- label_points$y[19]
+seats$label_point_x[seats$id==8] <- label_points$x[20]+0.2
+seats$label_point_y[seats$id==8] <- label_points$y[20]
+seats$label_point_x[seats$id==18] <- label_points$x[21]+0.2
+seats$label_point_y[seats$id==18] <- label_points$y[21]
+seats$label_point_x[seats$id==16] <- label_points$x[22]
+seats$label_point_y[seats$id==16] <- label_points$y[22]
+seats$label_point_x[seats$id==17] <- label_points$x[23]
+seats$label_point_y[seats$id==17] <- label_points$y[23]
+seats$label_point_x[seats$id==20] <- label_points$x[24]-0.4
+seats$label_point_y[seats$id==20] <- label_points$y[24]
+seats$label_point_x[seats$id==19] <- label_points$x[25]
+seats$label_point_y[seats$id==19] <- label_points$y[25]
+seats$label_point_x[seats$id==21] <- label_points$x[26]
+seats$label_point_y[seats$id==21] <- label_points$y[26]
+seats$label_point_x[seats$id==24] <- label_points$x[27]
+seats$label_point_y[seats$id==24] <- label_points$y[27]
+seats$label_point_x[seats$id==26] <- label_points$x[28]
+seats$label_point_y[seats$id==26] <- label_points$y[28]
+seats$label_point_x[seats$id==25] <- label_points$x[29]
+seats$label_point_y[seats$id==25] <- label_points$y[29]
+seats$label_point_x[seats$id==30] <- label_points$x[30]
+seats$label_point_y[seats$id==30] <- label_points$y[30]
+seats$label_point_x[seats$id==31] <- label_points$x[31]
+seats$label_point_y[seats$id==31] <- label_points$y[31]
+seats$label_point_x[seats$id==27] <- label_points$x[32]
+seats$label_point_y[seats$id==27] <- label_points$y[32]
+seats$label_point_x[seats$id==32] <- label_points$x[33]
+seats$label_point_y[seats$id==32] <- label_points$y[33]
+seats$label_point_x[seats$id==29] <- label_points$x[34]
+seats$label_point_y[seats$id==29] <- label_points$y[34]
+seats$label_point_x[seats$id==28] <- label_points$x[35]
+seats$label_point_y[seats$id==28] <- label_points$y[35]
+seats$label_point_x[seats$id==23] <- label_points$x[36]
+seats$label_point_y[seats$id==23] <- label_points$y[36]
+seats$label_point_x[seats$id==22] <- label_points$x[37]+0.1
+seats$label_point_y[seats$id==22] <- label_points$y[37]
+seats$label_point_x[seats$id==34] <- label_points$x[38]
+seats$label_point_y[seats$id==34] <- label_points$y[38]
+seats$label_point_x[seats$id==35] <- label_points$x[39]
+seats$label_point_y[seats$id==35] <- label_points$y[39]
+seats$label_point_x[seats$id==41] <- label_points$x[40]
+seats$label_point_y[seats$id==41] <- label_points$y[40]
+seats$label_point_x[seats$id==40] <- label_points$x[41]
+seats$label_point_y[seats$id==40] <- label_points$y[41]
+
+const.df$id <- const.df$con
+plotdata <- merge(const.df,seats,by="id")
+```
+
+```{r, fig.align='center', fig.width=12}
+ggplot(plotdata) + 
+  aes(long,lat,group=group,fill=as.integer(PiSmKO)) + 
+  geom_polygon() +
+  geom_path(color="black") +
+  scale_fill_gradient2(name="PiSKO", limits=c(min=-20, max=20), low = "orange", mid="white", high = "blue4", midpoint=0, guide="colorbar") +
+  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiSKO, label=PiSKO), fill="white", family="Roboto Condensed Light") +
+  labs(title="", subtitle="", 
+       caption = "", family="Roboto Condensed")+
+  theme_ipsum_rc(grid=FALSE, axis=FALSE, ticks=FALSE, axis_text_size = 0) +
+  theme_changes_map
+```
+
+## Trends by pollster  
+\
+Only pollsters with more than five polls are included.
+
+```{r, fig.align='center', fig.width=12}
+tab <- table(polls$org)
+polls <- polls[polls$org %in% names(tab)[tab >= 5], ]
+
+names <- data.frame(as.factor(get_labels(polls$org)))
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
+names$house <- as.factor(names$house)
+housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+orgnames <- glue_collapse(get_labels(housenames), ", ", last = " and ")
+polls$org <- str_replace_all(polls$org, "_", ", ")
+
+today <- interval(min(polls$midDate), Sys.Date())/years(1)
+
+pred_dta <-
+  tibble(
+    time = seq(0, today, length.out = nrow(polls)),
+    date = as.Date(time*365, origin = min(polls$midDate)),
+    org = polls$org,
+    pollster = polls$pollster
+  )
+
+pred_dta <-
+  add_fitted_draws(
+    model = m1,
+    newdata = pred_dta
+  ) %>%
+  group_by(date, .category, org) %>%
+  rename(party = .category) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+  )
+  )
+
+point_dta <- polls %>%
+  select(org, midDate, PiS, KO, Lewica, Konfederacja, Other, PSL, Polska2050) %>%
+  pivot_longer(
+    cols = c(-midDate, -org),
+    names_to = "party",
+    values_to = "est"
+  ) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+      )
+  )
+
+ggplot() +
+  geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
+  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/3) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_date(date_breaks = "2 months",
+               date_labels = "%b") +
+  facet_wrap(~org, nrow=3) +
+  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+                  ylim = c(0, .5)) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  labs(y = "% of vote", x="", color="") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+  theme_changes
+```
+
+## Latest figures by pollster  
+\
+Only pollsters with more than five polls are included.
+
+```{r, fig.align='center', fig.width=12}
+plotdraws <- polls %>%  
+  modelr::data_grid(time = today, pollster = pollster) %>%
+  add_fitted_draws(m1)
+
+medians <- plotdraws %>%
+  summarise(est = median(.value)*100, .groups = "drop") 
+
+names <- data.frame(as.factor(get_labels(polls$org)))
+names$house <- as.factor(names$as.factor.get_labels.polls.org..)
+names <- separate(names, as.factor.get_labels.polls.org.., sep=",", into=c('org', "label"))
+orgnames <- glue_collapse(get_labels(sort(names$org)), ", ", last = " and ")
+
+plot_latest_parl_pollster <- polls %>%  
+  modelr::data_grid(time = today, pollster = factor(pollster)) %>%
+  add_fitted_draws(m1) %>%
+  group_by(.category, pollster) %>%
+  mutate(.category = factor(.category,
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Polska 2050")),
+         pollster = factor(pollster,
+                           levels = get_labels(factor(polls$pollster)),
+                           labels = get_labels(factor(polls$org)))
+         ) %>%
+  ggplot() +
+  geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
+  stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
+                x=.value, fill=.category), normalize="xy") +
+  scale_y_discrete(name="", position="right") +
+  scale_fill_manual(name=" ", values=cols, guide=FALSE) +
+  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  expand_limits(x = 0) +
+  facet_wrap(vars(pollster), ) +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  theme_changes 
+
+plot_latest_parl_pollster +
+  geom_text(data=medians %>%
+              mutate(.category = factor(.category,
+                                        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+                                        labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Polska 2050")),
+                     pollster = factor(pollster,
+                                       levels = get_labels(factor(polls$pollster)),
+                                       labels = get_labels(factor(polls$org)))
+              ), 
+            aes(x=est/100, y=.category, label=round(est,0)), check_overlap = TRUE,
+            size=3, hjust = "center", vjust=1.2,
+            family="Roboto Condensed Light")
+```
