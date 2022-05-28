@@ -17,7 +17,7 @@ const <- readRDS('constituencies')
 
 options(mc.cores = parallel::detectCores())
 if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
-    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.1.2") {
+    Sys.info()["sysname"] == "Darwin" && getRversion() == "4.2.0") {
   parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
 }
 
