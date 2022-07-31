@@ -1809,6 +1809,7 @@ plot_latest_parl_pollster_PL <- polls %>%
                            levels = get_labels(factor(polls$pollster)),
                            labels = get_labels(factor(polls$org)))
   ) %>%
+  #filter(., pollster=="Kantar, CAPI" | pollster=="CBOS, Mixed") %>%
   ggplot() +
   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
   stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
@@ -1819,7 +1820,8 @@ plot_latest_parl_pollster_PL <- polls %>%
   expand_limits(x = 0) +
   facet_wrap(vars(pollster), ) +
   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki według ośrodku badawczego",
-       subtitle=str_to_upper(str_c("Dane: ", orgnames_PL,"."))) +
+       #subtitle=str_to_upper(str_c("Dane: ", orgnames_PL,"."))
+       ) +
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes
@@ -1832,7 +1834,8 @@ plot_latest_parl_pollster_PL <- plot_latest_parl_pollster_PL +
                      pollster = factor(pollster,
                                        levels = get_labels(factor(polls$pollster)),
                                        labels = get_labels(factor(polls$org)))
-              ), 
+                     ) %>%
+                       filter(., pollster=="Kantar, CAPI" | pollster=="CBOS, Mixed"), 
             aes(x=est/100, y=.category, label=round(est,0)), check_overlap=TRUE,
             size=3, hjust = "center", vjust=1.2,
             family="Roboto Condensed Light")
