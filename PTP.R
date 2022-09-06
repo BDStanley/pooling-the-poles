@@ -50,8 +50,8 @@ polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
-  #filter(midDate >= as.Date('2021-06-01')) %>%
-  filter(midDate_int > (max(midDate_int)-365)) %>%
+  filter(midDate >= as.Date('2022-01-01')) %>%
+  #filter(midDate_int > (max(midDate_int)-365)) %>%
   mutate(PiS = 100/((100-DK))*PiS,
          KO = 100/((100-DK))*KO,
          Lewica = 100/((100-DK))*Lewica,
@@ -102,7 +102,7 @@ polls <-
 #####Run model#####
 library(brms)
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 24) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 12) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Other"),
       prior =
         prior(normal(0, 1.5), class = "Intercept", dpar = "muPiS") +
