@@ -216,24 +216,6 @@ plot_trends_parl <-
 ggsave(plot_trends_parl, file = "plot_trends_parl.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
-ggplot(data=pred_dta, aes(x = date, y = .value, color=party, fill=party, fill_ramp = stat(.width))) +
-  stat_lineribbon(.width = ppoints(50)) +
-  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  scale_fill_ramp_continuous(range = c(1, 0)) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "2 month",
-               date_labels = "%b\n%Y") +
-  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-                  ylim = c(0, .5)) +
-  scale_color_manual(values=cols) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  labs(y = "", x="", title = "Trends", 
-       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_changes
-
 trends_blend <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(

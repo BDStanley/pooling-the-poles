@@ -1,0 +1,110 @@
+---
+knit: (function(input_file, encoding) {
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), 'index.html'))})
+title: "Pooling the Poles"
+subtitle: "Pooled polls of intended voting at parliamentary elections in Poland."
+author: "Ben Stanley"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format: html
+editor: visual
+theme: flatly
+fig-cap-location: margin
+---
+
+```{r, global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.align = 'center',
+                      echo=FALSE, warning=FALSE, message=FALSE, dev.args = list(png = list(type = "cairo")))
+```
+
+```{r, include=FALSE}
+theme_changes_map <- theme(axis.title.y = element_blank(), axis.title.x = element_blank(),
+                           axis.text.x = element_blank(), axis.text.y = element_blank(),
+                           strip.text.x = element_text(size = 10, family="Roboto Condensed Light"), legend.text = element_text(size=9, family="Roboto Condensed Light"), 
+                           legend.title = element_text(size=10, family="Roboto Condensed Light"), plot.title = element_text(size=14, family="Roboto Condensed Bold"),
+                           plot.subtitle = element_text(size=8, family="Roboto Condensed Light"), aspect.ratio=1, legend.position="none")
+names <- data.frame(as.factor(get_labels(polls$org)))
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep=",")
+names$house <- as.factor(names$house)
+housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+#names <- paste0(get_labels(housenames), collapse=", ")
+names <- glue_collapse(get_labels(housenames), ", ", last = " and ")
+polls$org <- str_replace_all(polls$org, "_", ", ")
+```
+
+```{r, echo=F, results='asis'}
+cat(str_c("Data from ", names, "."))
+```
+
+### Trends
+
+```{r warning=FALSE, echo=FALSE, out.width="120%"}
+#| label: fig-trends
+#| fig-cap: Trends.
+#| warning: false
+today <- interval(min(polls$midDate), Sys.Date())/years(1)
+
+pred_dta <-
+  tibble(
+    time = seq(0, today, length.out = nrow(polls)),
+    date = as.Date(time*365, origin = min(polls$midDate))
+  )
+
+pred_dta <-
+  add_fitted_draws(
+    model = m1,
+    newdata = pred_dta,
+    re_formula = NA
+  ) %>%
+  group_by(date, .category) %>%
+  rename(party = .category) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+      )
+  )
+
+point_dta <-
+  polls[names(polls) %in% c("midDate", "PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050")] %>%
+  pivot_longer(
+    cols = -midDate,
+    names_to = "party",
+    values_to = "est"
+  ) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other")
+      )
+  )
+
+pred_dta %>%
+  ggplot(aes(x = date, color=party, fill=party)) +
+  ggdist::stat_lineribbon(
+    aes(y = .value, fill_ramp = stat(.width)),
+    .width = ppoints(100)
+  ) |> partition(vars(party)) |> blend("multiply") +
+  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_date(date_breaks = "2 month",
+               date_labels = "%b\n%Y", expand = c(0,0)) +
+  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+                  ylim = c(0, .5)) +
+  labs(y = "", x="", title = "", 
+       subtitle="", color="", caption = "") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+  theme_changes
+
+```
