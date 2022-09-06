@@ -226,6 +226,29 @@ ggplot() +
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
+
+pred_dta %>%
+  ggplot(aes(x = date, color=party, fill=party)) +
+  ggdist::stat_lineribbon(
+    aes(y = .value, fill_ramp = stat(.width)),
+    .width = ppoints(100)
+  ) |> partition(vars(party)) |> blend("multiply") +
+  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_date(date_breaks = "2 month",
+               date_labels = "%b\n%Y", expand = c(0,0)) +
+  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+                  ylim = c(0, .5)) +
+  labs(y = "", x="", title = "Trends", 
+       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+  theme_minimal() +
+  theme_ipsum_rc() +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+  theme_changes
+
 ```
 
 ## Estimated share of seats  
