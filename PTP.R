@@ -216,6 +216,9 @@ plot_trends_parl <-
 ggsave(plot_trends_parl, file = "plot_trends_parl.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
+library(ggdist)
+library(ggblend)
+
 trends_blend <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(
