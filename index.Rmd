@@ -131,35 +131,35 @@ add_fitted_draws(
   scale_y_discrete(name="", position="right") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
            y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed Light", color="white") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
            y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed Light", color="white") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Polska 2050"],0)),
            y="Polska 2050", x=medians$est[medians$.category=="Polska 2050"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed Light", color="white") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
            y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed Light", color="white") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed Light", color="white") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
            y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed Light", color="white") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
            y="Other", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed Light", color="white") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
-           x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(KO > Polska 2050)  = ", KO.P50.diff), y="KO",
-           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica_5), y="Lewica",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL_5), y="PSL",
-           x=quantile(plotdraws$.value[plotdraws$.category=="PSL"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="PSL"], 0.999), size=3.5, adj=c(0), family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja_5), y="Konfederacja",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), family="Roboto Condensed Light") +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
@@ -559,7 +559,7 @@ plot_latest_parl_pollster <- polls %>%
   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
   stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
   partition(vars(.category)) +
-  scale_color_manual(values=cols) +
+  scale_color_manual(values=cols, guide=FALSE) +
   scale_fill_manual(values=cols, guide=FALSE) +
   ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
   scale_y_discrete(name="", position="right") +
