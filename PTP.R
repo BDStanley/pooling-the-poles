@@ -199,9 +199,10 @@ point_dta <-
 plot_trends_parl <-
   ggplot() +
   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
+  #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
+  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "2 month",
+  scale_x_date(date_breaks = "3 month",
                date_labels = "%b\n%Y") +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
@@ -219,39 +220,62 @@ ggsave(plot_trends_parl, file = "plot_trends_parl.png",
 library(ggdist)
 library(ggblend)
 
-trends_blend <- pred_dta %>%
-  ggplot(aes(x = date, color=party, fill=party)) +
-  ggdist::stat_lineribbon(
-    aes(y = .value, fill_ramp = stat(.width)),
-    .width = ppoints(100)
-  ) |> partition(vars(party)) |> blend("multiply") +
-  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
-  scale_color_manual(values=cols) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "2 month",
-               date_labels = "%b\n%Y", expand = c(0,0)) +
-  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-                  ylim = c(0, .5)) +
-  labs(y = "", x="", title = "Trends", 
-       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_changes
-
-ggsave(trends_blend, file = "trends_blend.pdf",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white", device=cairo_pdf)
-
-ggsave(trends_blend, file = "trends_blend.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
+# trends_blend <- pred_dta %>%
+#   ggplot(aes(x = date, color=party, fill=party)) +
+#   ggdist::stat_lineribbon(
+#     aes(y = .value, fill_ramp = stat(.width)),
+#     .width = ppoints(100)
+#   ) |> partition(vars(party)) |> blend("multiply") +
+#   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
+#   scale_color_manual(values=cols) +
+#   scale_fill_manual(values=cols, guide=FALSE) +
+#   ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
+#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+#   scale_x_date(date_breaks = "2 month",
+#                date_labels = "%b\n%Y", expand = c(0,0)) +
+#   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+#                   ylim = c(0, .5)) +
+#   labs(y = "", x="", title = "Trends", 
+#        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+#   theme_minimal() +
+#   theme_ipsum_rc() +
+#   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+#   theme_changes
+# 
+# ggsave(trends_blend, file = "trends_blend.pdf",
+#        width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white", device=cairo_pdf)
+# 
+# trends_blend <- pred_dta %>%
+#   ggplot(aes(x = date, color=party, fill=party)) +
+#   ggdist::stat_lineribbon(
+#     aes(y = .value, fill_ramp = stat(.width)),
+#     .width = ppoints(100), alpha=0.65
+#   )  +
+#   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
+#   scale_color_manual(values=cols) +
+#   scale_fill_manual(values=cols, guide=FALSE) +
+#   ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
+#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+#   scale_x_date(date_breaks = "2 month",
+#                date_labels = "%b\n%Y", expand = c(0,0)) +
+#   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+#                   ylim = c(0, .5)) +
+#   labs(y = "", x="", title = "Trends", 
+#        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+#   theme_minimal() +
+#   theme_ipsum_rc() +
+#   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+#   theme_changes
+# 
+# ggsave(trends_blend, file = "trends_blend.png",
+#        width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
 plot_trends_parl_PL <-
   ggplot() +
   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
+  #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
+  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_date(date_breaks = "3 month",
                date_labels = "%b\n%Y") +
@@ -262,7 +286,7 @@ plot_trends_parl_PL <-
   scale_fill_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"),
                     labels=c("PiS", "KO", "Lewica", "Konfederacja",  "PSL", "Polska 2050", "Inni"), guide=FALSE) +
   labs(y = "", x="", title = "Trendy",
-       subtitle=str_to_upper(str_c("Dane: ", names_PL, ".")), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+       subtitle=str_c("Dane: ", names_PL, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_minimal() +
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
@@ -338,64 +362,63 @@ Konfederacja_5 <- plotdraws %>%
   pull(Konfederacja_5) %>%
   last(.)
 
-plot_latest_parl <-
-  add_fitted_draws(
-    model = m1,
-    newdata =
-      tibble(time = today),
-    re_formula = NA
-  ) %>%
-  group_by(.category) %>%
-  mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
-                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Polska 2050"))) %>%
-  ggplot() +
-  geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
-  stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
-                x=.value, fill=.category), normalize="xy") +
-  scale_y_discrete(name="", position="right") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
-           y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
-           y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Polska 2050"],0)),
-           y="Polska 2050", x=medians$est[medians$.category=="Polska 2050"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
-           y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
-           y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
-           y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
-           y="Other", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
-  annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
-           x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(KO > Polska 2050)  = ", KO.P50.diff), y="KO",
-           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica_5), y="Lewica",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL_5), y="PSL",
-           x=quantile(plotdraws$.value[plotdraws$.category=="PSL"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja_5), y="Konfederacja",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
-  scale_fill_manual(name=" ", values=cols, guide=FALSE) +
-  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
-  expand_limits(x = 0) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Latest estimates",
-       subtitle=str_c("Data from ", names,".")) +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  theme_changes 
-ggsave(plot_latest_parl, file = "polls_latest_parl.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
-
+# plot_latest_parl <-
+#   add_fitted_draws(
+#     model = m1,
+#     newdata =
+#       tibble(time = today),
+#     re_formula = NA
+#   ) %>%
+#   group_by(.category) %>%
+#   mutate(.category = factor(.category,
+#                             levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
+#                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Polska 2050"))) %>%
+#   ggplot() +
+#   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
+#   stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
+#                 x=.value, fill=.category), normalize="xy") +
+#   scale_y_discrete(name="", position="right") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
+#            y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
+#            y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Polska 2050"],0)),
+#            y="Polska 2050", x=medians$est[medians$.category=="Polska 2050"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
+#            y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
+#            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
+#            y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
+#            y="Other", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
+#            family="Roboto Condensed", color="white") +
+#   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
+#            x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+#   annotate(geom = "text", label=paste("Pr(KO > Polska 2050)  = ", KO.P50.diff), y="KO",
+#            x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+#   annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica_5), y="Lewica",
+#            x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+#   annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL_5), y="PSL",
+#            x=quantile(plotdraws$.value[plotdraws$.category=="PSL"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+#   annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja_5), y="Konfederacja",
+#            x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+#   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
+#   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+#   expand_limits(x = 0) +
+#   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Latest estimates",
+#        subtitle=str_c("Data from ", names,".")) +
+#   theme_minimal() +
+#   theme_ipsum_rc() +
+#   theme_changes 
+# ggsave(plot_latest_parl, file = "polls_latest_parl.png", 
+#        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 plot_latest_parl <-
   add_fitted_draws(
@@ -419,35 +442,35 @@ plot_latest_parl <-
   scale_y_discrete(name="", position="right") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
            y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="black") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
            y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="black") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Polska 2050"],0)),
            y="Polska 2050", x=medians$est[medians$.category=="Polska 2050"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="black") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
            y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="black") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="black") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
            y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="black") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
            y="Other", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="black") +
+           family="Roboto Condensed Light", color="black") +
   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
-           x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(KO > Polska 2050)  = ", KO.P50.diff), y="KO",
-           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica_5), y="Lewica",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL_5), y="PSL",
-           x=quantile(plotdraws$.value[plotdraws$.category=="PSL"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="PSL"], 0.999), size=3.5, adj=c(0), family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja_5), y="Konfederacja",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), family="Roboto Condensed Light") +
   scale_color_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
@@ -456,9 +479,10 @@ plot_latest_parl <-
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes 
-ggsave(plot_latest_parl, file = "polls_latest_parl.svg", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white", device=svg)
+ggsave(plot_latest_parl, file = "polls_latest_parl.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
+Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
 plot_latest_parl_PL <-
   add_fitted_draws(
     model = m1,
@@ -470,52 +494,57 @@ plot_latest_parl_PL <-
   mutate(.category = factor(.category,
                             levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "PSL","Polska 2050"))) %>%
-  ggplot() +
+  ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
+             x=.value, color=.category)) +
   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
-  stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)),
-                x=.value, fill=.category), normalize="xy") +
+  stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
+  partition(vars(.category)) +
+  scale_color_manual(values=cols, guide=FALSE) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
   scale_y_discrete(name="", position="right") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
            y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
            y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Polska 2050"],0)),
            y="Polska 2050", x=medians$est[medians$.category=="Polska 2050"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
            y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
            y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Inni"],0)),
            y="Inni", x=medians$est[medians$.category=="Inni"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
-           x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(KO > Polska 2050)  = ", KO.P50.diff), y="KO",
-           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Lewica > 5%)  = ", Lewica_5), y="Lewica",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="Lewica"], 0.999), size=3.5, adj=c(0), family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(PSL > 5%)  = ", PSL_5), y="PSL",
-           x=quantile(plotdraws$.value[plotdraws$.category=="PSL"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="PSL"], 0.999), size=3.5, adj=c(0), family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(Konfederacja > 5%)  = ", Konfederacja_5), y="Konfederacja",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), vjust=-4, family="Roboto Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="Konfederacja"], 0.999), size=3.5, adj=c(0), family="Roboto Condensed Light") +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki",
-       subtitle=str_to_upper(str_c("Dane: ", names,"."))) +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki", color="",
+       subtitle=str_c("Dane: ", names_PL,".")) +
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes
 ggsave(plot_latest_parl_PL, file = "polls_latest_parl_PL.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
 
 #####Seat maps#####
@@ -1725,7 +1754,7 @@ plot_seats_parl_PL <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) 
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Roboto Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Roboto Condensed Light") +
   labs(x="", y="", title="Szacowany rozkład miejsc w Sejmie",
-       subtitle=str_to_upper("(95%-owy przedział wiarygodności)"),
+       subtitle="(95%-owy przedział wiarygodności)",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_minimal() +
   theme_ipsum_rc() +
@@ -1792,10 +1821,11 @@ point_dta <- polls %>%
 plot_trends_pollster <-
   ggplot() +
   geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+  #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "1 month",
-               date_labels = "%b") +
+  scale_x_date(date_breaks = "3 month",
+               date_labels = "%b\n%Y") +
   facet_wrap(~org, nrow=3) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
@@ -1808,16 +1838,17 @@ plot_trends_pollster <-
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
 ggsave(plot_trends_pollster , file = "plot_trends_pollster.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
 plot_trends_pollster_PL <-
   ggplot() +
   geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+  #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "1 month",
-               date_labels = "%b") +
+  scale_x_date(date_breaks = "3 month",
+               date_labels = "%b\n%Y") +
   facet_wrap(~org, nrow=3) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
@@ -1826,7 +1857,7 @@ plot_trends_pollster_PL <-
   scale_fill_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"),
                     labels=c("PiS", "KO", "Lewica", "Konfederacja",  "PSL", "Polska 2050", "Inni"), guide=FALSE) +
   labs(y = "", x="", title = "Trendy według ośrodku badawczego",
-       subtitle=str_to_upper(str_c("Dane: ", names_PL, ".")), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+       subtitle=str_c("Dane: ", names_PL, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_minimal() +
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
@@ -1860,17 +1891,21 @@ plot_latest_parl_pollster <- polls %>%
                            levels = get_labels(factor(polls$pollster)),
                            labels = get_labels(factor(polls$org)))
   ) %>%
-  ggplot() +
+  ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
+             x=.value, color=.category)) +
   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
-  stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
-                x=.value, fill=.category), normalize="xy") +
+  stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
+  partition(vars(.category)) +
+  scale_color_manual(values=cols, guide=FALSE) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
   scale_y_discrete(name="", position="right") +
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   facet_wrap(vars(pollster), ) +
   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Latest estimates by pollster",
-       subtitle=str_c("Data from ", orgnames,".")) +
+       subtitle=str_c("Data from ", orgnames,"."), color="") +
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes 
@@ -1885,11 +1920,11 @@ plot_latest_parl_pollster <- plot_latest_parl_pollster +
                                        labels = get_labels(factor(polls$org)))
               ), 
             aes(x=est/100, y=.category, label=round(est,0)), check_overlap = TRUE,
-            size=3, hjust = "center", vjust=1.2,
-            family="Roboto Condensed Light")
+            size=3, hjust=1.5,
+            family="Roboto Condensed Light", color="black")
 
 ggsave(plot_latest_parl_pollster, file = "polls_latest_parl_pollster.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
 
 
 plot_latest_parl_pollster_PL <- polls %>%  
@@ -1904,17 +1939,20 @@ plot_latest_parl_pollster_PL <- polls %>%
                            labels = get_labels(factor(polls$org)))
   ) %>%
   #filter(., pollster=="Kantar, CAPI" | pollster=="CBOS, Mixed") %>%
-  ggplot() +
+  ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
+             x=.value, color=.category)) +
   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
-  stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
-                x=.value, fill=.category), normalize="xy") +
+  stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
+  partition(vars(.category)) +
+  scale_color_manual(values=cols, guide=FALSE) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
   scale_y_discrete(name="", position="right") +
-  scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   facet_wrap(vars(pollster), ) +
   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki według ośrodku badawczego",
-       #subtitle=str_to_upper(str_c("Dane: ", orgnames_PL,"."))
+       #subtitle=str_to_upper(str_c("Dane: ", orgnames_PL,"."), color="")
        ) +
   theme_minimal() +
   theme_ipsum_rc() +
@@ -1931,11 +1969,11 @@ plot_latest_parl_pollster_PL <- plot_latest_parl_pollster_PL +
                      ) %>%
                        filter(., pollster=="Kantar, CAPI" | pollster=="CBOS, Mixed"), 
             aes(x=est/100, y=.category, label=round(est,0)), check_overlap=TRUE,
-            size=3, hjust = "center", vjust=1.2,
-            family="Roboto Condensed Light")
+            size=3, hjust = 1.5,
+            family="Roboto Condensed Light", color="black")
 
 ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
 
 
 #####Upload to Github#####

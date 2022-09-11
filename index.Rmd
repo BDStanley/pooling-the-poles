@@ -120,32 +120,36 @@ add_fitted_draws(
   mutate(.category = factor(.category,
     levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska2050"),
     labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "Polska 2050"))) %>%
-  ggplot() +
+  ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
+             x=.value, color=.category)) +
   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
-  stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
-                 x=.value, fill=.category), normalize="xy") +
+  stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
+  partition(vars(.category)) +
+  scale_color_manual(values=cols, guide=FALSE) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
   scale_y_discrete(name="", position="right") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
            y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
            y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Polska 2050"],0)),
            y="Polska 2050", x=medians$est[medians$.category=="Polska 2050"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
            y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
            y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
            y="Other", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
-           family="Roboto Condensed", color="white") +
+           family="Roboto Condensed Light", color="white") +
   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
            x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), vjust=-3, family="Roboto Condensed Light") +
   annotate(geom = "text", label=paste("Pr(KO > Polska 2050)  = ", KO.P50.diff), y="KO",
@@ -159,7 +163,7 @@ add_fitted_draws(
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
-  labs(x="") +
+  labs(x="", color="") +
   theme_minimal() +
   theme_ipsum_rc() +
   theme_changes 
@@ -213,10 +217,11 @@ point_dta <-
 
 ggplot() +
   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
+  #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
+  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "1 month",
-               date_labels = "%b") +
+  scale_x_date(date_breaks = "3 month",
+               date_labels = "%b\n%Y") +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
   scale_color_manual(values=cols) +
@@ -226,29 +231,6 @@ ggplot() +
   theme_ipsum_rc() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_changes
-
-pred_dta %>%
-  ggplot(aes(x = date, color=party, fill=party)) +
-  ggdist::stat_lineribbon(
-    aes(y = .value, fill_ramp = stat(.width)),
-    .width = ppoints(100)
-  ) |> partition(vars(party)) |> blend("multiply") +
-  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
-  scale_color_manual(values=cols) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "2 month",
-               date_labels = "%b\n%Y", expand = c(0,0)) +
-  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-                  ylim = c(0, .5)) +
-  labs(y = "", x="", title = "Trends", 
-       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_changes
-
 ```
 
 ## Estimated share of seats  
@@ -527,10 +509,11 @@ point_dta <- polls %>%
 
 ggplot() +
   geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/3) +
+  #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/3) +
+  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "2 months",
-               date_labels = "%b") +
+  scale_x_date(date_breaks = "3 month",
+               date_labels = "%b\n%Y") +
   facet_wrap(~org, nrow=3) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
@@ -571,12 +554,15 @@ plot_latest_parl_pollster <- polls %>%
                            levels = get_labels(factor(polls$pollster)),
                            labels = get_labels(factor(polls$org)))
          ) %>%
-  ggplot() +
+  ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
+             x=.value, color=.category)) +
   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
-  stat_slab(aes(y=reorder(.category, dplyr::desc(-.value)), 
-                x=.value, fill=.category), normalize="xy") +
+  stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
+  partition(vars(.category)) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
   scale_y_discrete(name="", position="right") +
-  scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   facet_wrap(vars(pollster), ) +
@@ -595,6 +581,6 @@ plot_latest_parl_pollster +
                                        labels = get_labels(factor(polls$org)))
               ), 
             aes(x=est/100, y=.category, label=round(est,0)), check_overlap = TRUE,
-            size=3, hjust = "center", vjust=1.2,
-            family="Roboto Condensed Light")
+            size=3, hjust = 1.5,
+            family="Roboto Condensed Light", color="black")
 ```
