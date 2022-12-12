@@ -38,7 +38,10 @@ theme_changes_map <- theme(axis.title.y = element_blank(), axis.title.x = elemen
 set.seed(780045)
 
 
-#polls <- polls %>% filter(., org!="Social Changes")
+# polls <- polls %>% 
+#   filter(., org!="Social Changes") %>%
+#   filter(., org!="CBOS") %>%
+#   filter(., org!="Kantar")
 
 polls <- unite(polls, org, remark, col="org", sep="_")
 polls$org <-as.factor(polls$org)
