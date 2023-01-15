@@ -170,8 +170,6 @@ add_fitted_draws(
 ```
 
 ## Trends
-\
-The shaded area shows the 95% credible interval.
 
 ```{r, fig.align='center'}
 today <- interval(min(polls$midDate), Sys.Date())/years(1)
