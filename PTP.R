@@ -1,3 +1,5 @@
+system("git pull")
+
 #####Read in, adjust and subset data#####
 library(googledrive)
 library(rio)
