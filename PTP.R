@@ -287,10 +287,8 @@ plot_trends_parl_PL <-
                date_labels = "%b\n%Y") +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
-  scale_color_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"),
-                     labels=c("PiS", "KO", "Lewica", "Konfederacja",  "PSL", "Polska 2050", "Inni")) +
-  scale_fill_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"),
-                    labels=c("PiS", "KO", "Lewica", "Konfederacja",  "PSL", "Polska 2050", "Inni"), guide=FALSE) +
+  scale_color_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50")) +
+  scale_fill_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"), guide=FALSE) +
   labs(y = "", x="", title = "Trendy",
        subtitle=str_c("Dane: ", names_PL, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_minimal() +
