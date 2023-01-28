@@ -140,7 +140,9 @@ m1 <-
   )
 
 
-
+#####Trend plot#####
+library(stringr)
+library(tidybayes)
 
 today <- interval(min(polls$midDate), Sys.Date())/years(1)
 
@@ -199,10 +201,8 @@ plot_trends_parl_DK <-
   facet_wrap(~party, nrow=3) +
   labs(y = "% of vote", x="", title = "Trends (including undecided voters)",
        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_changes
+  theme_plots() +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA)))
 ggsave(plot_trends_parl_DK, file = "plot_trends_parl_DK.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
@@ -233,13 +233,136 @@ plot_trends_parl_DK_PL <-
   facet_wrap(~party, nrow=3, labeller = as_labeller(facet_labels)) +
   labs(y = "", x="", title = "Trendy (w tym wyborcy niezdecydowani)",
        subtitle=str_to_upper(str_c("Dane: ", names_PL, ".")), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_changes
+  theme_plots() +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) 
 ggsave(plot_trends_parl_DK_PL, file = "plot_trends_parl_DK_PL.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
 
+#####Latest plot#####
+plotdraws <- add_fitted_draws(
+  model = m1,
+  newdata =
+    tibble(time = today),
+  re_formula = NA
+) %>%
+  group_by(.category) %>%
+  mutate(.category = factor(.category,
+                            levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "DK"),
+                            labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know")))
 
+medians <- plotdraws %>%
+  summarise(est = median(.value)*100, .groups = "drop")
+
+plot_latest_parl_DK <-
+  add_fitted_draws(
+    model = m1,
+    newdata =
+      tibble(time = today),
+    re_formula = NA
+  ) %>%
+  group_by(.category) %>%
+  mutate(.category = factor(.category,
+                            levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "DK"),
+                            labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know"))) %>%
+  ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
+             x=.value, color=.category)) +
+  geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
+  stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
+  partition(vars(.category)) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
+  scale_y_discrete(name="", position="right") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
+           y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
+           y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Polska 2050"],0)),
+           y="Polska 2050", x=medians$est[medians$.category=="Polska 2050"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
+           y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
+           y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
+           y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Don't know"],0)),
+           y="Don't know", x=medians$est[medians$.category=="Don't know"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  scale_color_manual(name=" ", values=cols, guide=FALSE) +
+  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  expand_limits(x = 0) +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Latest estimates",
+       subtitle=str_c("Data from ", names,".")) +
+  theme_plots()
+ggsave(plot_latest_parl_DK, file = "polls_latest_parl_DK.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+
+medians <- medians %>%
+  mutate(., .category = recode(.category, "Don't know" = 'Nie wiem'))
+
+Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
+plot_latest_parl_DK_PL <-
+  add_fitted_draws(
+    model = m1,
+    newdata =
+      tibble(time = today),
+    re_formula = NA
+  ) %>%
+  group_by(.category) %>%
+  mutate(.category = factor(.category,
+                            levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "DK"),
+                            labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Nie wiem"))) %>%
+  ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
+             x=.value, color=.category)) +
+  geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
+  stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
+  partition(vars(.category)) +
+  scale_color_manual(values=cols, guide=FALSE) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
+  scale_y_discrete(name="", position="right") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
+           y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
+           y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Polska 2050"],0)),
+           y="Polska 2050", x=medians$est[medians$.category=="Polska 2050"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
+           y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
+           y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
+           y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Nie wiem"],0)),
+           y="Nie wiem", x=medians$est[medians$.category=="Nie wiem"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  scale_fill_manual(name=" ", values=cols, guide=FALSE) +
+  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  expand_limits(x = 0) +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki", color="",
+       subtitle=str_c("Dane: ", names_PL,".")) +
+  theme_plots()
+ggsave(plot_latest_parl_DK_PL, file = "polls_latest_parl_DK_PL.png",
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+Sys.setlocale("LC_TIME", "en_GB.UTF-8")
+
+
+#####Upload to Github#####
+system("git add -A")
+system("git commit -m 'PTP new'")
+system("git pull")
+system("git push")
