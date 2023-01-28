@@ -530,7 +530,7 @@ ggplot() +
   scale_color_manual(values=cols) +
   scale_fill_manual(values=cols, guide=FALSE) +
   labs(y = "% of vote", x="", color="") +
-  theme_plots()
+  theme_plots() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) 
 ```
 
