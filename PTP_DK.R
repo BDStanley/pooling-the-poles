@@ -63,8 +63,7 @@ polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate)/2)),
          midDate_int=as.integer(midDate)) %>%
-  filter(midDate >= as.Date('2021-06-01')) %>%
-  #filter(midDate_int > (max(midDate_int)-150)) %>%
+  filter(midDate >= as.Date('2022-01-01')) %>%
   mutate(PSL = PSL,
          Polska2050 = `Polska 2050`,
          time = as.integer(difftime(midDate, min(midDate), units = "days")),
@@ -98,8 +97,9 @@ polls <-
     outcome = as.matrix(polls[names(polls) %in% c("PiS", "KO", "Lewica", "PSL", "Konfederacja", "Polska2050", "DK")])
   )
 
+#####Run model#####
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 24) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 12) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "PSL"),
       prior =
         prior(normal(0, 1.5), class = "Intercept", dpar = "muPiS") +
@@ -130,7 +130,7 @@ m1 <-
       data = polls,
       seed = 780045,
       iter = 5000,
-      backend="cmdstanr", chains=6, cores=12, threads = threading(6),
+      backend="cmdstanr", chains=3, cores=3, threads = threading(3),
       refresh = 5,
       control =
         list(
@@ -138,6 +138,9 @@ m1 <-
           max_treedepth = 15
         )
   )
+
+
+
 
 today <- interval(min(polls$midDate), Sys.Date())/years(1)
 
