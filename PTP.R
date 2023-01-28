@@ -34,6 +34,8 @@ update_geom_defaults(ggtext::GeomRichText,
 update_geom_defaults("label_repel", 
                      list(family = "IBM Plex Sans Condensed"))
 
+options(mc.cores = parallel::detectCores())
+
 
 #####Read in, adjust and subset data#####
 library(googledrive)
@@ -51,10 +53,6 @@ weights <- read_excel('2019_elec_percentages.xlsx')
 import <- drive_download(as_id("https://drive.google.com/file/d/1JmF3bjRA_sTaJZ4rqPd1WAQyGm-XM-l7/view?usp=sharing"), overwrite=TRUE)
 1
 const <- readRDS('constituencies')
-
-options(mc.cores = parallel::detectCores())
-
-
 
 # polls <- polls %>% 
 #   filter(., org!="Social Changes") %>%
