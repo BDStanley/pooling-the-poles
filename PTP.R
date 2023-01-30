@@ -34,8 +34,17 @@ update_geom_defaults(ggtext::GeomRichText,
 update_geom_defaults("label_repel", 
                      list(family = "IBM Plex Sans Condensed"))
 
-options(mc.cores = parallel::detectCores())
+my_date_format <- function()
+{
+  function(x)
+  {
+    m <- format(x,"%b")
+    y <- format(x,"\n%Y")
+    ifelse(duplicated(y),m,paste(m,y))
+  }
+}
 
+options(mc.cores = parallel::detectCores())
 
 #####Read in, adjust and subset data#####
 library(googledrive)
@@ -222,8 +231,8 @@ plot_trends_parl <-
   #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "3 month",
-               date_labels = "%b\n%Y") +
+  scale_x_date(date_breaks = "1 month",
+               labels = my_date_format()) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
   scale_color_manual(values=cols) +
@@ -249,8 +258,8 @@ trends_blend <- pred_dta %>%
   scale_fill_manual(values=cols, guide=FALSE) +
   ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "2 month",
-               date_labels = "%b\n%Y", expand = c(0,0)) +
+  scale_x_date(date_breaks = "1 month",
+               labels = my_date_format()) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
   labs(y = "", x="", title = "Trends",
@@ -268,8 +277,8 @@ plot_trends_parl_PL <-
   #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "3 month",
-               date_labels = "%b\n%Y") +
+  scale_x_date(date_breaks = "1 month",
+               labels = my_date_format()) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
   scale_color_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50")) +
@@ -1735,7 +1744,7 @@ plot_trends_pollster <-
   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_date(date_breaks = "3 month",
-               date_labels = "%b\n%Y") +
+               labels = my_date_format()) +
   facet_wrap(~org, nrow=3) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
@@ -1756,7 +1765,7 @@ plot_trends_pollster_PL <-
   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_date(date_breaks = "3 month",
-               date_labels = "%b\n%Y") +
+               labels = my_date_format()) +
   facet_wrap(~org, nrow=3) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +

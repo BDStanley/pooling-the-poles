@@ -38,6 +38,16 @@ theme_plots_map <- function() {
           plot.subtitle = element_text(size=8), aspect.ratio=1, legend.position="none")
 }
 
+my_date_format <- function()
+{
+  function(x)
+  {
+    m <- format(x,"%b")
+    y <- format(x,"\n%Y")
+    ifelse(duplicated(y),m,paste(m,y))
+  }
+}
+
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep=",")
 names$house <- as.factor(names$house)
@@ -233,8 +243,8 @@ ggplot() +
   #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "3 month",
-               date_labels = "%b\n%Y") +
+  scale_x_date(date_breaks = "1 month",
+               labels = my_date_format()) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
   scale_color_manual(values=cols) +
@@ -262,9 +272,7 @@ ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="IBM Plex Sans Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="IBM Plex Sans Condensed Light") +
   labs(x="", y="% of vote") +
-  theme_minimal() +
-  theme_ipsum_rc() +
-  theme_changes
+  theme_plots()
 ```
 
 ## Constituency-level differences in share of seats for PiS and Koalicja Obywatelska
@@ -523,7 +531,7 @@ ggplot() +
   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_date(date_breaks = "3 month",
-               date_labels = "%b\n%Y") +
+               labels = my_date_format()) +
   facet_wrap(~org, nrow=3) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
