@@ -34,12 +34,25 @@ update_geom_defaults(ggtext::GeomRichText,
 update_geom_defaults("label_repel", 
                      list(family = "IBM Plex Sans Condensed"))
 
+my_date_format <- function()
+{
+  function(x)
+  {
+    m <- format(x,"%b")
+    y <- format(x,"\n%Y")
+    ifelse(duplicated(y),m,paste(m,y))
+  }
+}
+
 options(mc.cores = parallel::detectCores())
 
 #####Read in, adjust and subset data#####
 library(googledrive)
 library(rio)
 library(readxl)
+library(sjlabelled)
+library(glue)
+library(lubridate)
 
 import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1aI_JqiQuuO0WmzkMBzSZvufrf-XGr-vmNddDCadGi7Q/edit?usp=sharing"), overwrite=TRUE)
 1
@@ -77,27 +90,41 @@ names$house <- as.factor(names$house)
 housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
   fct_collapse(., Kantar=c("Kantar"))
 names <- glue_collapse(get_labels(housenames), ", ", last = " and ")
+names_PL <- glue_collapse(get_labels(housenames), ", ", last = " i ")
 polls$org <- str_replace_all(polls$org, "_", ", ")
 
 polls <-
   polls %>%
   mutate(time = interval(min(midDate), midDate)/years(1))
 
-polls[names(polls) %in% c("PiS", "KO", "Lewica", "PSL", "Konfederacja", "Polska2050", "DK")] <-
-  polls[names(polls) %in% c("PiS", "KO", "Lewica", "PSL", "Konfederacja", "Polska2050", "DK")] %>%
-  mutate_all(function(x) (as.numeric(str_remove(x, "%"))/100)-0.001) #to ensure no zeroes in model
+polls$Other <- polls$Other+0.001
+polls$DK <- polls$DK+0.001
+
+polls[names(polls) %in% c("PiS", "KO", "Lewica", "PSL", "Konfederacja", "Polska2050", "Other", "DK")] <-
+  polls[names(polls) %in% c("PiS", "KO", "Lewica", "PSL", "Konfederacja", "Polska2050", "Other", "DK")] %>%
+  mutate_all(function(x) (as.numeric(str_remove(x, "%"))/100))
 
 polls <-
   polls %>%
-  mutate(DK = 1 - c(PiS + KO + Lewica + PSL + Konfederacja + Polska2050))
+  mutate(All = PiS + KO + Lewica + PSL + Konfederacja + Polska2050 + Other + DK,
+         PiS = (PiS/All)*1,
+         KO = (KO/All)*1,
+         Lewica = (Lewica/All)*1,
+         PSL = (PSL/All)*1,
+         Konfederacja = (Konfederacja/All)*1,
+         Polska2050 = (Polska2050/All)*1,
+         Other = (Other/All)*1,
+         DK = (DK/All)*1
+  )
 
 polls <-
   polls %>%
   mutate(
-    outcome = as.matrix(polls[names(polls) %in% c("PiS", "KO", "Lewica", "PSL", "Konfederacja", "Polska2050", "DK")])
+    outcome = as.matrix(polls[names(polls) %in% c("PiS", "KO", "Lewica", "PSL", "Konfederacja", "Polska2050", "Other", "DK")])
   )
 
 #####Run model#####
+library(brms)
 m1 <-
   brm(formula = bf(outcome ~ 1 + s(time, k = 12) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "PSL"),
@@ -126,6 +153,10 @@ m1 <-
         prior(normal(0, 0.5), class = "b", dpar = "muPolska2050") +
         prior(exponential(2), class = "sd", dpar = "muPolska2050") +
         prior(exponential(2), class = "sds", dpar = "muPolska2050") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muOther") +
+        prior(normal(0, 0.5), class = "b", dpar = "muOther") +
+        prior(exponential(2), class = "sd", dpar = "muOther") +
+        prior(exponential(2), class = "sds", dpar = "muOther") +
         prior(gamma(1, 0.01), class = "phi"),
       data = polls,
       seed = 780045,
@@ -164,13 +195,13 @@ pred_dta <-
     party =
       party %>%
         factor(
-          levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "DK"),
-          labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know")
+          levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other", "DK"),
+          labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other", "Don't know")
       )
   )
 
 point_dta <-
-  polls[names(polls) %in% c("midDate", "PiS", "KO", "Lewica", "Konfederacja", "DK", "PSL", "Polska2050")] %>%
+  polls[names(polls) %in% c("midDate", "PiS", "KO", "Lewica", "Konfederacja", "DK", "PSL", "Polska2050", "Other")] %>%
   pivot_longer(
     cols = -midDate,
     names_to = "party",
@@ -180,20 +211,20 @@ point_dta <-
     party =
       party %>%
       factor(
-        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "DK"),
-        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know")
+        levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other", "DK"),
+        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other", "Don't know")
       )
   )
 
 plot_trends_parl_DK <-
   ggplot() +
-  geom_point(data=point_dta %>% filter(., party %in% c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know")),
+  geom_point(data=point_dta %>% filter(., party %in% c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other", "Don't know")),
              aes(x = midDate, y = est, colour = party, fill = party), alpha = .5, size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta %>% filter(., party %in% c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know")),
+  stat_lineribbon(data=pred_dta %>% filter(., party %in% c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other", "Don't know")),
                   aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_date(date_breaks = "1 month",
-               date_labels = "%b") +
+               labels = my_date_format()) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
   scale_color_manual(values=cols) +
@@ -213,26 +244,27 @@ facet_labels <- c(
   `Lewica` = "Lewica",
   `Konfederacja` = "Konfederacja",
   `PSL` = "PSL",
+  `Other` = "Inni",
   `Don't know` = "Nie wiem / Trudno powiedzieć"
 )
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
 plot_trends_parl_DK_PL <-
   ggplot() +
-  geom_point(data=point_dta %>% filter(., party %in% c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know")),
+  geom_point(data=point_dta %>% filter(., party %in% c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other", "Don't know")),
              aes(x = midDate, y = est, colour = party, fill = party), alpha = .5, size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta %>% filter(., party %in% c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know")),
+  stat_lineribbon(data=pred_dta %>% filter(., party %in% c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other", "Don't know")),
                   aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2, show.legend = FALSE) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_date(date_breaks = "1 month",
-               date_labels = "%b") +
+               labels = my_date_format()) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
   scale_color_manual(values=cols) +
   scale_fill_manual(values=cols, guide=FALSE) +
   facet_wrap(~party, nrow=3, labeller = as_labeller(facet_labels)) +
   labs(y = "", x="", title = "Trendy (w tym wyborcy niezdecydowani)",
-       subtitle=str_to_upper(str_c("Dane: ", names_PL, ".")), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+       subtitle=str_c("Dane: ", names_PL, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) 
 ggsave(plot_trends_parl_DK_PL, file = "plot_trends_parl_DK_PL.png",
@@ -241,6 +273,9 @@ Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
 
 #####Latest plot#####
+library(ggdist)
+library(ggblend)
+
 plotdraws <- add_fitted_draws(
   model = m1,
   newdata =
@@ -249,8 +284,8 @@ plotdraws <- add_fitted_draws(
 ) %>%
   group_by(.category) %>%
   mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "DK"),
-                            labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know")))
+                            levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other", "DK"),
+                            labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other", "Don't know")))
 
 medians <- plotdraws %>%
   summarise(est = median(.value)*100, .groups = "drop")
@@ -264,8 +299,8 @@ plot_latest_parl_DK <-
   ) %>%
   group_by(.category) %>%
   mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "DK"),
-                            labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Don't know"))) %>%
+                            levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other", "DK"),
+                            labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Other", "Don't know"))) %>%
   ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
              x=.value, color=.category)) +
   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
@@ -293,6 +328,9 @@ plot_latest_parl_DK <-
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
            y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
+           y="Other", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Don't know"],0)),
            y="Don't know", x=medians$est[medians$.category=="Don't know"]/100, size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
@@ -306,7 +344,7 @@ ggsave(plot_latest_parl_DK, file = "polls_latest_parl_DK.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 medians <- medians %>%
-  mutate(., .category = recode(.category, "Don't know" = 'Nie wiem'))
+  mutate(., .category = recode(.category, "Don't know" = 'Nie wiem', "Other" = 'Inni'))
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
 plot_latest_parl_DK_PL <-
@@ -318,8 +356,8 @@ plot_latest_parl_DK_PL <-
   ) %>%
   group_by(.category) %>%
   mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "DK"),
-                            labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Nie wiem"))) %>%
+                            levels = c("PiS", "KO", "Polska2050", "Lewica", "Konfederacja", "PSL", "Other", "DK"),
+                            labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "PSL", "Inni", "Nie wiem"))) %>%
   ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
              x=.value, color=.category)) +
   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
@@ -346,6 +384,9 @@ plot_latest_parl_DK_PL <-
            family="IBM Plex Sans Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PSL"],0)),
            y="PSL", x=medians$est[medians$.category=="PSL"]/100, size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Inni"],0)),
+           y="Inni", x=medians$est[medians$.category=="Inni"]/100, size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Nie wiem"],0)),
            y="Nie wiem", x=medians$est[medians$.category=="Nie wiem"]/100, size=4, hjust = "center", vjust=-1,
