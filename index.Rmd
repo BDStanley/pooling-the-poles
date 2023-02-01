@@ -24,7 +24,7 @@ theme_plots <- function() {
           plot.subtitle = element_text(size=8),
           axis.title = element_text(face = "bold"),
           strip.text = element_text(face = "bold"),
-          strip.background = element_rect(fill = "grey80", color = NA),
+          strip.background = element_rect(fill = "grey95", color = NA),
           legend.title = element_text(face = "bold"))
 }
 
