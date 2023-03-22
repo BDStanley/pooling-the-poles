@@ -44,7 +44,7 @@ my_date_format <- function()
   }
 }
 
-cols <- c("PiS"="blue4", "KO/Lewica/Polska 2050/PSL"="orange", "Konfederacja" = "midnightblue", "MN" = "yellow")
+cols <- c("PiS"="blue", "KO/Lewica/Polska 2050/PSL"="orange", "Konfederacja" = "midnightblue", "MN" = "yellow")
 
 #####Read in, adjust and subset data#####
 library(googledrive)
@@ -66,9 +66,9 @@ KO <- rnorm(1000, 38.8, sd=1)
 Konfederacja <- rnorm(1000, 12.7, sd=1)
 MN <- rnorm(1000, mean=0.079, sd=0.00001)
 
-PiS <- rnorm(1000, 36.1, sd=1)
-KO <- rnorm(1000, 50.9, sd=1)
-Konfederacja <- rnorm(1000, 13.1, sd=1)
+PiS <- rnorm(1000, 26, sd=1)
+KO <- rnorm(1000, 67, sd=1)
+Konfederacja <- rnorm(1000, 7, sd=1)
 MN <- rnorm(1000, mean=0.079, sd=0.00001)
 
 plotdraws <- tibble(PiS, KO, Konfederacja, MN)
@@ -388,3 +388,10 @@ plot_latest_onelist <- plotdraws %>%
   theme_plots()
 ggsave(plot_latest_onelist, file = "plot_latest_onelist.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+
+
+#####Upload to Github#####
+system("git add -A")
+system("git commit -m 'Single coalition new'")
+system("git pull")
+system("git push")
