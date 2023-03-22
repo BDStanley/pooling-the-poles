@@ -1,3 +1,66 @@
+#####Prepare workspace
+system("git pull")
+library(tidyverse); library(ggrepel)
+
+set.seed(780045)
+
+theme_plots <- function() {
+  theme_minimal(base_family = "IBM Plex Sans Condensed") +
+    theme(panel.grid.minor = element_blank(),
+          plot.background = element_rect(fill = "white", color = NA),
+          plot.title = element_text(face = "bold"),
+          plot.subtitle = element_text(size=8),
+          axis.title = element_text(face = "bold"),
+          strip.text = element_text(face = "bold"),
+          strip.background = element_rect(fill = "grey95", color = NA),
+          legend.title = element_text(face = "bold"))
+}
+
+theme_plots_map <- function() {
+  theme_minimal(base_family = "IBM Plex Sans Condensed") +
+    theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
+          axis.title.y = element_blank(), axis.title.x = element_blank(),
+          axis.text.x = element_blank(), axis.text.y = element_blank(),
+          strip.text.x = element_text(size = 10), legend.text = element_text(size=9), 
+          legend.title = element_text(face="bold"), plot.title = element_text(face="bold"),
+          plot.subtitle = element_text(size=8), aspect.ratio=1, legend.position="none")
+}
+
+
+update_geom_defaults("label", 
+                     list(family = "IBM Plex Sans Condensed"))
+update_geom_defaults(ggtext::GeomRichText, 
+                     list(family = "IBM Plex Sans Condensed"))
+update_geom_defaults("label_repel", 
+                     list(family = "IBM Plex Sans Condensed"))
+
+my_date_format <- function()
+{
+  function(x)
+  {
+    m <- format(x,"%b")
+    y <- format(x,"\n%Y")
+    ifelse(duplicated(y),m,paste(m,y))
+  }
+}
+
+cols <- c("PiS"="blue4", "KO/Lewica/Polska 2050/PSL"="orange", "Konfederacja" = "midnightblue", "MN" = "yellow")
+
+#####Read in, adjust and subset data#####
+library(googledrive)
+library(rio)
+library(readxl)
+
+import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1cOC1mY4xf0iXgPavA1CNQeSFwqi_0U_m/edit?usp=sharing&ouid=111487015973215379663&rtpof=true&sd=true"), overwrite=TRUE)
+1
+weights <- read_excel('2019_elec_percentages.xlsx')
+
+import <- drive_download(as_id("https://drive.google.com/file/d/1JmF3bjRA_sTaJZ4rqPd1WAQyGm-XM-l7/view?usp=sharing"), overwrite=TRUE)
+1
+const <- readRDS('constituencies')
+
+
+#####Enter party support and weight by constituency#####
 PiS <- rnorm(1000, 34.7, sd=1)
 KO <- rnorm(1000, 38.8, sd=1)
 Konfederacja <- rnorm(1000, 12.7, sd=1)
@@ -226,6 +289,11 @@ consts <- consts %>%
 
 consts$.draw <- rep(1:1000, each=41)
 
+
+#####Calculate seat shares#####
+library(seatdist)
+library(ggdist)
+
 poldHondt <- data.frame(KO=rep(1,41000), Konfederacja=rep(1,41000), MN=rep(1,41000), PiS=rep(1,41000))
 
 for(i in 1:41000) { 
@@ -256,10 +324,11 @@ frame <- poldHondt %>%
 
 frame$party <- factor(frame$party, levels=c("PiS", "KO", "Konfederacja", "MN"))
 frame$party <- reorder(frame$party, -frame$y)
+levels(frame$party)[levels(frame$party)=="KO"] <- "KO/Lewica/Polska 2050/PSL"
 
-cols <- c("PiS"="blue4", "KO"="orange", "Konfederacja" = "midnightblue", "MN" = "yellow")
 
-plot_seats_parl_onelist <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
+#####Plots#####
+plot_seats_onelist <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   geom_bar(stat="identity", width=.75, show.legend = F) +
   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
@@ -275,5 +344,47 @@ plot_seats_parl_onelist <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=par
        subtitle="(95%-owy przedział wiarygodności)",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots()
-ggsave(plot_seats_parl_onelist, file = "plot_seats_parl_onelist.png",
+ggsave(plot_seats_onelist, file = "plot_seats_onelist.png",
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+
+
+library(tidybayes)
+library(ggblend)
+names(plotdraws)[names(plotdraws)=="KO"] <- "KO/Lewica/Polska 2050/PSL"
+
+KO.PiS.diff <- plotdraws %>%
+  mutate(., KOPiS = `KO/Lewica/Polska 2050/PSL`-PiS,
+         KOPiS = sum((KOPiS > 0) / length(KOPiS)),
+         KOPiS = round(KOPiS, 2)) %>%
+  pull(KOPiS) %>%
+  last(.)
+
+plot_latest_onelist <- plotdraws %>%
+  pivot_longer(., cols=c("PiS", "KO/Lewica/Polska 2050/PSL", "Konfederacja")) %>%
+  select(., !MN) %>%
+  ggplot(aes(y=reorder(name, dplyr::desc(-value)), 
+             x=value, color=name)) +
+  geom_vline(aes(xintercept=5), colour="gray40", linetype="dotted") +
+  stat_interval(aes(x=value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
+  partition(vars(name)) +
+  scale_color_manual(values=cols, guide="none") +
+  scale_fill_manual(values=cols, guide="none") +
+  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
+  scale_y_discrete(name="", position="right") +
+  annotate(geom = "text", label=paste(round(median(plotdraws$PiS),0)),
+         y="PiS", x=median(plotdraws$PiS), size=4, hjust = "center", vjust=-1,
+         family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(mean(plotdraws$`KO/Lewica/Polska 2050/PSL`),0)),
+           y="KO/Lewica/Polska 2050/PSL", x=mean(plotdraws$`KO/Lewica/Polska 2050/PSL`), size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste(round(mean(plotdraws$`Konfederacja`),0)),
+           y="Konfederacja", x=mean(plotdraws$`Konfederacja`), size=4, hjust = "center", vjust=-1,
+           family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste("Pr(KO/Lewica/Polska 2050/PSL > PiS)  = ", KO.PiS.diff), y="KO/Lewica/Polska 2050/PSL",
+            x=quantile(plotdraws$`KO/Lewica/Polska 2050/PSL`, 0.001), size=3, adj=c(1), family="IBM Plex Sans Condensed Light") +
+  scale_fill_manual(name=" ", values=cols, guide="none") +
+  expand_limits(x = 0) +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki", subtitle="(95%-owy przedział wiarygodności)", color="") +
+  theme_plots()
+ggsave(plot_latest_onelist, file = "plot_latest_onelist.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
