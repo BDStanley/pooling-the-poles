@@ -61,14 +61,15 @@ const <- readRDS('constituencies')
 
 
 #####Enter party support and weight by constituency#####
-PiS <- rnorm(1000, 34.7, sd=1)
-KO <- rnorm(1000, 38.8, sd=1)
-Konfederacja <- rnorm(1000, 12.7, sd=1)
-MN <- rnorm(1000, mean=0.079, sd=0.00001)
+PiS_raw <- 31.8
+KO_raw <- 35.6
+Konf_raw <- 11.6
+Other_raw <- 12.7
+Undecided_raw <- 8.2
 
-PiS <- rnorm(1000, 26, sd=1)
-KO <- rnorm(1000, 67, sd=1)
-Konfederacja <- rnorm(1000, 7, sd=1)
+PiS <- rnorm(1000, (PiS_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
+KO <- rnorm(1000, (KO_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
+Konfederacja <- rnorm(1000, (Konf_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
 MN <- rnorm(1000, mean=7.9, sd=0.00001)
 
 plotdraws <- tibble(PiS, KO, Konfederacja, MN)

@@ -68,7 +68,6 @@ Lewica_raw <- 8.4
 Other_raw <- 10.3
 Undecided_raw <- 7.8
 
-
 PiS <- rnorm(1000, (PiS_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
 KO <- rnorm(1000, (KO_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
 Konfederacja <- rnorm(1000, (Konf_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
