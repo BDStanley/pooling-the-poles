@@ -1674,7 +1674,7 @@ plot_seats_parl_PL <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) 
   geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="IBM Plex Sans Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="IBM Plex Sans Condensed Light") +
-  labs(x="", y="", title="Szacowany rozkład miejsc w Sejmie",
+  labs(x="", y="", title="Rozkład mandatów w Sejmie",
        subtitle="(95%-owy przedział wiarygodności)",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots()
