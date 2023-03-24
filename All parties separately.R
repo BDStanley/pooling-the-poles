@@ -517,6 +517,6 @@ ggsave(plot_latest_all_separate, file = "plot_latest_all_separate.png",
 
 #####Upload to Github#####
 system("git add -A")
-system("git commit -m 'KO PSL PL2050 coalition new'")
+system("git commit -m 'All separate new'")
 system("git pull")
 system("git push")
