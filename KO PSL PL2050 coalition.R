@@ -386,7 +386,7 @@ plot_seats_ko_p2050_psl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=par
   geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="IBM Plex Sans Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="IBM Plex Sans Condensed Light") +
-  labs(x="", y="", title="Szacowany rozkład miejsc w Sejmie",
+  labs(x="", y="", title="Rozkład mandatów w Sejmie - wspólny start KO, Polski 2050 i PSL",
        subtitle="(95%-owy przedział wiarygodności)",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots()
@@ -431,7 +431,7 @@ plot_latest_ko_p2050_psl <- plotdraws %>%
            family="IBM Plex Sans Condensed Light", color="black") +
   scale_fill_manual(name=" ", values=cols, guide="none") +
   expand_limits(x = 0) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki", subtitle="(95%-owy przedział wiarygodności)", color="") +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych oraz koalicji KO-Polska 2050-PSL", subtitle="(95%-owy przedział wiarygodności)", color="") +
   theme_plots()
 ggsave(plot_latest_ko_p2050_psl, file = "plot_latest_ko_p2050_psl.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
