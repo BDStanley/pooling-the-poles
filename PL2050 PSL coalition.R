@@ -16,17 +16,6 @@ theme_plots <- function() {
           legend.title = element_text(face = "bold"))
 }
 
-theme_plots_map <- function() {
-  theme_minimal(base_family = "IBM Plex Sans Condensed") +
-    theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
-          axis.title.y = element_blank(), axis.title.x = element_blank(),
-          axis.text.x = element_blank(), axis.text.y = element_blank(),
-          strip.text.x = element_text(size = 10), legend.text = element_text(size=9), 
-          legend.title = element_text(face="bold"), plot.title = element_text(face="bold"),
-          plot.subtitle = element_text(size=8), aspect.ratio=1, legend.position="none")
-}
-
-
 update_geom_defaults("label", 
                      list(family = "IBM Plex Sans Condensed"))
 update_geom_defaults(ggtext::GeomRichText, 

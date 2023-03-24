@@ -469,7 +469,7 @@ plot_latest_parl_PL <-
   scale_fill_manual(name=" ", values=cols, guide=FALSE) +
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki", color="",
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych", color="",
        subtitle=str_c("Dane: ", names_PL,".")) +
   theme_plots()
 ggsave(plot_latest_parl_PL, file = "polls_latest_parl_PL.png",

@@ -13,19 +13,9 @@ theme_plots <- function() {
           axis.title = element_text(face = "bold"),
           strip.text = element_text(face = "bold"),
           strip.background = element_rect(fill = "grey95", color = NA),
-          legend.title = element_text(face = "bold"))
+          legend.title = element_text(face = "bold")
+          )
 }
-
-theme_plots_map <- function() {
-  theme_minimal(base_family = "IBM Plex Sans Condensed") +
-    theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
-          axis.title.y = element_blank(), axis.title.x = element_blank(),
-          axis.text.x = element_blank(), axis.text.y = element_blank(),
-          strip.text.x = element_text(size = 10), legend.text = element_text(size=9), 
-          legend.title = element_text(face="bold"), plot.title = element_text(face="bold"),
-          plot.subtitle = element_text(size=8), aspect.ratio=1, legend.position="none")
-}
-
 
 update_geom_defaults("label", 
                      list(family = "IBM Plex Sans Condensed"))
@@ -341,7 +331,7 @@ plot_seats_onelist <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) 
   geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="IBM Plex Sans Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="IBM Plex Sans Condensed Light") +
-  labs(x="", y="", title="Szacowany rozkład miejsc w Sejmie",
+  labs(x="", y="", title="Rozkład mandatów w Sejmie - wspólny start KO, Lewicy, Polski 2050 i PSL",
        subtitle="(95%-owy przedział wiarygodności)",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots()
@@ -385,7 +375,7 @@ plot_latest_onelist <- plotdraws %>%
             x=quantile(plotdraws$`KO/Lewica/Polska 2050/PSL`, 0.001), size=3, adj=c(1), family="IBM Plex Sans Condensed Light") +
   scale_fill_manual(name=" ", values=cols, guide="none") +
   expand_limits(x = 0) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki", subtitle="(95%-owy przedział wiarygodności)", color="") +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych oraz koalicji KO-Lewica-Polska 2050-PSL", subtitle="(95%-owy przedział wiarygodności)", color="") +
   theme_plots()
 ggsave(plot_latest_onelist, file = "plot_latest_onelist.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
