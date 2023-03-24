@@ -377,7 +377,7 @@ plot_seats_ko_lewica_i_p2050_psl <- ggplot(data=frame, mapping=aes(x=party, y=y,
   geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="IBM Plex Sans Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="IBM Plex Sans Condensed Light") +
-  labs(x="", y="", title="Rozkład mandatów w Sejmie - wspólny start KO i Lewica, oraz Polski 2050 i PSL",
+  labs(x="", y="", title="Rozkład mandatów w Sejmie - wspólne starty KO i Lewica oraz Polski 2050 i PSL",
        subtitle="(95%-owy przedział wiarygodności)",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots()
@@ -388,7 +388,7 @@ ggsave(plot_seats_ko_lewica_i_p2050_psl, file = "plot_seats_ko_lewica_i_p2050_ps
 library(tidybayes)
 library(ggblend)
 names(plotdraws)[names(plotdraws)=="Polska 2050"] <- "Polska 2050/PSL"
-levels(frame$party)[levels(frame$party)=="KO"] <- "KO/Lewica"
+names(plotdraws)[names(plotdraws)=="KO"] <- "KO/Lewica"
 
 plot_latest_ko_lewica_i_p2050_psl <- plotdraws %>%
   pivot_longer(., cols=c("PiS", "KO/Lewica", "Polska 2050/PSL", "Konfederacja")) %>%
@@ -405,8 +405,8 @@ plot_latest_ko_lewica_i_p2050_psl <- plotdraws %>%
   annotate(geom = "text", label=paste(round(median(plotdraws$PiS),0)),
            y="PiS", x=median(plotdraws$PiS), size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
-  annotate(geom = "text", label=paste(round(mean(plotdraws$KO),0)),
-           y="KO", x=mean(plotdraws$KO), size=4, hjust = "center", vjust=-1,
+  annotate(geom = "text", label=paste(round(mean(plotdraws$`KO/Lewica`),0)),
+           y="KO/Lewica", x=mean(plotdraws$`KO/Lewica`), size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(mean(plotdraws$`Polska 2050/PSL`),0)),
            y="Polska 2050/PSL", x=mean(plotdraws$`Polska 2050/PSL`), size=4, hjust = "center", vjust=-1,
@@ -416,7 +416,7 @@ plot_latest_ko_lewica_i_p2050_psl <- plotdraws %>%
            family="IBM Plex Sans Condensed Light", color="black") +
   scale_fill_manual(name=" ", values=cols, guide="none") +
   expand_limits(x = 0) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych oraz koalicji Polska 2050-PSL", subtitle="(95%-owy przedział wiarygodności)", color="") +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych oraz koalicji KO-Lewica i Polska 2050-PSL", subtitle="(95%-owy przedział wiarygodności)", color="") +
   theme_plots()
 ggsave(plot_latest_ko_lewica_i_p2050_psl, file = "plot_latest_ko_lewica_i_p2050_psl.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
@@ -424,6 +424,6 @@ ggsave(plot_latest_ko_lewica_i_p2050_psl, file = "plot_latest_ko_lewica_i_p2050_
 
 #####Upload to Github#####
 system("git add -A")
-system("git commit -m 'PSL PL2050 coalition new'")
+system("git commit -m 'KO Lewica PL2050 PSL coalitions new'")
 system("git pull")
 system("git push")
