@@ -92,7 +92,7 @@ polls <-
          time = as.integer(difftime(midDate, min(midDate), units = "days")),
          pollster = as.integer(factor(org)))
 
-cols <- c("PiS"="blue4", "KO"="orange", "PSL"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "Other"="gray50", "Polska 2050"="darkgoldenrod")
+cols <- c("PiS"="blue", "KO"="orange", "PSL"="darkgreen", "Konfederacja" = "midnightblue", "Lewica" = "red", "MN" = "yellow", "Other"="gray50", "Polska 2050"="darkgoldenrod")
 
 library(glue)
 library(sjlabelled)
@@ -131,7 +131,7 @@ polls <-
 #####Run model#####
 library(brms)
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 12) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 24) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Other"),
       prior =
         prior(normal(0, 1.5), class = "Intercept", dpar = "muPiS") +
@@ -281,8 +281,8 @@ plot_trends_parl_PL <-
                labels = my_date_format()) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
-  scale_color_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50")) +
-  scale_fill_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"), guide=FALSE) +
+  scale_color_manual(values=c("PiS"="blue", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50")) +
+  scale_fill_manual(values=c("PiS"="blue", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"), guide=FALSE) +
   labs(y = "", x="", title = "Trendy",
        subtitle=str_c("Dane: ", names_PL, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
@@ -509,54 +509,8 @@ for( i in 1 : 42 ) {
   poldHondt[i,] <- c(giveseats(v = c(KOest[i], Konfederacjaest[i], Lewicaest[i], MNest[i], PiSest[i], 
                                      `Polska 2050est`[i], PSLest[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
 }
-# 
-# PiSpct <- round(weights$PiScoef*29, digits=2)
-# KOpct <- round(weights$KOcoef*26, digits=2)
-# PSLpct <- round(weights$PSLcoef*0, digits=2)
-# Lewicapct <- round(weights$Lewicacoef*5, digits=2)
-# Konfederacjapct <- round(weights$Konfcoef*9, digits=2)
-# `Polska 2050pct` <- round(weights$KOcoef*15, digits=2)
-# MNpct <- c(0.17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-# KOest <- (weights$validvotes/100)*KOpct
-# PiSest <- (weights$validvotes/100)*PiSpct
-# PSLest <- (weights$validvotes/100)*PSLpct
-# Lewicaest <- (weights$validvotes/100)*Lewicapct
-# Konfederacjaest <- (weights$validvotes/100)*Konfederacjapct
-# `Polska 2050est` <- (weights$validvotes/100)*`Polska 2050pct`
-# MNest <- (weights$validvotes/100)*MNpct
-# poldHondt <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42), `Polska 2050`=rep(1,42), PSL=rep(1,42))
-# 
-# for( i in 1 : 42 ) {
-#   poldHondt[i,] <- c(giveseats(v = c(KOest[i], Konfederacjaest[i], Lewicaest[i], MNest[i], PiSest[i],
-#                                      `Polska 2050est`[i], PSLest[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
-# }
-# 
-# separate <- poldHondt %>%
-#   slice(2:42) %>%
-#   summarise_all(sum)
-# 
-# PiSpct <- round(weights$PiScoef*30, digits=2)
-# KOpct <- round(weights$KOcoef*42, digits=2)
-# Lewicapct <- round(weights$Lewicacoef*6, digits=2)
-# Konfederacjapct <- round(weights$Konfcoef*10, digits=2)
-# MNpct <- c(0.17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-# KOest <- (weights$validvotes/100)*KOpct
-# PiSest <- (weights$validvotes/100)*PiSpct
-# Lewicaest <- (weights$validvotes/100)*Lewicapct
-# Konfederacjaest <- (weights$validvotes/100)*Konfederacjapct
-# MNest <- (weights$validvotes/100)*MNpct
-# poldHondt <- data.frame(`KO-P2050-PSL`=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42))
-# 
-# for( i in 1 : 42 ) {
-#   poldHondt[i,] <- c(giveseats(v = c(KOest[i], Konfederacjaest[i], Lewicaest[i], MNest[i], PiSest[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
-# }
-# 
-# together <- poldHondt %>%
-#   slice(2:42) %>%
-#   summarise_all(sum)
 
-
-# seats table
+#seats table
 seats <- cbind(poldHondt, weights)
 row.names(seats) <- weights$name
 keep <- c("KO","Konfederacja","Lewica","MN", "PiS", "Polska 2050", "PSL")
@@ -733,7 +687,7 @@ p_pis <- ggplot(plotdata) +
   geom_polygon() +
   geom_path(color="black") +
   theme(aspect.ratio=1) +
-  scale_fill_gradient(name="PiS", limits=c(min=0, max=20), low = "white", high = "blue4", guide="colorbar") +
+  scale_fill_gradient(name="PiS", limits=c(min=0, max=20), low = "white", high = "blue", guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiS, label=PiS), fill="white") +
   labs(title="Constituency-level share of seats for PiS", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
@@ -784,7 +738,7 @@ p_pis_ko <- ggplot(plotdata) +
   aes(long,lat,group=group,fill=as.integer(PiSmKO)) + 
   geom_polygon() +
   geom_path(color="black") +
-  scale_fill_gradient2(name="PiSKO", limits=c(min=-20, max=20), low = "orange", mid="white", high = "blue4", midpoint=0, guide="colorbar") +
+  scale_fill_gradient2(name="PiSKO", limits=c(min=-20, max=20), low = "orange", mid="white", high = "blue", midpoint=0, guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiSKO, label=PiSKO), fill="white") +
   labs(title="Constituency-level differences in share of seats for PiS and Koalicja Obywatelska", subtitle="Constituencies in shades of blue have more PiS MPs; constituencies in orange have more KO MPs", 
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
@@ -1769,8 +1723,8 @@ plot_trends_pollster_PL <-
   facet_wrap(~org, nrow=3) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
-  scale_color_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50")) +
-  scale_fill_manual(values=c("PiS"="blue4", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"), guide=FALSE) +
+  scale_color_manual(values=c("PiS"="blue", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50")) +
+  scale_fill_manual(values=c("PiS"="blue", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "PSL"="darkgreen", "Polska 2050"="darkgoldenrod", "Inni"="gray50"), guide=FALSE) +
   labs(y = "", x="", title = "Trendy według ośrodku badawczego",
        subtitle=str_c("Dane: ", names_PL, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots() +

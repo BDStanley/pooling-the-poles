@@ -460,7 +460,7 @@ ggplot(plotdata) +
   aes(long,lat,group=group,fill=as.integer(PiSmKO)) + 
   geom_polygon() +
   geom_path(color="black") +
-  scale_fill_gradient2(name="PiSKO", limits=c(min=-20, max=20), low = "orange", mid="white", high = "blue4", midpoint=0, guide="colorbar") +
+  scale_fill_gradient2(name="PiSKO", limits=c(min=-20, max=20), low = "orange", mid="white", high = "blue", midpoint=0, guide="colorbar") +
   geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiSKO, label=PiSKO), fill="white", family="IBM Plex Sans Condensed Light") +
   labs(title="", subtitle="", 
        caption = "") +
