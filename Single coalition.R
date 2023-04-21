@@ -54,7 +54,7 @@ const <- readRDS('constituencies')
 PiS_raw <- 33.68
 KO_raw <- 47.72
 Konf_raw <- 12.33
-Other_raw <- 4.12
+Other_raw <- 2.15
 Undecided_raw <- 4.12
 
 PiS <- rnorm(1000, (PiS_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
