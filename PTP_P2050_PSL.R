@@ -214,7 +214,7 @@ point_dta <-
       party %>%
       factor(
         levels = c("PiS", "KO", "PO2050PSL", "Lewica", "Konfederacja", "Other"),
-        labels = c("PiS", "KO", "Polska 2050", "Lewica", "Konfederacja", "Other")
+        labels = c("PiS", "KO", "Polska 2050-PSL", "Lewica", "Konfederacja", "Other")
       )
   )
 
