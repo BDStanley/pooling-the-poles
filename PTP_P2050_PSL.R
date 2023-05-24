@@ -51,9 +51,19 @@ library(googledrive)
 library(rio)
 library(readxl)
 
+import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1aI_JqiQuuO0WmzkMBzSZvufrf-XGr-vmNddDCadGi7Q/edit?usp=sharing"), overwrite=TRUE)
+1
+polls_old <- read_excel('polldata_gs.xlsx')
+
+polls_old <- polls_old %>%
+  mutate(PO2050PSL = `Polska 2050` + PSL) %>%
+  select(startDate, endDate, org, remark, PiS, KO, Lewica, PO2050PSL, Konfederacja, Other, DK)
+
 import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1DzFWrLA34CWzXDuxIncracoNG0kmMuo1DjvLR0PQUEs/edit?usp=sharing"), overwrite=TRUE)
 1
 polls <- read_excel('polldata_gs_p2050_psl.xlsx')
+
+polls <- bind_rows(polls_old, polls)
 
 import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1cOC1mY4xf0iXgPavA1CNQeSFwqi_0U_m/edit?usp=sharing&ouid=111487015973215379663&rtpof=true&sd=true"), overwrite=TRUE)
 1
@@ -1652,8 +1662,8 @@ ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png",
 
 
 #####Upload to Github#####
-library(rmarkdown)
-render('index.Rmd')
+#library(rmarkdown)
+#render('index.Rmd')
 system("git add -A")
 system("git commit -m 'PTP new'")
 system("git pull")
