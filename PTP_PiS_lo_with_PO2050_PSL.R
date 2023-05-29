@@ -1451,7 +1451,7 @@ ggsave(plot_seats_parl_PL, file = "plot_seats_parl_PiS_low_PL.png",
 
 
 #####Upload to Github#####
+system("git pull")
 system("git add -A")
 system("git commit -m 'PTP new'")
-system("git pull")
 system("git push")
