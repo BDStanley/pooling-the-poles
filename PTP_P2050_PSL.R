@@ -401,8 +401,8 @@ plot_latest_parl_PL <-
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Inni"],0)),
-           y="Inni", x=medians$est[medians$.category=="Inni"]/100, size=4, hjust = "center", vjust=-1,
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
+           y="Inni", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
            x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), family="IBM Plex Sans Condensed Light") +
