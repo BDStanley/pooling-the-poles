@@ -66,6 +66,10 @@ Lewica <- rnorm(1000, (Lewica_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
 MN <- rnorm(1000, mean=7.9, sd=0.00001)
 
 plotdraws <- tibble(PiS, `Polska 2050`, KO, Konfederacja, Lewica, MN)
+plotdraws <- plotdraws %>%
+  mutate(`Polska 2050` = ifelse(median(`Polska 2050`)<8, 0, `Polska 2050`),
+         Lewica = ifelse(median(Lewica)<5, 0, Lewica)
+  )
 consts <- uncount(tibble(plotdraws), 41, .id="okreg")
 
 consts <- consts %>%
