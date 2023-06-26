@@ -50,11 +50,11 @@ const <- readRDS('constituencies')
 
 
 #####Enter party support and weight by constituency#####
-PiS_raw <- 35
-KO_raw <- 31
+PiS_raw <- 32
+KO_raw <- 34
 `Polska 2050_raw` <- 14
-Konf_raw <- 12
-Lewica_raw <- 5
+Konf_raw <- 10
+Lewica_raw <- 7
 Other_raw <- 3
 Undecided_raw <- 0
 
@@ -425,7 +425,7 @@ plot_seats_p2050_psl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)
   geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="IBM Plex Sans Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="IBM Plex Sans Condensed Light") +
-  labs(x="", y="", title="Rozkład mandatów w Sejmie - wariant C",
+  labs(x="", y="", title="Rozkład mandatów w Sejmie - wariant D",
        subtitle="(95%-owy przedział wiarygodności)",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots()
