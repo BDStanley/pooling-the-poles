@@ -33,7 +33,7 @@ my_date_format <- function()
   }
 }
 
-cols <- c("PiS"="blue", "KO"="orange", "Polska 2050/PSL" = "goldenrod", "Lewica"="red", "Konfederacja" = "midnightblue", "MN" = "yellow")
+cols <- c("PiS"="blue", "KO"="orange", "Trzecia Droga" = "goldenrod", "Lewica"="red", "Konfederacja" = "midnightblue", "MN" = "yellow")
 
 #####Read in, adjust and subset data#####
 library(googledrive)
@@ -405,7 +405,7 @@ frame <- poldHondt %>%
 
 frame$party <- factor(frame$party, levels=c("PiS", "Polska 2050", "KO", "Konfederacja", "Lewica", "MN"))
 frame$party <- reorder(frame$party, -frame$y)
-levels(frame$party)[levels(frame$party)=="Polska 2050"] <- "Polska 2050/PSL"
+levels(frame$party)[levels(frame$party)=="Polska 2050"] <- "Trzecia Droga"
 
 
 #####Plots#####
@@ -431,10 +431,10 @@ ggsave(plot_seats_p2050_psl, file = "plot_seats_p2050_psl.png",
 
 library(tidybayes)
 library(ggblend)
-names(plotdraws)[names(plotdraws)=="Polska 2050"] <- "Polska 2050/PSL"
+names(plotdraws)[names(plotdraws)=="Polska 2050"] <- "Trzecia Droga"
 
 plot_latest_p2050_psl <- plotdraws %>%
-  pivot_longer(., cols=c("PiS", "KO", "Polska 2050/PSL", "Lewica", "Konfederacja")) %>%
+  pivot_longer(., cols=c("PiS", "KO", "Trzecia Droga", "Lewica", "Konfederacja")) %>%
   select(., !MN) %>%
   ggplot(aes(y=reorder(name, dplyr::desc(-value)), 
              x=value, color=name)) +
@@ -451,8 +451,8 @@ plot_latest_p2050_psl <- plotdraws %>%
   annotate(geom = "text", label=paste(round(mean(plotdraws$KO),0)),
            y="KO", x=mean(plotdraws$KO), size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
-  annotate(geom = "text", label=paste(round(mean(plotdraws$`Polska 2050/PSL`),0)),
-           y="Polska 2050/PSL", x=mean(plotdraws$`Polska 2050/PSL`), size=4, hjust = "center", vjust=-1,
+  annotate(geom = "text", label=paste(round(mean(plotdraws$`Trzecia Droga`),0)),
+           y="Trzecia Droga", x=mean(plotdraws$`Trzecia Droga`), size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(mean(plotdraws$`Konfederacja`),0)),
            y="Konfederacja", x=mean(plotdraws$`Konfederacja`), size=4, hjust = "center", vjust=-1,
