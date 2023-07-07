@@ -420,7 +420,7 @@ Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 library(seatdist)
 library(maptools) 
 library(rgeos) 
-library(gpclib)
+#library(gpclib)
 
 median_PiS <- ifelse(medians$est[medians$.category=="PiS"] >=5, medians$est[medians$.category=="PiS"], 0)
 median_KO <- ifelse(medians$est[medians$.category=="KO"] >=5, medians$est[medians$.category=="KO"], 0)
