@@ -78,7 +78,7 @@ plotdraws <- add_fitted_draws(
   group_by(.category) %>%
   mutate(.category = factor(.category,
                             levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PO2050PSL"),
-                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "Polska 2050-PSL")))
+                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "Trzecia Droga")))
 
 medians <- plotdraws %>%
   summarise(est = median(.value)*100, .groups = "drop")
@@ -106,7 +106,7 @@ add_fitted_draws(
   group_by(.category) %>%
   mutate(.category = factor(.category,
                             levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PO2050PSL"),
-                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "Polska 2050-PSL"))) %>%
+                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "Trzecia Droga"))) %>%
   ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
              x=.value, color=.category)) +
   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
@@ -122,8 +122,8 @@ add_fitted_draws(
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
            y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Polska 2050-PSL"],0)),
-           y="Polska 2050-PSL", x=medians$est[medians$.category=="Polska 2050-PSL"]/100, size=4, hjust = "center", vjust=-1,
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Trzecia Droga"],0)),
+           y="Trzecia Droga", x=medians$est[medians$.category=="Trzecia Droga"]/100, size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
            y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
@@ -166,7 +166,7 @@ pred_dta <-
       party %>%
       factor(
         levels = c("PiS", "KO", "PO2050PSL", "Lewica", "Konfederacja", "Other"),
-        labels = c("PiS", "KO", "Polska 2050-PSL", "Lewica", "Konfederacja", "Other")
+        labels = c("PiS", "KO", "Trzecia Droga", "Lewica", "Konfederacja", "Other")
       )
   )
 
@@ -182,7 +182,7 @@ point_dta <-
       party %>%
       factor(
         levels = c("PiS", "KO", "PO2050PSL", "Lewica", "Konfederacja", "Other"),
-        labels = c("PiS", "KO", "Polska 2050-PSL", "Lewica", "Konfederacja", "Other")
+        labels = c("PiS", "KO", "Trzecia Droga", "Lewica", "Konfederacja", "Other")
       )
   )
 
@@ -232,31 +232,31 @@ median_PiS <- ifelse(medians$est[medians$.category=="PiS"] >=5, medians$est[medi
 median_KO <- ifelse(medians$est[medians$.category=="KO"] >=5, medians$est[medians$.category=="KO"], 0)
 median_Lewica <- ifelse(medians$est[medians$.category=="Lewica"] >=5, medians$est[medians$.category=="Lewica"], 0)
 median_Konfederacja <- ifelse(medians$est[medians$.category=="Konfederacja"] >=5, medians$est[medians$.category=="Konfederacja"], 0)
-`median_Polska 2050-PSL` <- ifelse(medians$est[medians$.category=="Polska 2050-PSL"] >=5, medians$est[medians$.category=="Polska 2050-PSL"], 0)
+`median_Trzecia Droga` <- ifelse(medians$est[medians$.category=="Trzecia Droga"] >=5, medians$est[medians$.category=="Trzecia Droga"], 0)
 PiSpct <- round(weights$PiScoef*median_PiS, digits=2)
 KOpct <- round(weights$KOcoef*median_KO, digits=2)
 Lewicapct <- round(weights$Lewicacoef*median_Lewica, digits=2)
 Konfederacjapct <- round(weights$Konfcoef*median_Konfederacja, digits=2)
-`Polska 2050-PSLpct` <- round(weights$PSLcoef*`median_Polska 2050-PSL`, digits=2)
+`Trzecia Drogapct` <- round(weights$PSLcoef*`median_Trzecia Droga`, digits=2)
 MNpct <- c(0.17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 KOest <- (weights$validvotes/100)*KOpct
 PiSest <- (weights$validvotes/100)*PiSpct
 Lewicaest <- (weights$validvotes/100)*Lewicapct
 Konfederacjaest <- (weights$validvotes/100)*Konfederacjapct
-`Polska 2050-PSLest` <- (weights$validvotes/100)*`Polska 2050-PSLpct`
+`Trzecia Drogaest` <- (weights$validvotes/100)*`Trzecia Drogapct`
 MNest <- (weights$validvotes/100)*MNpct
-poldHondt <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42), `Polska 2050-PSL`=rep(1,42))
+poldHondt <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42), `Trzecia Droga`=rep(1,42))
 
 for( i in 1 : 42 ) {
   poldHondt[i,] <- c(giveseats(v = c(KOest[i], Konfederacjaest[i], Lewicaest[i], MNest[i], PiSest[i], 
-                                     `Polska 2050-PSLest`[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
+                                     `Trzecia Drogaest`[i]), ns = weights$magnitude[i], method="dh", thresh=5))$seats
 }
 
 #seats table
 seats <- cbind(poldHondt, weights)
 row.names(seats) <- weights$name
-keep <- c("KO","Konfederacja","Lewica","MN", "PiS", "Polska 2050-PSL")
-colnames(seats) <- c("KO", "Konfederacja","Lewica","MN", "PiS", "Polska 2050-PSL")
+keep <- c("KO","Konfederacja","Lewica","MN", "PiS", "Trzecia Droga")
+colnames(seats) <- c("KO", "Konfederacja","Lewica","MN", "PiS", "Trzecia Droga")
 seats <- seats[keep]
 seats <- seats[-1,]
 seats$id <- 1:41
