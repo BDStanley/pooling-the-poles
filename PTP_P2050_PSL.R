@@ -250,28 +250,28 @@ ggsave(plot_trends_parl, file = "plot_trends_parl.png",
 library(ggdist)
 library(ggblend)
 
-trends_blend <- pred_dta %>%
-  ggplot(aes(x = date, color=party, fill=party)) +
-  ggdist::stat_lineribbon(
-    aes(y = .value, fill_ramp = stat(.width)),
-    .width = ppoints(100)
-  ) |> partition(vars(party)) |> blend("multiply") +
-  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
-  scale_color_manual(values=cols) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "1 month",
-               labels = my_date_format()) +
-  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-                  ylim = c(0, .5)) +
-  labs(y = "", x="", title = "Trends",
-       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_plots()
-
-ggsave(trends_blend, file = "trends_blend.pdf",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white", device=cairo_pdf)
+# trends_blend <- pred_dta %>%
+#   ggplot(aes(x = date, color=party, fill=party)) +
+#   ggdist::stat_lineribbon(
+#     aes(y = .value, fill_ramp = stat(.width)),
+#     .width = ppoints(100)
+#   ) |> partition(vars(party)) |> blend("multiply") +
+#   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
+#   scale_color_manual(values=cols) +
+#   scale_fill_manual(values=cols, guide=FALSE) +
+#   ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
+#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+#   scale_x_date(date_breaks = "1 month",
+#                labels = my_date_format()) +
+#   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+#                   ylim = c(0, .5)) +
+#   labs(y = "", x="", title = "Trends",
+#        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+#   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+#   theme_plots()
+# 
+# ggsave(trends_blend, file = "trends_blend.pdf",
+#        width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white", device=cairo_pdf)
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
 plot_trends_parl_PL <-
