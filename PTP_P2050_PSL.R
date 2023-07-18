@@ -696,7 +696,7 @@ plotdraws <- plotdraws %>%
          KO = ifelse(KO<0.05, 0, KO),
          Konfederacja = ifelse(Konfederacja<0.05, 0, Konfederacja),
          Lewica = ifelse(Lewica<0.05, 0, Lewica),
-         `Trzecia Droga` = ifelse(`Trzecia Droga`<0.05, 0, `Trzecia Droga`)
+         `Trzecia Droga` = ifelse(`Trzecia Droga`<0.08, 0, `Trzecia Droga`)
   )
 
 consts <- uncount(tibble(plotdraws), 41, .id="okreg")
