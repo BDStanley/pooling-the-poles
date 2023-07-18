@@ -317,6 +317,13 @@ PiS.KO.diff <- plotdraws %>%
   pull(PiSKO) %>%
   last(.)
 
+trzecia_droga_thresh <- plotdraws %>%
+  pivot_wider(names_from=.category, values_from=.value) %>%
+  mutate(., `Trzecia Droga` = sum((`Trzecia Droga` > 0.08) / length(`Trzecia Droga`)),
+         `Trzecia Droga` = round(`Trzecia Droga`, 2)) %>%
+  pull(`Trzecia Droga`) %>%
+  last(.)
+
 plot_latest_parl <-
   add_fitted_draws(
     model = m1,
@@ -330,7 +337,6 @@ plot_latest_parl <-
                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "Trzecia Droga"))) %>%
   ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
              x=.value, color=.category)) +
-  geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
   stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
   partition(vars(.category)) +
   scale_fill_manual(values=cols, guide=FALSE) +
@@ -355,9 +361,11 @@ plot_latest_parl <-
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
            y="Other", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste("Pr(Trzecia Droga > 0.8)  = ", trzecia_droga_thresh), y="Trzecia Droga",
+           x=quantile(plotdraws$.value[plotdraws$.category=="Trzecia Droga"], 0.995)+0.07, size=3.5, adj=c(1), family="IBM Plex Sans Condensed Light") +
   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
            x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), family="IBM Plex Sans Condensed Light") +
-  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  scale_x_continuous(breaks=c(0, 0.05, 0.08, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Latest estimates",
        subtitle=str_c("Data from ", names,".")) +
@@ -379,7 +387,6 @@ plot_latest_parl_PL <-
                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "Trzecia Droga"))) %>%
   ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
              x=.value, color=.category)) +
-  geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
   stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
   partition(vars(.category)) +
   scale_color_manual(values=cols, guide=FALSE) +
@@ -404,9 +411,11 @@ plot_latest_parl_PL <-
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
            y="Inni", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
+  annotate(geom = "text", label=paste("Pr(Trzecia Droga > 0.8)  = ", trzecia_droga_thresh), y="Trzecia Droga",
+           x=quantile(plotdraws$.value[plotdraws$.category=="Trzecia Droga"], 0.995)+0.07, size=3.5, adj=c(1), family="IBM Plex Sans Condensed Light") +
   annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
            x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), family="IBM Plex Sans Condensed Light") +
-  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+  scale_x_continuous(breaks=c(0, 0.05, 0.08, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych", color="",
        subtitle=str_c("Dane: ", names_PL,".")) +
