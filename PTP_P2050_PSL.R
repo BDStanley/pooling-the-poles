@@ -75,11 +75,8 @@ const <- readRDS('constituencies')
 
 # polls <- polls %>%
 #   filter(., remark %in% c("CATI"))
-# polls <- polls %>% 
-#   filter(., org!="Social Changes") %>%
-#   filter(., org!="CBOS") %>%
-#   filter(., org!="Kantar")
-
+polls <- polls %>%
+  filter(., org!="CBOS") 
 polls <- unite(polls, org, remark, col="org", sep="_")
 polls$org <-as.factor(polls$org)
 
