@@ -73,6 +73,8 @@ import <- drive_download(as_id("https://drive.google.com/file/d/1JmF3bjRA_sTaJZ4
 1
 const <- readRDS('constituencies')
 
+# polls <- polls %>%
+#   filter(., remark %in% c("CATI"))
 # polls <- polls %>% 
 #   filter(., org!="Social Changes") %>%
 #   filter(., org!="CBOS") %>%
