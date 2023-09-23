@@ -50,12 +50,12 @@ const <- readRDS('constituencies')
 
 
 #####Enter party support and weight by constituency#####
-PiS_raw <- 32
-KO_raw <- 35
-`Polska 2050_raw` <- 7
-Konf_raw <- 14
-Lewica_raw <- 8
-Other_raw <- 4
+PiS_raw <- 42
+KO_raw <- 32
+`Polska 2050_raw` <- 11
+Konf_raw <- 4
+Lewica_raw <- 9
+Other_raw <- 2
 Undecided_raw <- 0
 
 PiS <- rnorm(1000, (PiS_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
@@ -68,7 +68,8 @@ MN <- rnorm(1000, mean=7.9, sd=0.00001)
 plotdraws <- tibble(PiS, `Polska 2050`, KO, Konfederacja, Lewica, MN)
 plotdraws <- plotdraws %>%
   mutate(`Polska 2050` = ifelse(median(`Polska 2050`)<8, 0, `Polska 2050`),
-         Lewica = ifelse(median(Lewica)<5, 0, Lewica)
+         Lewica = ifelse(median(Lewica)<5, 0, Lewica),
+         Konfederacja = ifelse(median(Konfederacja)<5, 0, Konfederacja),
   )
 consts <- uncount(tibble(plotdraws), 41, .id="okreg")
 
@@ -420,17 +421,17 @@ plot_seats_p2050_psl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)
   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
   scale_y_continuous('Liczba miejsc', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
   scale_fill_manual(name="Party", values = cols)+
-  geom_label(aes(x=2, y=231), label="Większość ustawodawcza", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
-  geom_label(aes(x=2, y=276), label="Większość pozwalająca obalić weto prezydenta", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
-  geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
+  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
+  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
+  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="IBM Plex Sans Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="IBM Plex Sans Condensed Light") +
-  labs(x="", y="", title="Rozkład mandatów w Sejmie jeśli KO wyprzedzi PiS, a Trzecia Droga nie wejdzie do parlamentu",
-       subtitle="(95%-owy przedział wiarygodności)",
+  labs(x="", y="", title="If KO draws level with PiS",
+       subtitle="",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots()
 ggsave(plot_seats_p2050_psl, file = "plot_seats_p2050_psl.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 9, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
 
 
 library(tidybayes)
