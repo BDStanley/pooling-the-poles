@@ -50,19 +50,19 @@ const <- readRDS('constituencies')
 
 
 #####Enter party support and weight by constituency#####
-PiS_raw <- 42
-KO_raw <- 32
-`Polska 2050_raw` <- 11
-Konf_raw <- 4
+PiS_raw <- 39
+KO_raw <- 31
+`Polska 2050_raw` <- 9
+Konf_raw <- 10
 Lewica_raw <- 9
 Other_raw <- 2
 Undecided_raw <- 0
 
-PiS <- rnorm(1000, (PiS_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
-KO <- rnorm(1000, (KO_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
-`Polska 2050` <- rnorm(1000, (`Polska 2050_raw`/(100-Other_raw-Undecided_raw))*100, sd=1)
-Konfederacja <- rnorm(1000, (Konf_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
-Lewica <- rnorm(1000, (Lewica_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
+PiS <- rnorm(1000, (PiS_raw/(100-Undecided_raw))*100, sd=1)
+KO <- rnorm(1000, (KO_raw/(100-Undecided_raw))*100, sd=1)
+`Polska 2050` <- rnorm(1000, (`Polska 2050_raw`/(100-Undecided_raw))*100, sd=1)
+Konfederacja <- rnorm(1000, (Konf_raw/(100-Undecided_raw))*100, sd=1)
+Lewica <- rnorm(1000, (Lewica_raw/(100-Undecided_raw))*100, sd=1)
 MN <- rnorm(1000, mean=7.9, sd=0.00001)
 
 plotdraws <- tibble(PiS, `Polska 2050`, KO, Konfederacja, Lewica, MN)
@@ -426,7 +426,7 @@ plot_seats_p2050_psl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)
   geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="IBM Plex Sans Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="IBM Plex Sans Condensed Light") +
-  labs(x="", y="", title="If KO draws level with PiS",
+  labs(x="", y="", title="Jeżeli KO zrówna się z PiS",
        subtitle="",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots()
