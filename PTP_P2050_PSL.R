@@ -50,7 +50,7 @@ options(mc.cores = parallel::detectCores())
 library(googledrive)
 library(rio)
 library(readxl)
-
+drive_deauth()
 import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1aI_JqiQuuO0WmzkMBzSZvufrf-XGr-vmNddDCadGi7Q/edit?usp=sharing"), overwrite=TRUE)
 1
 polls_old <- read_excel('polldata_gs.xlsx')
