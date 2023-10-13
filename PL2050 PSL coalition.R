@@ -50,13 +50,13 @@ const <- readRDS('constituencies')
 
 
 #####Enter party support and weight by constituency#####
-PiS_raw <- 35
-KO_raw <- 22
-`Polska 2050_raw` <- 6
-Konf_raw <- 6
-Lewica_raw <-5
-Other_raw <- 2
-Undecided_raw <- 24
+PiS_raw <- 36
+KO_raw <- 31
+`Polska 2050_raw` <- 10
+Konf_raw <- 9
+Lewica_raw <-10
+Other_raw <- 4
+Undecided_raw <- 0
 
 PiS <- rnorm(1000, (PiS_raw/(100-Undecided_raw))*100, sd=1)
 KO <- rnorm(1000, (KO_raw/(100-Undecided_raw))*100, sd=1)
