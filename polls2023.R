@@ -53,17 +53,15 @@ library(readxl)
 library(sf)
 
 drive_deauth()
-import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1aI_JqiQuuO0WmzkMBzSZvufrf-XGr-vmNddDCadGi7Q/edit?usp=sharing"), overwrite=TRUE)
+import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1KtOZ4s-YDw5gyC8UcyGe8Y_FFd7dRaLI2pLuywP9wlk/edit?usp=sharing"), overwrite=TRUE)
 polls <- read_excel('polldata_2023.xlsx')
 
 polls <- polls %>%
   select(startDate, endDate, org, remark, PiS, KO, Lewica, TD, Konfederacja, Other, DK)
 
 weights <- read_excel('2023_elec_percentages.xlsx')
-const <- sf_read('GRED_20190215_Poland_2011.shp')
+const <- st_read('GRED_20190215_Poland_2011.shp')
 
-# polls <- polls %>%
-#   filter(., remark %in% c("CATI"))
 polls <- polls %>%
   filter(., org!="CBOS") 
 polls <- unite(polls, org, remark, col="org", sep="_")
@@ -76,12 +74,11 @@ polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
-  filter(midDate >= as.Date('2023-01-01')) %>%
-  #filter(midDate_int > (max(midDate_int)-365)) %>%
+  filter(midDate >= as.Date('2023-06-01')) %>%
   mutate(PiS = 100/((100-DK))*PiS,
          KO = 100/((100-DK))*KO,
          Lewica = 100/((100-DK))*Lewica,
-         PO2050PSL = 100/((100-DK))*PO2050PSL,
+         TD = 100/((100-DK))*TD,
          Konfederacja = 100/((100-DK))*Konfederacja,
          Other = 100/((100-DK))*Other,
          time = as.integer(difftime(midDate, min(midDate), units = "days")),
@@ -107,20 +104,19 @@ polls <-
   polls %>%
   mutate(time = interval(min(midDate), midDate)/years(1))
 
-polls[names(polls) %in% c("PiS", "KO", "Lewica", "Konfederacja", "PO2050PSL")] <-
-  polls[names(polls) %in% c("PiS", "KO", "Lewica", "Konfederacja", "PO2050PSL")] %>%
+polls[names(polls) %in% c("PiS", "KO", "Lewica", "Konfederacja", "TD")] <-
+  polls[names(polls) %in% c("PiS", "KO", "Lewica", "Konfederacja", "TD")] %>%
   mutate_all(function(x) (as.numeric(str_remove(x, "%"))/100)-0.001)
 
 polls <-
   polls %>%
-  mutate(Other = 1 - (PiS + KO + Lewica + Konfederacja + PO2050PSL))
+  mutate(Other = 1 - (PiS + KO + Lewica + Konfederacja + TD))
 
 polls <-
   polls %>%
   mutate(
-    outcome = as.matrix(polls[names(polls) %in% c("PiS", "KO", "Lewica", "PO2050PSL", "Konfederacja", "Other")])
+    outcome = as.matrix(polls[names(polls) %in% c("PiS", "KO", "Lewica", "TD", "Konfederacja", "Other")])
   )
-
 
 
 #####Run model#####
@@ -141,10 +137,10 @@ m1 <-
         prior(normal(0, 0.5), class = "b", dpar = "muLewica") +
         prior(exponential(2), class = "sd", dpar = "muLewica") +
         prior(exponential(2), class = "sds", dpar = "muLewica") +
-        prior(normal(0, 1.5), class = "Intercept", dpar = "muPO2050PSL") +
-        prior(normal(0, 0.5), class = "b", dpar = "muPO2050PSL") +
-        prior(exponential(2), class = "sd", dpar = "muPO2050PSL") +
-        prior(exponential(2), class = "sds", dpar = "muPO2050PSL") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muTD") +
+        prior(normal(0, 0.5), class = "b", dpar = "muTD") +
+        prior(exponential(2), class = "sd", dpar = "muTD") +
+        prior(exponential(2), class = "sds", dpar = "muTD") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muKonfederacja") +
         prior(normal(0, 0.5), class = "b", dpar = "muKonfederacja") +
         prior(exponential(2), class = "sd", dpar = "muKonfederacja") +
@@ -170,13 +166,6 @@ library(tidybayes)
 
 today <- interval(min(polls$midDate), Sys.Date())/years(1)
 
-# time <- seq(0, today, length.out = nrow(polls))
-# 
-# pred_dta <- polls %>%  
-#   modelr::data_grid(time, date = as.Date(time*365, origin=min(polls$midDate)),
-#                     pollster = pollster) %>% 
-#   add_fitted_draws(m1, re_formula = NA)
-
 pred_dta <-
   tibble(
     time = seq(0, today, length.out = nrow(polls)),
@@ -195,13 +184,13 @@ pred_dta <-
     party =
       party %>%
       factor(
-        levels = c("PiS", "KO", "PO2050PSL", "Lewica", "Konfederacja", "Other"),
+        levels = c("PiS", "KO", "TD", "Lewica", "Konfederacja", "Other"),
         labels = c("PiS", "KO", "Trzecia Droga", "Lewica", "Konfederacja", "Other")
       )
   )
 
 point_dta <-
-  polls[names(polls) %in% c("midDate", "PiS", "KO", "Lewica", "Konfederacja", "Other", "PO2050PSL")] %>%
+  polls[names(polls) %in% c("midDate", "PiS", "KO", "Lewica", "Konfederacja", "Other", "TD")] %>%
   pivot_longer(
     cols = -midDate,
     names_to = "party",
@@ -211,7 +200,7 @@ point_dta <-
     party =
       party %>%
       factor(
-        levels = c("PiS", "KO", "PO2050PSL", "Lewica", "Konfederacja", "Other"),
+        levels = c("PiS", "KO", "TD", "Lewica", "Konfederacja", "Other"),
         labels = c("PiS", "KO", "Trzecia Droga", "Lewica", "Konfederacja", "Other")
       )
   )
@@ -233,33 +222,33 @@ plot_trends_parl <-
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()
 ggsave(plot_trends_parl, file = "plot_trends_parl.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
 library(ggdist)
 library(ggblend)
 
-# trends_blend <- pred_dta %>%
-#   ggplot(aes(x = date, color=party, fill=party)) +
-#   ggdist::stat_lineribbon(
-#     aes(y = .value, fill_ramp = stat(.width)),
-#     .width = ppoints(100)
-#   ) |> partition(vars(party)) |> blend("multiply") +
-#   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
-#   scale_color_manual(values=cols) +
-#   scale_fill_manual(values=cols, guide=FALSE) +
-#   ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
-#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-#   scale_x_date(date_breaks = "1 month",
-#                labels = my_date_format()) +
-#   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-#                   ylim = c(0, .5)) +
-#   labs(y = "", x="", title = "Trends",
-#        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-#   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-#   theme_plots()
-# 
-# ggsave(trends_blend, file = "trends_blend.pdf",
-#        width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white", device=cairo_pdf)
+trends_blend <- pred_dta %>%
+  ggplot(aes(x = date, color=party, fill=party)) +
+  ggdist::stat_lineribbon(
+    aes(y = .value, fill_ramp = stat(.width)),
+    .width = ppoints(100)
+  ) |> partition(vars(party)) |> blend("multiply") +
+  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_date(date_breaks = "1 month",
+               labels = my_date_format()) +
+  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+                  ylim = c(0, .5)) +
+  labs(y = "", x="", title = "Trends",
+       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+  theme_plots()
+
+ggsave(trends_blend, file = "trends_blend.pdf",
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white", device=cairo_pdf)
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
 plot_trends_parl_PL <-
@@ -279,7 +268,7 @@ plot_trends_parl_PL <-
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()
 ggsave(plot_trends_parl_PL, file = "plot_trends_parl_PL.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
 #####Latest plot#####
@@ -291,7 +280,7 @@ plotdraws <- add_fitted_draws(
 ) %>%
   group_by(.category) %>%
   mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PO2050PSL"),
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "Trzecia Droga")))
 
 medians <- plotdraws %>%
@@ -321,7 +310,7 @@ plot_latest_parl <-
   ) %>%
   group_by(.category) %>%
   mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PO2050PSL"),
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "Trzecia Droga"))) %>%
   ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
              x=.value, color=.category)) +
@@ -359,7 +348,7 @@ plot_latest_parl <-
        subtitle=str_c("Data from ", names,".")) +
   theme_plots()
 ggsave(plot_latest_parl, file = "polls_latest_parl.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
 plot_latest_parl_PL <-
@@ -371,7 +360,7 @@ plot_latest_parl_PL <-
   ) %>%
   group_by(.category) %>%
   mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PO2050PSL"),
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "Trzecia Droga"))) %>%
   ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
              x=.value, color=.category)) +
@@ -409,15 +398,12 @@ plot_latest_parl_PL <-
        subtitle=str_c("Dane: ", names_PL,".")) +
   theme_plots()
 ggsave(plot_latest_parl_PL, file = "polls_latest_parl_PL.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
 
 #####Seat maps#####
 library(seatdist)
-library(maptools) 
-library(rgeos) 
-#library(gpclib)
 
 median_PiS <- ifelse(medians$est[medians$.category=="PiS"] >=5, medians$est[medians$.category=="PiS"], 0)
 median_KO <- ifelse(medians$est[medians$.category=="KO"] >=5, medians$est[medians$.category=="KO"], 0)
@@ -428,13 +414,13 @@ PiSpct <- round(weights$PiScoef*median_PiS, digits=2)
 KOpct <- round(weights$KOcoef*median_KO, digits=2)
 Lewicapct <- round(weights$Lewicacoef*median_Lewica, digits=2)
 Konfederacjapct <- round(weights$Konfcoef*median_Konfederacja, digits=2)
-`Trzecia Drogapct` <- round(weights$PSLcoef*`median_Trzecia Droga`, digits=2)
-MNpct <- c(0.17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7.90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+TDpct <- round(weights$TDcoef*`median_Trzecia Droga`, digits=2)
+MNpct <- c(0.12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5.37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 KOest <- (weights$validvotes/100)*KOpct
 PiSest <- (weights$validvotes/100)*PiSpct
 Lewicaest <- (weights$validvotes/100)*Lewicapct
 Konfederacjaest <- (weights$validvotes/100)*Konfederacjapct
-`Trzecia Drogaest` <- (weights$validvotes/100)*`Trzecia Drogapct`
+`Trzecia Drogaest` <- (weights$validvotes/100)*TDpct
 MNest <- (weights$validvotes/100)*MNpct
 poldHondt <- data.frame(KO=rep(1,42), Konfederacja=rep(1,42), Lewica=rep(1,42),  MN=rep(1,42), PiS=rep(1,42), `Trzecia Droga`=rep(1,42))
 
@@ -455,216 +441,124 @@ seats$PiSKO <-abs(seats$PiS-seats$KO)
 seats$PiSmKO <- seats$PiS-seats$KO
 
 #regional maps
-const@data$id = rownames(const@data)
-const.points = fortify(const, region="id")
-const.df = full_join(const.points, const@data, by="id")
-const.df$con[const.df$id==0] <- 13
-const.df$con[const.df$id==1] <- 12
-const.df$con[const.df$id==2] <- 14
-const.df$con[const.df$id==3] <- 15
-const.df$con[const.df$id==4] <- 3
-const.df$con[const.df$id==5] <- 2
-const.df$con[const.df$id==6] <- 1
-const.df$con[const.df$id==7] <- 11
-const.df$con[const.df$id==8] <- 9
-const.df$con[const.df$id==9] <- 10
-const.df$con[const.df$id==10] <- 33
-const.df$con[const.df$id==11] <- 37
-const.df$con[const.df$id==12] <- 38
-const.df$con[const.df$id==13] <- 36
-const.df$con[const.df$id==14] <- 39
-const.df$con[const.df$id==15] <- 4
-const.df$con[const.df$id==16] <- 5
-const.df$con[const.df$id==17] <- 6
-const.df$con[const.df$id==18] <- 7
-const.df$con[const.df$id==19] <- 8
-const.df$con[const.df$id==20] <- 18
-const.df$con[const.df$id==21] <- 16
-const.df$con[const.df$id==22] <- 17
-const.df$con[const.df$id==23] <- 20
-const.df$con[const.df$id==24] <- 19
-const.df$con[const.df$id==25] <- 21
-const.df$con[const.df$id==26] <- 24
-const.df$con[const.df$id==27] <- 26
-const.df$con[const.df$id==28] <- 25
-const.df$con[const.df$id==29] <- 30
-const.df$con[const.df$id==30] <- 31
-const.df$con[const.df$id==31] <- 27
-const.df$con[const.df$id==32] <- 32
-const.df$con[const.df$id==33] <- 29
-const.df$con[const.df$id==34] <- 28
-const.df$con[const.df$id==35] <- 23
-const.df$con[const.df$id==36] <- 22
-const.df$con[const.df$id==37] <- 34
-const.df$con[const.df$id==38] <- 35
-const.df$con[const.df$id==39] <- 41
-const.df$con[const.df$id==40] <- 40
+const$id <- 0
+const$id[const$cst==1] <- 24
+const$id[const$cst==2] <- 27
+const$id[const$cst==3] <- 4
+const$id[const$cst==4] <- 7
+const$id[const$cst==5] <- 28
+const$id[const$cst==6] <- 34
+const$id[const$cst==7] <- 25
+const$id[const$cst==8] <- 26
+const$id[const$cst==9] <- 29
+const$id[const$cst==10] <- 36
+const$id[const$cst==11] <- 31
+const$id[const$cst==12] <- 33
+const$id[const$cst==13] <- 37
+const$id[const$cst==14] <- 40
+const$id[const$cst==15] <- 13
+const$id[const$cst==16] <- 12
+const$id[const$cst==17] <- 22
+const$id[const$cst==18] <- 1
+const$id[const$cst==19] <- 6
+const$id[const$cst==20] <- 14
+const$id[const$cst==21] <- 35
+const$id[const$cst==22] <- 21
+const$id[const$cst==23] <- 10
+const$id[const$cst==24] <- 38
+const$id[const$cst==25] <- 39
+const$id[const$cst==26] <- 16
+const$id[const$cst==27] <- 17
+const$id[const$cst==28] <- 30
+const$id[const$cst==29] <- 23
+const$id[const$cst==30] <- 18
+const$id[const$cst==31] <- 11
+const$id[const$cst==32] <- 32
+const$id[const$cst==33] <- 41
+const$id[const$cst==34] <- 15
+const$id[const$cst==35] <- 5
+const$id[const$cst==36] <- 19
+const$id[const$cst==37] <- 20
+const$id[const$cst==38] <- 2
+const$id[const$cst==39] <- 3
+const$id[const$cst==40] <- 8
+const$id[const$cst==41] <- 9
 
-label_points <- coordinates(const)
-colnames(label_points) <- c("x","y")
-label_points <- data.frame(label_points)
-seats$label_point_x[seats$id==12] <- label_points$x[2]
-seats$label_point_y[seats$id==12] <- label_points$y[2]
-seats$label_point_x[seats$id==13] <- label_points$x[1]
-seats$label_point_y[seats$id==13] <- label_points$y[1]
-seats$label_point_x[seats$id==14] <- label_points$x[3]
-seats$label_point_y[seats$id==14] <- label_points$y[3]
-seats$label_point_x[seats$id==15] <- label_points$x[4]
-seats$label_point_y[seats$id==15] <- label_points$y[4]
-seats$label_point_x[seats$id==3] <- label_points$x[5]
-seats$label_point_y[seats$id==3] <- label_points$y[5]
-seats$label_point_x[seats$id==2] <- label_points$x[6]
-seats$label_point_y[seats$id==2] <- label_points$y[6]
-seats$label_point_x[seats$id==1] <- label_points$x[7]
-seats$label_point_y[seats$id==1] <- label_points$y[7]
-seats$label_point_x[seats$id==11] <- label_points$x[8]
-seats$label_point_y[seats$id==11] <- label_points$y[8]
-seats$label_point_x[seats$id==9] <- label_points$x[9]
-seats$label_point_y[seats$id==9] <- label_points$y[9]
-seats$label_point_x[seats$id==10] <- label_points$x[10]
-seats$label_point_y[seats$id==10] <- label_points$y[10]
-seats$label_point_x[seats$id==33] <- label_points$x[11]
-seats$label_point_y[seats$id==33] <- label_points$y[11]
-seats$label_point_x[seats$id==37] <- label_points$x[12]
-seats$label_point_y[seats$id==37] <- label_points$y[12]
-seats$label_point_x[seats$id==38] <- label_points$x[13]
-seats$label_point_y[seats$id==38] <- label_points$y[13]
-seats$label_point_x[seats$id==36] <- label_points$x[14]
-seats$label_point_y[seats$id==36] <- label_points$y[14]
-seats$label_point_x[seats$id==39] <- label_points$x[15]
-seats$label_point_y[seats$id==39] <- label_points$y[15]
-seats$label_point_x[seats$id==4] <- label_points$x[16]
-seats$label_point_y[seats$id==4] <- label_points$y[16]
-seats$label_point_x[seats$id==5] <- label_points$x[17]
-seats$label_point_y[seats$id==5] <- label_points$y[17]
-seats$label_point_x[seats$id==6] <- label_points$x[18]
-seats$label_point_y[seats$id==6] <- label_points$y[18]
-seats$label_point_x[seats$id==7] <- label_points$x[19]+0.2
-seats$label_point_y[seats$id==7] <- label_points$y[19]
-seats$label_point_x[seats$id==8] <- label_points$x[20]+0.2
-seats$label_point_y[seats$id==8] <- label_points$y[20]
-seats$label_point_x[seats$id==18] <- label_points$x[21]+0.2
-seats$label_point_y[seats$id==18] <- label_points$y[21]
-seats$label_point_x[seats$id==16] <- label_points$x[22]
-seats$label_point_y[seats$id==16] <- label_points$y[22]
-seats$label_point_x[seats$id==17] <- label_points$x[23]
-seats$label_point_y[seats$id==17] <- label_points$y[23]
-seats$label_point_x[seats$id==20] <- label_points$x[24]-0.4
-seats$label_point_y[seats$id==20] <- label_points$y[24]
-seats$label_point_x[seats$id==19] <- label_points$x[25]
-seats$label_point_y[seats$id==19] <- label_points$y[25]
-seats$label_point_x[seats$id==21] <- label_points$x[26]
-seats$label_point_y[seats$id==21] <- label_points$y[26]
-seats$label_point_x[seats$id==24] <- label_points$x[27]
-seats$label_point_y[seats$id==24] <- label_points$y[27]
-seats$label_point_x[seats$id==26] <- label_points$x[28]
-seats$label_point_y[seats$id==26] <- label_points$y[28]
-seats$label_point_x[seats$id==25] <- label_points$x[29]
-seats$label_point_y[seats$id==25] <- label_points$y[29]
-seats$label_point_x[seats$id==30] <- label_points$x[30]
-seats$label_point_y[seats$id==30] <- label_points$y[30]
-seats$label_point_x[seats$id==31] <- label_points$x[31]
-seats$label_point_y[seats$id==31] <- label_points$y[31]
-seats$label_point_x[seats$id==27] <- label_points$x[32]
-seats$label_point_y[seats$id==27] <- label_points$y[32]
-seats$label_point_x[seats$id==32] <- label_points$x[33]
-seats$label_point_y[seats$id==32] <- label_points$y[33]
-seats$label_point_x[seats$id==29] <- label_points$x[34]
-seats$label_point_y[seats$id==29] <- label_points$y[34]
-seats$label_point_x[seats$id==28] <- label_points$x[35]
-seats$label_point_y[seats$id==28] <- label_points$y[35]
-seats$label_point_x[seats$id==23] <- label_points$x[36]
-seats$label_point_y[seats$id==23] <- label_points$y[36]
-seats$label_point_x[seats$id==22] <- label_points$x[37]+0.1
-seats$label_point_y[seats$id==22] <- label_points$y[37]
-seats$label_point_x[seats$id==34] <- label_points$x[38]
-seats$label_point_y[seats$id==34] <- label_points$y[38]
-seats$label_point_x[seats$id==35] <- label_points$x[39]
-seats$label_point_y[seats$id==35] <- label_points$y[39]
-seats$label_point_x[seats$id==41] <- label_points$x[40]
-seats$label_point_y[seats$id==41] <- label_points$y[40]
-seats$label_point_x[seats$id==40] <- label_points$x[41]
-seats$label_point_y[seats$id==40] <- label_points$y[41]
+label_points <- st_point_on_surface(const) %>%
+  arrange(., id)
+label_points <- st_coordinates(label_points) %>%
+  as_tibble() %>%
+  mutate(id = 1:n())
+colnames(label_points) <- c("x","y","id")
 
-const.df$id <- const.df$con
-plotdata <- merge(const.df,seats,by="id")
+plotdata <- merge(const, seats, by="id")
+plotdata <- merge(plotdata, label_points, by="id")
 
-p_p2050 <- ggplot(plotdata) + 
-  aes(long,lat,group=group,fill=as.integer(`Trzecia Droga`)) + 
-  geom_polygon() +
-  geom_path(color="black") +
+p_TD <- ggplot(plotdata)+
+  geom_sf(aes(fill=as.integer(`Trzecia Droga`)))+
   theme(aspect.ratio=1) +
   scale_fill_gradient(name="Trzecia Droga", limits=c(min=0, max=20), low = "white", high = "darkgreen", guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=`Trzecia Droga`, label=`Trzecia Droga`), fill="white") +
-  labs(title="Constituency-level share of seats for Trzecia Droga", subtitle="Seat distribution reflects regional levels of support for PSL in 2019", 
+  geom_label(aes(x=x, y=y, group=`Trzecia Droga`, label=`Trzecia Droga`), fill="white") +
+  labs(title="Constituency-level share of seats for Trzecia Droga", subtitle="Seat distribution reflects regional levels of support at October 2023 election", 
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots_map()
-ggsave(p_p2050, file = "Polska_2050-PSL_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
+ggsave(p_TD, file = "TD_seats.png", 
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
-p_lewica <- ggplot(plotdata) + 
-  aes(long,lat,group=group,fill=as.integer(Lewica)) + 
-  geom_polygon() +
-  geom_path(color="black") +
+p_lewica <- ggplot(plotdata)+
+  geom_sf(aes(fill=as.integer(Lewica)))+
   theme(aspect.ratio=1) +
+  geom_label(aes(x=x, y=y, group=Lewica, label=Lewica), fill="white") +
   scale_fill_gradient(name="Lewica", limits=c(min=0, max=20), low = "white", high = "red", guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=Lewica, label=Lewica), fill="white") +
-  labs(title="Constituency-level share of seats for Lewica", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
+  labs(title="Constituency-level share of seats for Lewica", subtitle="Seat distribution reflects regional levels of support at October 2023 election", 
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots_map()
 ggsave(p_lewica, file = "Lewica_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
-p_pis <- ggplot(plotdata) + 
-  aes(long,lat,group=group,fill=as.integer(PiS)) + 
-  geom_polygon() +
-  geom_path(color="black") +
+p_pis <- ggplot(plotdata)+
+  geom_sf(aes(fill=as.integer(PiS)))+
   theme(aspect.ratio=1) +
+  geom_label(aes(x=x, y=y, group=PiS, label=PiS), fill="white") +
   scale_fill_gradient(name="PiS", limits=c(min=0, max=20), low = "white", high = "blue", guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiS, label=PiS), fill="white") +
-  labs(title="Constituency-level share of seats for PiS", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
+  labs(title="Constituency-level share of seats for PiS", subtitle="Seat distribution reflects regional levels of support at October 2023 election", 
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots_map()
 ggsave(p_pis, file = "PiS_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
-p_ko <- ggplot(plotdata) + 
-  aes(long,lat,group=group,fill=as.integer(KO)) + 
-  geom_polygon() +
-  geom_path(color="black") +
+p_ko <- ggplot(plotdata)+
+  geom_sf(aes(fill=as.integer(KO)))+
   theme(aspect.ratio=1) +
+  geom_label(aes(x=x, y=y, group=KO, label=KO), fill="white") +
   scale_fill_gradient(name="KO", limits=c(min=0, max=20), low = "white", high = "orange", guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=KO, label=KO), fill="white") +
   labs(title="Constituency-level share of seats for Koalicja Obywatelska", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots_map()
 ggsave(p_ko, file = "KO_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
-p_konf <- ggplot(plotdata) + 
-  aes(long,lat,group=group,fill=as.integer(Konfederacja)) + 
-  geom_polygon() +
-  geom_path(color="black") +
+p_konf <- ggplot(plotdata)+
+  geom_sf(aes(fill=as.integer(Konfederacja)))+
   theme(aspect.ratio=1) +
+  geom_label(aes(x=x, y=y, group=Konfederacja, label=Konfederacja), fill="white") +
   scale_fill_gradient(name="Konfederacja", limits=c(min=0, max=20), low = "white", high = "midnightblue", guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=Konfederacja, label=Konfederacja), fill="white") +
   labs(title="Constituency-level share of seats for Konfederacja", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
        caption = "Ben Stanley (@BDStanley; benstanley.pl).")+
   theme_plots_map()
 ggsave(p_konf, file = "Konf_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
-p_pis_ko <- ggplot(plotdata) + 
-  aes(long,lat,group=group,fill=as.integer(PiSmKO)) + 
-  geom_polygon() +
-  geom_path(color="black") +
+p_pis_ko <- ggplot(plotdata)+
+  geom_sf(aes(fill=as.integer(PiSmKO)))+
+  theme(aspect.ratio=1) +
+  geom_label(aes(x=x, y=y, group=PiSmKO, label=PiSmKO), fill="white") +
   scale_fill_gradient2(name="PiSKO", limits=c(min=-20, max=20), low = "orange", mid="white", high = "blue", midpoint=0, guide="colorbar") +
-  geom_label(seats, mapping = aes(x=label_point_x, y=label_point_y, group=PiSKO, label=PiSKO), fill="white") +
   labs(title="Constituency-level differences in share of seats for PiS and Koalicja Obywatelska", subtitle="Constituencies in shades of blue have more PiS MPs; constituencies in orange have more KO MPs", 
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots_map()
 ggsave(p_pis_ko, file = "PiSKO_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
 
 #####Seats plot#####
@@ -678,7 +572,7 @@ plotdraws <- add_fitted_draws(
   mutate(.draw = c(1:1000)) %>%
   group_by(.category, .draw) %>%
   mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "PO2050PSL"),
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL", "TD"),
                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PSL","Trzecia Droga")))
 
 plotdraws <- plotdraws %>%
@@ -825,47 +719,47 @@ consts <- consts %>%
                  okreg==40 ~ (weights$validvotes[weights$okreg==40])*KO*weights$KOcoef[weights$okreg==40],
                  okreg==41 ~ (weights$validvotes[weights$okreg==41])*KO*weights$KOcoef[weights$okreg==41]
   ),
-  `Trzecia Droga` = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==1],
-                              okreg==2 ~ (weights$validvotes[weights$okreg==2])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==2],
-                              okreg==3 ~ (weights$validvotes[weights$okreg==3])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==3],
-                              okreg==4 ~ (weights$validvotes[weights$okreg==4])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==4],
-                              okreg==5 ~ (weights$validvotes[weights$okreg==5])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==5],
-                              okreg==6 ~ (weights$validvotes[weights$okreg==6])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==6],
-                              okreg==7 ~ (weights$validvotes[weights$okreg==7])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==7],
-                              okreg==8 ~ (weights$validvotes[weights$okreg==8])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==8],
-                              okreg==9 ~ (weights$validvotes[weights$okreg==9])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==9],
-                              okreg==10 ~ (weights$validvotes[weights$okreg==10])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==10],
-                              okreg==11 ~ (weights$validvotes[weights$okreg==11])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==11],
-                              okreg==12 ~ (weights$validvotes[weights$okreg==12])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==12],
-                              okreg==13 ~ (weights$validvotes[weights$okreg==13])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==13],
-                              okreg==14 ~ (weights$validvotes[weights$okreg==14])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==14],
-                              okreg==15 ~ (weights$validvotes[weights$okreg==15])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==15],
-                              okreg==16 ~ (weights$validvotes[weights$okreg==16])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==16],
-                              okreg==17 ~ (weights$validvotes[weights$okreg==17])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==17],
-                              okreg==18 ~ (weights$validvotes[weights$okreg==18])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==18],
-                              okreg==19 ~ (weights$validvotes[weights$okreg==19])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==19],
-                              okreg==20 ~ (weights$validvotes[weights$okreg==20])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==20],
-                              okreg==21 ~ (weights$validvotes[weights$okreg==21])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==21],
-                              okreg==22 ~ (weights$validvotes[weights$okreg==22])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==22],
-                              okreg==23 ~ (weights$validvotes[weights$okreg==23])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==23],
-                              okreg==24 ~ (weights$validvotes[weights$okreg==24])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==24],
-                              okreg==25 ~ (weights$validvotes[weights$okreg==25])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==25],
-                              okreg==26 ~ (weights$validvotes[weights$okreg==26])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==26],
-                              okreg==27 ~ (weights$validvotes[weights$okreg==27])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==27],
-                              okreg==28 ~ (weights$validvotes[weights$okreg==28])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==28],
-                              okreg==29 ~ (weights$validvotes[weights$okreg==29])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==29],
-                              okreg==30 ~ (weights$validvotes[weights$okreg==30])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==30],
-                              okreg==31 ~ (weights$validvotes[weights$okreg==31])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==31],
-                              okreg==32 ~ (weights$validvotes[weights$okreg==32])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==32],
-                              okreg==33 ~ (weights$validvotes[weights$okreg==33])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==33],
-                              okreg==34 ~ (weights$validvotes[weights$okreg==34])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==34],
-                              okreg==35 ~ (weights$validvotes[weights$okreg==35])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==35],
-                              okreg==36 ~ (weights$validvotes[weights$okreg==36])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==36],
-                              okreg==37 ~ (weights$validvotes[weights$okreg==37])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==37],
-                              okreg==38 ~ (weights$validvotes[weights$okreg==38])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==38],
-                              okreg==39 ~ (weights$validvotes[weights$okreg==39])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==39],
-                              okreg==40 ~ (weights$validvotes[weights$okreg==40])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==40],
-                              okreg==41 ~ (weights$validvotes[weights$okreg==41])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==41]
+  `Trzecia Droga` = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*`Trzecia Droga`*weights$TDcoef[weights$okreg==1],
+                              okreg==2 ~ (weights$validvotes[weights$okreg==2])*`Trzecia Droga`*weights$TDcoef[weights$okreg==2],
+                              okreg==3 ~ (weights$validvotes[weights$okreg==3])*`Trzecia Droga`*weights$TDcoef[weights$okreg==3],
+                              okreg==4 ~ (weights$validvotes[weights$okreg==4])*`Trzecia Droga`*weights$TDcoef[weights$okreg==4],
+                              okreg==5 ~ (weights$validvotes[weights$okreg==5])*`Trzecia Droga`*weights$TDcoef[weights$okreg==5],
+                              okreg==6 ~ (weights$validvotes[weights$okreg==6])*`Trzecia Droga`*weights$TDcoef[weights$okreg==6],
+                              okreg==7 ~ (weights$validvotes[weights$okreg==7])*`Trzecia Droga`*weights$TDcoef[weights$okreg==7],
+                              okreg==8 ~ (weights$validvotes[weights$okreg==8])*`Trzecia Droga`*weights$TDcoef[weights$okreg==8],
+                              okreg==9 ~ (weights$validvotes[weights$okreg==9])*`Trzecia Droga`*weights$TDcoef[weights$okreg==9],
+                              okreg==10 ~ (weights$validvotes[weights$okreg==10])*`Trzecia Droga`*weights$TDcoef[weights$okreg==10],
+                              okreg==11 ~ (weights$validvotes[weights$okreg==11])*`Trzecia Droga`*weights$TDcoef[weights$okreg==11],
+                              okreg==12 ~ (weights$validvotes[weights$okreg==12])*`Trzecia Droga`*weights$TDcoef[weights$okreg==12],
+                              okreg==13 ~ (weights$validvotes[weights$okreg==13])*`Trzecia Droga`*weights$TDcoef[weights$okreg==13],
+                              okreg==14 ~ (weights$validvotes[weights$okreg==14])*`Trzecia Droga`*weights$TDcoef[weights$okreg==14],
+                              okreg==15 ~ (weights$validvotes[weights$okreg==15])*`Trzecia Droga`*weights$TDcoef[weights$okreg==15],
+                              okreg==16 ~ (weights$validvotes[weights$okreg==16])*`Trzecia Droga`*weights$TDcoef[weights$okreg==16],
+                              okreg==17 ~ (weights$validvotes[weights$okreg==17])*`Trzecia Droga`*weights$TDcoef[weights$okreg==17],
+                              okreg==18 ~ (weights$validvotes[weights$okreg==18])*`Trzecia Droga`*weights$TDcoef[weights$okreg==18],
+                              okreg==19 ~ (weights$validvotes[weights$okreg==19])*`Trzecia Droga`*weights$TDcoef[weights$okreg==19],
+                              okreg==20 ~ (weights$validvotes[weights$okreg==20])*`Trzecia Droga`*weights$TDcoef[weights$okreg==20],
+                              okreg==21 ~ (weights$validvotes[weights$okreg==21])*`Trzecia Droga`*weights$TDcoef[weights$okreg==21],
+                              okreg==22 ~ (weights$validvotes[weights$okreg==22])*`Trzecia Droga`*weights$TDcoef[weights$okreg==22],
+                              okreg==23 ~ (weights$validvotes[weights$okreg==23])*`Trzecia Droga`*weights$TDcoef[weights$okreg==23],
+                              okreg==24 ~ (weights$validvotes[weights$okreg==24])*`Trzecia Droga`*weights$TDcoef[weights$okreg==24],
+                              okreg==25 ~ (weights$validvotes[weights$okreg==25])*`Trzecia Droga`*weights$TDcoef[weights$okreg==25],
+                              okreg==26 ~ (weights$validvotes[weights$okreg==26])*`Trzecia Droga`*weights$TDcoef[weights$okreg==26],
+                              okreg==27 ~ (weights$validvotes[weights$okreg==27])*`Trzecia Droga`*weights$TDcoef[weights$okreg==27],
+                              okreg==28 ~ (weights$validvotes[weights$okreg==28])*`Trzecia Droga`*weights$TDcoef[weights$okreg==28],
+                              okreg==29 ~ (weights$validvotes[weights$okreg==29])*`Trzecia Droga`*weights$TDcoef[weights$okreg==29],
+                              okreg==30 ~ (weights$validvotes[weights$okreg==30])*`Trzecia Droga`*weights$TDcoef[weights$okreg==30],
+                              okreg==31 ~ (weights$validvotes[weights$okreg==31])*`Trzecia Droga`*weights$TDcoef[weights$okreg==31],
+                              okreg==32 ~ (weights$validvotes[weights$okreg==32])*`Trzecia Droga`*weights$TDcoef[weights$okreg==32],
+                              okreg==33 ~ (weights$validvotes[weights$okreg==33])*`Trzecia Droga`*weights$TDcoef[weights$okreg==33],
+                              okreg==34 ~ (weights$validvotes[weights$okreg==34])*`Trzecia Droga`*weights$TDcoef[weights$okreg==34],
+                              okreg==35 ~ (weights$validvotes[weights$okreg==35])*`Trzecia Droga`*weights$TDcoef[weights$okreg==35],
+                              okreg==36 ~ (weights$validvotes[weights$okreg==36])*`Trzecia Droga`*weights$TDcoef[weights$okreg==36],
+                              okreg==37 ~ (weights$validvotes[weights$okreg==37])*`Trzecia Droga`*weights$TDcoef[weights$okreg==37],
+                              okreg==38 ~ (weights$validvotes[weights$okreg==38])*`Trzecia Droga`*weights$TDcoef[weights$okreg==38],
+                              okreg==39 ~ (weights$validvotes[weights$okreg==39])*`Trzecia Droga`*weights$TDcoef[weights$okreg==39],
+                              okreg==40 ~ (weights$validvotes[weights$okreg==40])*`Trzecia Droga`*weights$TDcoef[weights$okreg==40],
+                              okreg==41 ~ (weights$validvotes[weights$okreg==41])*`Trzecia Droga`*weights$TDcoef[weights$okreg==41]
   ),
   Konfederacja = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*Konfederacja*weights$Konfcoef[weights$okreg==1],
                            okreg==2 ~ (weights$validvotes[weights$okreg==2])*Konfederacja*weights$Konfcoef[weights$okreg==2],
@@ -1051,7 +945,7 @@ plotdraws <- add_fitted_draws(
   mutate(.draw = c(1:1000)) %>%
   group_by(.category, .draw) %>%
   mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PO2050PSL"),
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "Trzecia Droga")))
 
 plotdraws <- plotdraws %>%
@@ -1202,47 +1096,47 @@ consts <- consts %>%
                  okreg==40 ~ (weights$validvotes[weights$okreg==40])*KO*weights$KOcoef[weights$okreg==40],
                  okreg==41 ~ (weights$validvotes[weights$okreg==41])*KO*weights$KOcoef[weights$okreg==41]
   ),
-  `Trzecia Droga` = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==1],
-                              okreg==2 ~ (weights$validvotes[weights$okreg==2])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==2],
-                              okreg==3 ~ (weights$validvotes[weights$okreg==3])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==3],
-                              okreg==4 ~ (weights$validvotes[weights$okreg==4])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==4],
-                              okreg==5 ~ (weights$validvotes[weights$okreg==5])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==5],
-                              okreg==6 ~ (weights$validvotes[weights$okreg==6])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==6],
-                              okreg==7 ~ (weights$validvotes[weights$okreg==7])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==7],
-                              okreg==8 ~ (weights$validvotes[weights$okreg==8])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==8],
-                              okreg==9 ~ (weights$validvotes[weights$okreg==9])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==9],
-                              okreg==10 ~ (weights$validvotes[weights$okreg==10])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==10],
-                              okreg==11 ~ (weights$validvotes[weights$okreg==11])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==11],
-                              okreg==12 ~ (weights$validvotes[weights$okreg==12])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==12],
-                              okreg==13 ~ (weights$validvotes[weights$okreg==13])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==13],
-                              okreg==14 ~ (weights$validvotes[weights$okreg==14])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==14],
-                              okreg==15 ~ (weights$validvotes[weights$okreg==15])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==15],
-                              okreg==16 ~ (weights$validvotes[weights$okreg==16])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==16],
-                              okreg==17 ~ (weights$validvotes[weights$okreg==17])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==17],
-                              okreg==18 ~ (weights$validvotes[weights$okreg==18])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==18],
-                              okreg==19 ~ (weights$validvotes[weights$okreg==19])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==19],
-                              okreg==20 ~ (weights$validvotes[weights$okreg==20])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==20],
-                              okreg==21 ~ (weights$validvotes[weights$okreg==21])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==21],
-                              okreg==22 ~ (weights$validvotes[weights$okreg==22])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==22],
-                              okreg==23 ~ (weights$validvotes[weights$okreg==23])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==23],
-                              okreg==24 ~ (weights$validvotes[weights$okreg==24])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==24],
-                              okreg==25 ~ (weights$validvotes[weights$okreg==25])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==25],
-                              okreg==26 ~ (weights$validvotes[weights$okreg==26])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==26],
-                              okreg==27 ~ (weights$validvotes[weights$okreg==27])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==27],
-                              okreg==28 ~ (weights$validvotes[weights$okreg==28])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==28],
-                              okreg==29 ~ (weights$validvotes[weights$okreg==29])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==29],
-                              okreg==30 ~ (weights$validvotes[weights$okreg==30])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==30],
-                              okreg==31 ~ (weights$validvotes[weights$okreg==31])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==31],
-                              okreg==32 ~ (weights$validvotes[weights$okreg==32])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==32],
-                              okreg==33 ~ (weights$validvotes[weights$okreg==33])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==33],
-                              okreg==34 ~ (weights$validvotes[weights$okreg==34])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==34],
-                              okreg==35 ~ (weights$validvotes[weights$okreg==35])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==35],
-                              okreg==36 ~ (weights$validvotes[weights$okreg==36])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==36],
-                              okreg==37 ~ (weights$validvotes[weights$okreg==37])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==37],
-                              okreg==38 ~ (weights$validvotes[weights$okreg==38])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==38],
-                              okreg==39 ~ (weights$validvotes[weights$okreg==39])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==39],
-                              okreg==40 ~ (weights$validvotes[weights$okreg==40])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==40],
-                              okreg==41 ~ (weights$validvotes[weights$okreg==41])*`Trzecia Droga`*weights$PSLcoef[weights$okreg==41]
+  `Trzecia Droga` = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*`Trzecia Droga`*weights$TDcoef[weights$okreg==1],
+                              okreg==2 ~ (weights$validvotes[weights$okreg==2])*`Trzecia Droga`*weights$TDcoef[weights$okreg==2],
+                              okreg==3 ~ (weights$validvotes[weights$okreg==3])*`Trzecia Droga`*weights$TDcoef[weights$okreg==3],
+                              okreg==4 ~ (weights$validvotes[weights$okreg==4])*`Trzecia Droga`*weights$TDcoef[weights$okreg==4],
+                              okreg==5 ~ (weights$validvotes[weights$okreg==5])*`Trzecia Droga`*weights$TDcoef[weights$okreg==5],
+                              okreg==6 ~ (weights$validvotes[weights$okreg==6])*`Trzecia Droga`*weights$TDcoef[weights$okreg==6],
+                              okreg==7 ~ (weights$validvotes[weights$okreg==7])*`Trzecia Droga`*weights$TDcoef[weights$okreg==7],
+                              okreg==8 ~ (weights$validvotes[weights$okreg==8])*`Trzecia Droga`*weights$TDcoef[weights$okreg==8],
+                              okreg==9 ~ (weights$validvotes[weights$okreg==9])*`Trzecia Droga`*weights$TDcoef[weights$okreg==9],
+                              okreg==10 ~ (weights$validvotes[weights$okreg==10])*`Trzecia Droga`*weights$TDcoef[weights$okreg==10],
+                              okreg==11 ~ (weights$validvotes[weights$okreg==11])*`Trzecia Droga`*weights$TDcoef[weights$okreg==11],
+                              okreg==12 ~ (weights$validvotes[weights$okreg==12])*`Trzecia Droga`*weights$TDcoef[weights$okreg==12],
+                              okreg==13 ~ (weights$validvotes[weights$okreg==13])*`Trzecia Droga`*weights$TDcoef[weights$okreg==13],
+                              okreg==14 ~ (weights$validvotes[weights$okreg==14])*`Trzecia Droga`*weights$TDcoef[weights$okreg==14],
+                              okreg==15 ~ (weights$validvotes[weights$okreg==15])*`Trzecia Droga`*weights$TDcoef[weights$okreg==15],
+                              okreg==16 ~ (weights$validvotes[weights$okreg==16])*`Trzecia Droga`*weights$TDcoef[weights$okreg==16],
+                              okreg==17 ~ (weights$validvotes[weights$okreg==17])*`Trzecia Droga`*weights$TDcoef[weights$okreg==17],
+                              okreg==18 ~ (weights$validvotes[weights$okreg==18])*`Trzecia Droga`*weights$TDcoef[weights$okreg==18],
+                              okreg==19 ~ (weights$validvotes[weights$okreg==19])*`Trzecia Droga`*weights$TDcoef[weights$okreg==19],
+                              okreg==20 ~ (weights$validvotes[weights$okreg==20])*`Trzecia Droga`*weights$TDcoef[weights$okreg==20],
+                              okreg==21 ~ (weights$validvotes[weights$okreg==21])*`Trzecia Droga`*weights$TDcoef[weights$okreg==21],
+                              okreg==22 ~ (weights$validvotes[weights$okreg==22])*`Trzecia Droga`*weights$TDcoef[weights$okreg==22],
+                              okreg==23 ~ (weights$validvotes[weights$okreg==23])*`Trzecia Droga`*weights$TDcoef[weights$okreg==23],
+                              okreg==24 ~ (weights$validvotes[weights$okreg==24])*`Trzecia Droga`*weights$TDcoef[weights$okreg==24],
+                              okreg==25 ~ (weights$validvotes[weights$okreg==25])*`Trzecia Droga`*weights$TDcoef[weights$okreg==25],
+                              okreg==26 ~ (weights$validvotes[weights$okreg==26])*`Trzecia Droga`*weights$TDcoef[weights$okreg==26],
+                              okreg==27 ~ (weights$validvotes[weights$okreg==27])*`Trzecia Droga`*weights$TDcoef[weights$okreg==27],
+                              okreg==28 ~ (weights$validvotes[weights$okreg==28])*`Trzecia Droga`*weights$TDcoef[weights$okreg==28],
+                              okreg==29 ~ (weights$validvotes[weights$okreg==29])*`Trzecia Droga`*weights$TDcoef[weights$okreg==29],
+                              okreg==30 ~ (weights$validvotes[weights$okreg==30])*`Trzecia Droga`*weights$TDcoef[weights$okreg==30],
+                              okreg==31 ~ (weights$validvotes[weights$okreg==31])*`Trzecia Droga`*weights$TDcoef[weights$okreg==31],
+                              okreg==32 ~ (weights$validvotes[weights$okreg==32])*`Trzecia Droga`*weights$TDcoef[weights$okreg==32],
+                              okreg==33 ~ (weights$validvotes[weights$okreg==33])*`Trzecia Droga`*weights$TDcoef[weights$okreg==33],
+                              okreg==34 ~ (weights$validvotes[weights$okreg==34])*`Trzecia Droga`*weights$TDcoef[weights$okreg==34],
+                              okreg==35 ~ (weights$validvotes[weights$okreg==35])*`Trzecia Droga`*weights$TDcoef[weights$okreg==35],
+                              okreg==36 ~ (weights$validvotes[weights$okreg==36])*`Trzecia Droga`*weights$TDcoef[weights$okreg==36],
+                              okreg==37 ~ (weights$validvotes[weights$okreg==37])*`Trzecia Droga`*weights$TDcoef[weights$okreg==37],
+                              okreg==38 ~ (weights$validvotes[weights$okreg==38])*`Trzecia Droga`*weights$TDcoef[weights$okreg==38],
+                              okreg==39 ~ (weights$validvotes[weights$okreg==39])*`Trzecia Droga`*weights$TDcoef[weights$okreg==39],
+                              okreg==40 ~ (weights$validvotes[weights$okreg==40])*`Trzecia Droga`*weights$TDcoef[weights$okreg==40],
+                              okreg==41 ~ (weights$validvotes[weights$okreg==41])*`Trzecia Droga`*weights$TDcoef[weights$okreg==41]
   ),
   Konfederacja = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*Konfederacja*weights$Konfcoef[weights$okreg==1],
                            okreg==2 ~ (weights$validvotes[weights$okreg==2])*Konfederacja*weights$Konfcoef[weights$okreg==2],
@@ -1434,7 +1328,7 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots()
 ggsave(plot_seats_parl, file = "plot_seats_parl.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
 plot_seats_parl_PL <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   geom_bar(stat="identity", width=.75, show.legend = F) +
@@ -1453,7 +1347,7 @@ plot_seats_parl_PL <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) 
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots()
 ggsave(plot_seats_parl_PL, file = "plot_seats_parl_PL.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
 
 #####By pollster#####
@@ -1489,13 +1383,13 @@ pred_dta <-
     party =
       party %>%
       factor(
-        levels = c("PiS", "KO", "PO2050PSL", "Lewica", "Konfederacja", "Other"),
+        levels = c("PiS", "KO", "TD", "Lewica", "Konfederacja", "Other"),
         labels = c("PiS", "KO", "Trzecia Droga", "Lewica", "Konfederacja", "Other")
       )
   )
 
 point_dta <- polls %>%
-  select(org, midDate, PiS, KO, Lewica, Konfederacja, Other, PO2050PSL) %>%
+  select(org, midDate, PiS, KO, Lewica, Konfederacja, Other, TD) %>%
   pivot_longer(
     cols = c(-midDate, -org),
     names_to = "party",
@@ -1505,7 +1399,7 @@ point_dta <- polls %>%
     party =
       party %>%
       factor(
-        levels = c("PiS", "KO", "PO2050PSL", "Lewica", "Konfederacja", "Other"),
+        levels = c("PiS", "KO", "TD", "Lewica", "Konfederacja", "Other"),
         labels = c("PiS", "KO", "Trzecia Droga", "Lewica", "Konfederacja", "Other")
       )
   )
@@ -1529,7 +1423,7 @@ plot_trends_pollster <-
   theme_plots() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) 
 ggsave(plot_trends_pollster , file = "plot_trends_pollster.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
 plot_trends_pollster_PL <-
@@ -1550,7 +1444,7 @@ plot_trends_pollster_PL <-
   theme_plots() +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA)))
 ggsave(plot_trends_pollster_PL , file = "plot_trends_pollster_PL.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
 
@@ -1572,7 +1466,7 @@ plot_latest_parl_pollster <- polls %>%
   add_fitted_draws(m1) %>%
   group_by(.category, pollster) %>%
   mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PO2050PSL"),
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "Trzecia Droga")),
          pollster = factor(pollster,
                            levels = get_labels(factor(polls$pollster)),
@@ -1598,7 +1492,7 @@ plot_latest_parl_pollster <- polls %>%
 plot_latest_parl_pollster <- plot_latest_parl_pollster +
   geom_text(data=medians %>%
               mutate(.category = factor(.category,
-                                        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PO2050PSL"),
+                                        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
                                         labels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "Trzecia Droga")),
                      pollster = factor(pollster,
                                        levels = get_labels(factor(polls$pollster)),
@@ -1609,7 +1503,7 @@ plot_latest_parl_pollster <- plot_latest_parl_pollster +
             family="IBM Plex Sans Condensed Light", color="black")
 
 ggsave(plot_latest_parl_pollster, file = "polls_latest_parl_pollster.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
 
 plot_latest_parl_pollster_PL <- polls %>%  
@@ -1617,7 +1511,7 @@ plot_latest_parl_pollster_PL <- polls %>%
   add_fitted_draws(m1) %>%
   group_by(.category, pollster) %>%
   mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PO2050PSL"),
+                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "Trzecia Droga")),
          pollster = factor(pollster,
                            levels = get_labels(factor(polls$pollster)),
@@ -1644,7 +1538,7 @@ plot_latest_parl_pollster_PL <- polls %>%
 plot_latest_parl_pollster_PL <- plot_latest_parl_pollster_PL +
   geom_text(data=medians %>%
               mutate(.category = factor(.category,
-                                        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "PO2050PSL"),
+                                        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
                                         labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "Trzecia Droga")),
                      pollster = factor(pollster,
                                        levels = get_labels(factor(polls$pollster)),
@@ -1655,7 +1549,7 @@ plot_latest_parl_pollster_PL <- plot_latest_parl_pollster_PL +
             family="IBM Plex Sans Condensed Light", color="black")
 
 ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 5, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
 
 #####Upload to Github#####
