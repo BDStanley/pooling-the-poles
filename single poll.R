@@ -33,42 +33,37 @@ my_date_format <- function()
   }
 }
 
-cols <- c("PiS"="blue", "KO"="orange", "Polska 2050" = "darkgoldenrod", "PSL" = "darkgreen", "Lewica"="red", "Konfederacja" = "midnightblue", "MN" = "yellow")
+cols <- c("PiS"="blue", "KO"="orange", "Trzecia Droga" = "darkgreen", "Lewica"="red", "Konfederacja" = "midnightblue", "MN" = "yellow")
 
 
 #####Read in, adjust and subset data#####
 library(googledrive)
 library(rio)
 library(readxl)
+library(sf)
 
+drive_deauth()
 import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1cOC1mY4xf0iXgPavA1CNQeSFwqi_0U_m/edit?usp=sharing&ouid=111487015973215379663&rtpof=true&sd=true"), overwrite=TRUE)
-1
-weights <- read_excel('2019_elec_percentages.xlsx')
-
-import <- drive_download(as_id("https://drive.google.com/file/d/1JmF3bjRA_sTaJZ4rqPd1WAQyGm-XM-l7/view?usp=sharing"), overwrite=TRUE)
-1
-const <- readRDS('constituencies')
-
+weights <- read_excel('2023_elec_percentages.xlsx')
+const <- st_read('GRED_20190215_Poland_2011.shp')
 
 #####Enter party support and weight by constituency#####
-PiS_raw <- 35
-KO_raw <- 34
-Konf_raw <- 12
-Lewica_raw <- 7
-`Polska 2050_raw` <- 8.7
-PSL_raw <- 5.9 
-Other_raw <- 0
-Undecided_raw <- 9.0
+PiS_raw <- 34
+KO_raw <- 31
+Konf_raw <- 7
+Lewica_raw <- 8
+`Trzecia Droga_raw` <- 16
+Other_raw <- 4
+Undecided_raw <- 0
 
 PiS <- rnorm(1000, (PiS_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
 KO <- rnorm(1000, (KO_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
 Konfederacja <- rnorm(1000, (Konf_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
 Lewica <- rnorm(1000, (Lewica_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
-`Polska 2050` <- rnorm(1000, (`Polska 2050_raw`/(100-Other_raw-Undecided_raw))*100, sd=1)
-PSL <- rnorm(1000, (PSL_raw/(100-Other_raw-Undecided_raw))*100, sd=1)
-MN <- rnorm(1000, mean=7.9, sd=0.00001)
+`Trzecia Droga` <- rnorm(1000, (`Trzecia Droga_raw`/(100-Other_raw-Undecided_raw))*100, sd=1)
+MN <- rnorm(1000, mean=5.4, sd=0.00001)
 
-plotdraws <- tibble(PiS, KO, Konfederacja, Lewica, MN, PSL, `Polska 2050`)
+plotdraws <- tibble(PiS, KO, Konfederacja, Lewica, MN, `Trzecia Droga`)
 consts <- uncount(tibble(plotdraws), 41, .id="okreg")
 
 consts <- consts %>%
@@ -240,89 +235,47 @@ consts <- consts %>%
                            okreg==40 ~ (weights$validvotes[weights$okreg==40])*Konfederacja*weights$Konfcoef[weights$okreg==40],
                            okreg==41 ~ (weights$validvotes[weights$okreg==41])*Konfederacja*weights$Konfcoef[weights$okreg==41]
   ),
-  `Polska 2050` = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*`Polska 2050`*weights$KOcoef[weights$okreg==1],
-                            okreg==2 ~ (weights$validvotes[weights$okreg==2])*`Polska 2050`*weights$KOcoef[weights$okreg==2],
-                            okreg==3 ~ (weights$validvotes[weights$okreg==3])*`Polska 2050`*weights$KOcoef[weights$okreg==3],
-                            okreg==4 ~ (weights$validvotes[weights$okreg==4])*`Polska 2050`*weights$KOcoef[weights$okreg==4],
-                            okreg==5 ~ (weights$validvotes[weights$okreg==5])*`Polska 2050`*weights$KOcoef[weights$okreg==5],
-                            okreg==6 ~ (weights$validvotes[weights$okreg==6])*`Polska 2050`*weights$KOcoef[weights$okreg==6],
-                            okreg==7 ~ (weights$validvotes[weights$okreg==7])*`Polska 2050`*weights$KOcoef[weights$okreg==7],
-                            okreg==8 ~ (weights$validvotes[weights$okreg==8])*`Polska 2050`*weights$KOcoef[weights$okreg==8],
-                            okreg==9 ~ (weights$validvotes[weights$okreg==9])*`Polska 2050`*weights$KOcoef[weights$okreg==9],
-                            okreg==10 ~ (weights$validvotes[weights$okreg==10])*`Polska 2050`*weights$KOcoef[weights$okreg==10],
-                            okreg==11 ~ (weights$validvotes[weights$okreg==11])*`Polska 2050`*weights$KOcoef[weights$okreg==11],
-                            okreg==12 ~ (weights$validvotes[weights$okreg==12])*`Polska 2050`*weights$KOcoef[weights$okreg==12],
-                            okreg==13 ~ (weights$validvotes[weights$okreg==13])*`Polska 2050`*weights$KOcoef[weights$okreg==13],
-                            okreg==14 ~ (weights$validvotes[weights$okreg==14])*`Polska 2050`*weights$KOcoef[weights$okreg==14],
-                            okreg==15 ~ (weights$validvotes[weights$okreg==15])*`Polska 2050`*weights$KOcoef[weights$okreg==15],
-                            okreg==16 ~ (weights$validvotes[weights$okreg==16])*`Polska 2050`*weights$KOcoef[weights$okreg==16],
-                            okreg==17 ~ (weights$validvotes[weights$okreg==17])*`Polska 2050`*weights$KOcoef[weights$okreg==17],
-                            okreg==18 ~ (weights$validvotes[weights$okreg==18])*`Polska 2050`*weights$KOcoef[weights$okreg==18],
-                            okreg==19 ~ (weights$validvotes[weights$okreg==19])*`Polska 2050`*weights$KOcoef[weights$okreg==19],
-                            okreg==20 ~ (weights$validvotes[weights$okreg==20])*`Polska 2050`*weights$KOcoef[weights$okreg==20],
-                            okreg==21 ~ (weights$validvotes[weights$okreg==21])*`Polska 2050`*weights$KOcoef[weights$okreg==21],
-                            okreg==22 ~ (weights$validvotes[weights$okreg==22])*`Polska 2050`*weights$KOcoef[weights$okreg==22],
-                            okreg==23 ~ (weights$validvotes[weights$okreg==23])*`Polska 2050`*weights$KOcoef[weights$okreg==23],
-                            okreg==24 ~ (weights$validvotes[weights$okreg==24])*`Polska 2050`*weights$KOcoef[weights$okreg==24],
-                            okreg==25 ~ (weights$validvotes[weights$okreg==25])*`Polska 2050`*weights$KOcoef[weights$okreg==25],
-                            okreg==26 ~ (weights$validvotes[weights$okreg==26])*`Polska 2050`*weights$KOcoef[weights$okreg==26],
-                            okreg==27 ~ (weights$validvotes[weights$okreg==27])*`Polska 2050`*weights$KOcoef[weights$okreg==27],
-                            okreg==28 ~ (weights$validvotes[weights$okreg==28])*`Polska 2050`*weights$KOcoef[weights$okreg==28],
-                            okreg==29 ~ (weights$validvotes[weights$okreg==29])*`Polska 2050`*weights$KOcoef[weights$okreg==29],
-                            okreg==30 ~ (weights$validvotes[weights$okreg==30])*`Polska 2050`*weights$KOcoef[weights$okreg==30],
-                            okreg==31 ~ (weights$validvotes[weights$okreg==31])*`Polska 2050`*weights$KOcoef[weights$okreg==31],
-                            okreg==32 ~ (weights$validvotes[weights$okreg==32])*`Polska 2050`*weights$KOcoef[weights$okreg==32],
-                            okreg==33 ~ (weights$validvotes[weights$okreg==33])*`Polska 2050`*weights$KOcoef[weights$okreg==33],
-                            okreg==34 ~ (weights$validvotes[weights$okreg==34])*`Polska 2050`*weights$KOcoef[weights$okreg==34],
-                            okreg==35 ~ (weights$validvotes[weights$okreg==35])*`Polska 2050`*weights$KOcoef[weights$okreg==35],
-                            okreg==36 ~ (weights$validvotes[weights$okreg==36])*`Polska 2050`*weights$KOcoef[weights$okreg==36],
-                            okreg==37 ~ (weights$validvotes[weights$okreg==37])*`Polska 2050`*weights$KOcoef[weights$okreg==37],
-                            okreg==38 ~ (weights$validvotes[weights$okreg==38])*`Polska 2050`*weights$KOcoef[weights$okreg==38],
-                            okreg==39 ~ (weights$validvotes[weights$okreg==39])*`Polska 2050`*weights$KOcoef[weights$okreg==39],
-                            okreg==40 ~ (weights$validvotes[weights$okreg==40])*`Polska 2050`*weights$KOcoef[weights$okreg==40],
-                            okreg==41 ~ (weights$validvotes[weights$okreg==41])*`Polska 2050`*weights$KOcoef[weights$okreg==41]
-  ),
-  PSL = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*PSL*weights$PSLcoef[weights$okreg==1],
-                  okreg==2 ~ (weights$validvotes[weights$okreg==2])*PSL*weights$PSLcoef[weights$okreg==2],
-                  okreg==3 ~ (weights$validvotes[weights$okreg==3])*PSL*weights$PSLcoef[weights$okreg==3],
-                  okreg==4 ~ (weights$validvotes[weights$okreg==4])*PSL*weights$PSLcoef[weights$okreg==4],
-                  okreg==5 ~ (weights$validvotes[weights$okreg==5])*PSL*weights$PSLcoef[weights$okreg==5],
-                  okreg==6 ~ (weights$validvotes[weights$okreg==6])*PSL*weights$PSLcoef[weights$okreg==6],
-                  okreg==7 ~ (weights$validvotes[weights$okreg==7])*PSL*weights$PSLcoef[weights$okreg==7],
-                  okreg==8 ~ (weights$validvotes[weights$okreg==8])*PSL*weights$PSLcoef[weights$okreg==8],
-                  okreg==9 ~ (weights$validvotes[weights$okreg==9])*PSL*weights$PSLcoef[weights$okreg==9],
-                  okreg==10 ~ (weights$validvotes[weights$okreg==10])*PSL*weights$PSLcoef[weights$okreg==10],
-                  okreg==11 ~ (weights$validvotes[weights$okreg==11])*PSL*weights$PSLcoef[weights$okreg==11],
-                  okreg==12 ~ (weights$validvotes[weights$okreg==12])*PSL*weights$PSLcoef[weights$okreg==12],
-                  okreg==13 ~ (weights$validvotes[weights$okreg==13])*PSL*weights$PSLcoef[weights$okreg==13],
-                  okreg==14 ~ (weights$validvotes[weights$okreg==14])*PSL*weights$PSLcoef[weights$okreg==14],
-                  okreg==15 ~ (weights$validvotes[weights$okreg==15])*PSL*weights$PSLcoef[weights$okreg==15],
-                  okreg==16 ~ (weights$validvotes[weights$okreg==16])*PSL*weights$PSLcoef[weights$okreg==16],
-                  okreg==17 ~ (weights$validvotes[weights$okreg==17])*PSL*weights$PSLcoef[weights$okreg==17],
-                  okreg==18 ~ (weights$validvotes[weights$okreg==18])*PSL*weights$PSLcoef[weights$okreg==18],
-                  okreg==19 ~ (weights$validvotes[weights$okreg==19])*PSL*weights$PSLcoef[weights$okreg==19],
-                  okreg==20 ~ (weights$validvotes[weights$okreg==20])*PSL*weights$PSLcoef[weights$okreg==20],
-                  okreg==21 ~ (weights$validvotes[weights$okreg==21])*PSL*weights$PSLcoef[weights$okreg==21],
-                  okreg==22 ~ (weights$validvotes[weights$okreg==22])*PSL*weights$PSLcoef[weights$okreg==22],
-                  okreg==23 ~ (weights$validvotes[weights$okreg==23])*PSL*weights$PSLcoef[weights$okreg==23],
-                  okreg==24 ~ (weights$validvotes[weights$okreg==24])*PSL*weights$PSLcoef[weights$okreg==24],
-                  okreg==25 ~ (weights$validvotes[weights$okreg==25])*PSL*weights$PSLcoef[weights$okreg==25],
-                  okreg==26 ~ (weights$validvotes[weights$okreg==26])*PSL*weights$PSLcoef[weights$okreg==26],
-                  okreg==27 ~ (weights$validvotes[weights$okreg==27])*PSL*weights$PSLcoef[weights$okreg==27],
-                  okreg==28 ~ (weights$validvotes[weights$okreg==28])*PSL*weights$PSLcoef[weights$okreg==28],
-                  okreg==29 ~ (weights$validvotes[weights$okreg==29])*PSL*weights$PSLcoef[weights$okreg==29],
-                  okreg==30 ~ (weights$validvotes[weights$okreg==30])*PSL*weights$PSLcoef[weights$okreg==30],
-                  okreg==31 ~ (weights$validvotes[weights$okreg==31])*PSL*weights$PSLcoef[weights$okreg==31],
-                  okreg==32 ~ (weights$validvotes[weights$okreg==32])*PSL*weights$PSLcoef[weights$okreg==32],
-                  okreg==33 ~ (weights$validvotes[weights$okreg==33])*PSL*weights$PSLcoef[weights$okreg==33],
-                  okreg==34 ~ (weights$validvotes[weights$okreg==34])*PSL*weights$PSLcoef[weights$okreg==34],
-                  okreg==35 ~ (weights$validvotes[weights$okreg==35])*PSL*weights$PSLcoef[weights$okreg==35],
-                  okreg==36 ~ (weights$validvotes[weights$okreg==36])*PSL*weights$PSLcoef[weights$okreg==36],
-                  okreg==37 ~ (weights$validvotes[weights$okreg==37])*PSL*weights$PSLcoef[weights$okreg==37],
-                  okreg==38 ~ (weights$validvotes[weights$okreg==38])*PSL*weights$PSLcoef[weights$okreg==38],
-                  okreg==39 ~ (weights$validvotes[weights$okreg==39])*PSL*weights$PSLcoef[weights$okreg==39],
-                  okreg==40 ~ (weights$validvotes[weights$okreg==40])*PSL*weights$PSLcoef[weights$okreg==40],
-                  okreg==41 ~ (weights$validvotes[weights$okreg==41])*PSL*weights$PSLcoef[weights$okreg==41]
+  `Trzecia Droga` = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*`Trzecia Droga`*weights$TDcoef[weights$okreg==1],
+                            okreg==2 ~ (weights$validvotes[weights$okreg==2])*`Trzecia Droga`*weights$TDcoef[weights$okreg==2],
+                            okreg==3 ~ (weights$validvotes[weights$okreg==3])*`Trzecia Droga`*weights$TDcoef[weights$okreg==3],
+                            okreg==4 ~ (weights$validvotes[weights$okreg==4])*`Trzecia Droga`*weights$TDcoef[weights$okreg==4],
+                            okreg==5 ~ (weights$validvotes[weights$okreg==5])*`Trzecia Droga`*weights$TDcoef[weights$okreg==5],
+                            okreg==6 ~ (weights$validvotes[weights$okreg==6])*`Trzecia Droga`*weights$TDcoef[weights$okreg==6],
+                            okreg==7 ~ (weights$validvotes[weights$okreg==7])*`Trzecia Droga`*weights$TDcoef[weights$okreg==7],
+                            okreg==8 ~ (weights$validvotes[weights$okreg==8])*`Trzecia Droga`*weights$TDcoef[weights$okreg==8],
+                            okreg==9 ~ (weights$validvotes[weights$okreg==9])*`Trzecia Droga`*weights$TDcoef[weights$okreg==9],
+                            okreg==10 ~ (weights$validvotes[weights$okreg==10])*`Trzecia Droga`*weights$TDcoef[weights$okreg==10],
+                            okreg==11 ~ (weights$validvotes[weights$okreg==11])*`Trzecia Droga`*weights$TDcoef[weights$okreg==11],
+                            okreg==12 ~ (weights$validvotes[weights$okreg==12])*`Trzecia Droga`*weights$TDcoef[weights$okreg==12],
+                            okreg==13 ~ (weights$validvotes[weights$okreg==13])*`Trzecia Droga`*weights$TDcoef[weights$okreg==13],
+                            okreg==14 ~ (weights$validvotes[weights$okreg==14])*`Trzecia Droga`*weights$TDcoef[weights$okreg==14],
+                            okreg==15 ~ (weights$validvotes[weights$okreg==15])*`Trzecia Droga`*weights$TDcoef[weights$okreg==15],
+                            okreg==16 ~ (weights$validvotes[weights$okreg==16])*`Trzecia Droga`*weights$TDcoef[weights$okreg==16],
+                            okreg==17 ~ (weights$validvotes[weights$okreg==17])*`Trzecia Droga`*weights$TDcoef[weights$okreg==17],
+                            okreg==18 ~ (weights$validvotes[weights$okreg==18])*`Trzecia Droga`*weights$TDcoef[weights$okreg==18],
+                            okreg==19 ~ (weights$validvotes[weights$okreg==19])*`Trzecia Droga`*weights$TDcoef[weights$okreg==19],
+                            okreg==20 ~ (weights$validvotes[weights$okreg==20])*`Trzecia Droga`*weights$TDcoef[weights$okreg==20],
+                            okreg==21 ~ (weights$validvotes[weights$okreg==21])*`Trzecia Droga`*weights$TDcoef[weights$okreg==21],
+                            okreg==22 ~ (weights$validvotes[weights$okreg==22])*`Trzecia Droga`*weights$TDcoef[weights$okreg==22],
+                            okreg==23 ~ (weights$validvotes[weights$okreg==23])*`Trzecia Droga`*weights$TDcoef[weights$okreg==23],
+                            okreg==24 ~ (weights$validvotes[weights$okreg==24])*`Trzecia Droga`*weights$TDcoef[weights$okreg==24],
+                            okreg==25 ~ (weights$validvotes[weights$okreg==25])*`Trzecia Droga`*weights$TDcoef[weights$okreg==25],
+                            okreg==26 ~ (weights$validvotes[weights$okreg==26])*`Trzecia Droga`*weights$TDcoef[weights$okreg==26],
+                            okreg==27 ~ (weights$validvotes[weights$okreg==27])*`Trzecia Droga`*weights$TDcoef[weights$okreg==27],
+                            okreg==28 ~ (weights$validvotes[weights$okreg==28])*`Trzecia Droga`*weights$TDcoef[weights$okreg==28],
+                            okreg==29 ~ (weights$validvotes[weights$okreg==29])*`Trzecia Droga`*weights$TDcoef[weights$okreg==29],
+                            okreg==30 ~ (weights$validvotes[weights$okreg==30])*`Trzecia Droga`*weights$TDcoef[weights$okreg==30],
+                            okreg==31 ~ (weights$validvotes[weights$okreg==31])*`Trzecia Droga`*weights$TDcoef[weights$okreg==31],
+                            okreg==32 ~ (weights$validvotes[weights$okreg==32])*`Trzecia Droga`*weights$TDcoef[weights$okreg==32],
+                            okreg==33 ~ (weights$validvotes[weights$okreg==33])*`Trzecia Droga`*weights$TDcoef[weights$okreg==33],
+                            okreg==34 ~ (weights$validvotes[weights$okreg==34])*`Trzecia Droga`*weights$TDcoef[weights$okreg==34],
+                            okreg==35 ~ (weights$validvotes[weights$okreg==35])*`Trzecia Droga`*weights$TDcoef[weights$okreg==35],
+                            okreg==36 ~ (weights$validvotes[weights$okreg==36])*`Trzecia Droga`*weights$TDcoef[weights$okreg==36],
+                            okreg==37 ~ (weights$validvotes[weights$okreg==37])*`Trzecia Droga`*weights$TDcoef[weights$okreg==37],
+                            okreg==38 ~ (weights$validvotes[weights$okreg==38])*`Trzecia Droga`*weights$TDcoef[weights$okreg==38],
+                            okreg==39 ~ (weights$validvotes[weights$okreg==39])*`Trzecia Droga`*weights$TDcoef[weights$okreg==39],
+                            okreg==40 ~ (weights$validvotes[weights$okreg==40])*`Trzecia Droga`*weights$TDcoef[weights$okreg==40],
+                            okreg==41 ~ (weights$validvotes[weights$okreg==41])*`Trzecia Droga`*weights$TDcoef[weights$okreg==41]
   ),
   Lewica = case_when(okreg==1 ~ (weights$validvotes[weights$okreg==1])*Lewica*weights$Lewicacoef[weights$okreg==1],
                      okreg==2 ~ (weights$validvotes[weights$okreg==2])*Lewica*weights$Lewicacoef[weights$okreg==2],
@@ -418,29 +371,28 @@ library(seatdist)
 library(ggdist)
 
 poldHondt <- data.frame(KO=rep(1,41000), Konfederacja=rep(1,41000), Lewica=rep(1,41000), MN=rep(1,41000),  
-                        PiS=rep(1,41000), `Polska 2050`=rep(1,41000), PSL=rep(1,41000))
+                        PiS=rep(1,41000), `Trzecia Droga`=rep(1,41000))
 
 for(i in 1:41000) { 
   poldHondt[i,] <- giveseats(v = c(consts$KO[i], consts$Konfederacja[i], consts$Lewica[i], consts$MN[i],
-                                   consts$PiS[i], consts$`Polska 2050`[i], consts$PSL[i]), ns = consts$magnitude[i], method="dh", thresh=0)$seats
+                                   consts$PiS[i], consts$`Trzecia Droga`[i]), ns = consts$magnitude[i], method="dh", thresh=0)$seats
 }
 
 poldHondt <- cbind(poldHondt, consts$okreg, consts$.draw)
 
-colnames(poldHondt) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "Polska 2050", "PSL", "okreg", "draw")
+colnames(poldHondt) <- c("KO", "Konfederacja", "Lewica", "MN", "PiS", "Trzecia Droga", "okreg", "draw")
 
 poldHondt <- poldHondt %>% 
   group_by(draw) %>% 
   summarise(KO = sum(KO),
             PiS = sum(PiS),
-            PSL = sum(PSL),
             Konfederacja = sum(Konfederacja),
-            `Polska 2050` = sum(`Polska 2050`),
+            `Trzecia Droga` = sum(`Trzecia Droga`),
             MN = sum(MN),
             Lewica = sum(Lewica))
 
 poldHondt <- poldHondt %>%
-  pivot_longer(., cols=c("KO", "Konfederacja", "Lewica", "MN", "PiS", "Polska 2050", "PSL"), names_to="party", values_to="seats")
+  pivot_longer(., cols=c("KO", "Konfederacja", "Lewica", "MN", "PiS", "Trzecia Droga"), names_to="party", values_to="seats")
 
 frame <- poldHondt %>%
   group_by(party) %>%
@@ -449,12 +401,12 @@ frame <- poldHondt %>%
          ymin = round(ymin, 0),
          ymax = round(ymax, 0))
 
-frame$party <- factor(frame$party, levels=c("PiS", "KO", "PSL", "Lewica", "Konfederacja", "Polska 2050", "MN"))
+frame$party <- factor(frame$party, levels=c("PiS", "KO", "Lewica", "Konfederacja", "Trzecia Droga", "MN"))
 frame$party <- reorder(frame$party, -frame$y)
 
 
 #####Plots#####
-plot_seats_all_separate <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
+plot_seats_single_poll <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   geom_bar(stat="identity", width=.75, show.legend = F) +
   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
@@ -466,19 +418,19 @@ plot_seats_all_separate <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=par
   geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="IBM Plex Sans Condensed Light")+
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="IBM Plex Sans Condensed Light") +
-  labs(x="", y="", title="Rozkład mandatów w Sejmie - wszystkie partie startują osobno",
+  labs(x="", y="", title="Rozkład mandatów w Sejmie",
        subtitle="(95%-owy przedział wiarygodności)",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots()
-ggsave(plot_seats_all_separate, file = "plot_seats_all_separate.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+ggsave(plot_seats_single_poll, file = "plot_seats_single_poll.png",
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
 
 library(tidybayes)
 library(ggblend)
 
-plot_latest_all_separate <- plotdraws %>%
-  pivot_longer(., cols=c("PiS", "KO", "Polska 2050", "PSL", "Lewica", "Konfederacja")) %>%
+plot_latest_single_poll <- plotdraws %>%
+  pivot_longer(., cols=c("PiS", "KO", "Trzecia Droga", "Lewica", "Konfederacja")) %>%
   select(., !MN) %>%
   ggplot(aes(y=reorder(name, dplyr::desc(-value)), 
              x=value, color=name)) +
@@ -501,22 +453,19 @@ plot_latest_all_separate <- plotdraws %>%
   annotate(geom = "text", label=paste(round(mean(plotdraws$`Lewica`),0)),
            y="Lewica", x=mean(plotdraws$`Lewica`), size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
-  annotate(geom = "text", label=paste(round(mean(plotdraws$`Polska 2050`),0)),
-           y="Polska 2050", x=mean(plotdraws$`Polska 2050`), size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
-  annotate(geom = "text", label=paste(round(mean(plotdraws$PSL),0)),
-           y="PSL", x=mean(plotdraws$PSL), size=4, hjust = "center", vjust=-1,
+  annotate(geom = "text", label=paste(round(mean(plotdraws$`Trzecia Droga`),0)),
+           y="Trzecia Droga", x=mean(plotdraws$`Trzecia Droga`), size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
   scale_fill_manual(name=" ", values=cols, guide="none") +
   expand_limits(x = 0) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych - wszystkie partie startują osobno", subtitle="(95%-owy przedział wiarygodności)", color="") +
+  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych", subtitle="(95%-owy przedział wiarygodności)", color="") +
   theme_plots()
-ggsave(plot_latest_all_separate, file = "plot_latest_all_separate.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 4, bg="white")
+ggsave(plot_latest_single_poll, file = "plot_latest_single_poll.png",
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
 
 #####Upload to Github#####
 system("git add -A")
-system("git commit -m 'All separate new'")
+system("git commit -m 'single poll new'")
 system("git pull")
 system("git push")
