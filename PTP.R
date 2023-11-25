@@ -1551,7 +1551,6 @@ plot_latest_parl_pollster_PL <- plot_latest_parl_pollster_PL +
 ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
-
 #####Upload to Github#####
 library(rmarkdown)
 render('index.Rmd')
