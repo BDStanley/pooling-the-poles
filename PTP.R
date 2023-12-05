@@ -62,8 +62,8 @@ polls <- polls %>%
 weights <- read_excel('2023_elec_percentages.xlsx')
 const <- st_read('GRED_20190215_Poland_2011.shp')
 
-polls <- polls %>%
-  filter(., org!="CBOS") 
+# polls <- polls %>%
+#   filter(., org!="CBOS") 
 polls <- unite(polls, org, remark, col="org", sep="_")
 polls$org <-as.factor(polls$org)
 
