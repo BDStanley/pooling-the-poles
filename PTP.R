@@ -1352,7 +1352,7 @@ ggsave(plot_seats_parl_PL, file = "plot_seats_parl_PL.png",
 
 #####By pollster#####
 tab <- table(polls$org)
-polls <- polls[polls$org %in% names(tab)[tab >= 5], ]
+#polls <- polls[polls$org %in% names(tab)[tab >= 5], ]
 
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
