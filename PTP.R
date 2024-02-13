@@ -339,8 +339,6 @@ plot_latest_parl <-
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
            y="Other", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
-  annotate(geom = "text", label=paste("Pr(Trzecia Droga > 0.8)  = ", trzecia_droga_thresh), y="Trzecia Droga",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Trzecia Droga"], 0.995)+0.07, size=3.5, adj=c(1), family="IBM Plex Sans Condensed Light") +
   annotate(geom = "text", label=paste("Pr(KO > PiS)  = ", PiS.KO.diff), y="KO",
            x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), family="IBM Plex Sans Condensed Light") +
   scale_x_continuous(breaks=c(0, 0.05, 0.08, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
@@ -389,10 +387,8 @@ plot_latest_parl_PL <-
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
            y="Inni", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
            family="IBM Plex Sans Condensed Light", color="black") +
-  annotate(geom = "text", label=paste("Pr(Trzecia Droga > 0.8)  = ", trzecia_droga_thresh), y="Trzecia Droga",
-           x=quantile(plotdraws$.value[plotdraws$.category=="Trzecia Droga"], 0.995)+0.07, size=3.5, adj=c(1), family="IBM Plex Sans Condensed Light") +
-  annotate(geom = "text", label=paste("Pr(PiS > KO)  = ", PiS.KO.diff), y="PiS",
-           x=quantile(plotdraws$.value[plotdraws$.category=="PiS"], 0.005), size=3.5, adj=c(1), family="IBM Plex Sans Condensed Light") +
+  annotate(geom = "text", label=paste("Pr(KO > PiS)  = ", PiS.KO.diff), y="KO",
+           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), family="IBM Plex Sans Condensed Light") +
   scale_x_continuous(breaks=c(0, 0.05, 0.08, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych", color="",
