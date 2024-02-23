@@ -149,7 +149,7 @@ m1 <-
       data = polls,
       seed = 780045,
       iter = 5000,
-      #backend="cmdstanr", chains=3, cores=12, threads = threading(3),
+      backend="cmdstanr", threads = threading(3),
       chains = 3, cores = 12,
       refresh = 5,
       control =
