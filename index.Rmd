@@ -323,9 +323,9 @@ plotdata <- merge(plotdata, label_points, by="id")
 ggplot(plotdata)+
   geom_sf(aes(fill=as.integer(PiSmKO)))+
   theme(aspect.ratio=1) +
-  geom_label(aes(x=x, y=y, group=PiSmKO, label=PiSmKO), fill="white") +
+  #geom_label(aes(x=x, y=y, group=PiSmKO, label=PiSmKO), fill="white") +
   scale_fill_gradient2(name="PiSKO", limits=c(min=-20, max=20), low = "orange", mid="white", high = "blue", midpoint=0, guide="colorbar") +
-  labs(title="", subtitle="", 
+  labs(title="Constituency-level differences in share of seats for PiS and Koalicja Obywatelska", subtitle="Constituencies in shades of blue have more PiS MPs; constituencies in orange have more KO MPs;\nconstituencies in white have equal numbers of PiS and KO MPs", 
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots_map()
 ```
