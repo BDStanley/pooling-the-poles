@@ -248,7 +248,7 @@ trends_blend <- pred_dta %>%
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()
 
-#ggsave(trends_blend, file = "trends_blend.pdf",
+#ggsave(trends_blend, file = "trends_blend.png",
         #width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white", device=png(type="cairo"))
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
