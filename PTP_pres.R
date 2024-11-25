@@ -1,0 +1,246 @@
+#####Prepare workspace
+system("git pull")
+library(tidyverse); library(ggrepel)
+
+set.seed(780045)
+
+theme_plots <- function() {
+  theme_minimal(base_family = "IBM Plex Sans Condensed") +
+    theme(panel.grid.minor = element_blank(),
+          plot.background = element_rect(fill = "white", color = NA),
+          plot.title = element_text(face = "bold"),
+          plot.subtitle = element_text(size=8),
+          axis.title = element_text(face = "bold"),
+          strip.text = element_text(face = "bold"),
+          strip.background = element_rect(fill = "grey95", color = NA),
+          legend.title = element_text(face = "bold"))
+}
+
+update_geom_defaults("label", 
+                     list(family = "IBM Plex Sans Condensed"))
+update_geom_defaults(ggtext::GeomRichText, 
+                     list(family = "IBM Plex Sans Condensed"))
+update_geom_defaults("label_repel", 
+                     list(family = "IBM Plex Sans Condensed"))
+
+my_date_format <- function()
+{
+  function(x)
+  {
+    m <- format(x,"%b")
+    y <- format(x,"\n%Y")
+    ifelse(duplicated(y),m,paste(m,y))
+  }
+}
+
+options(mc.cores = parallel::detectCores())
+
+#####Read in, adjust and subset data#####
+library(googledrive)
+library(rio)
+library(readxl)
+library(sf)
+
+drive_deauth()
+import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1YXiP38k4JYVvJcuAm1E2uYGJFK2foldaJPQXq8c9H8o/edit?usp=share_link"), overwrite=TRUE)
+polls <- read_excel('polldata_pres_R1.xlsx')
+
+polls <- polls %>%
+  dplyr::select(startDate, endDate, org, remark, Nawrocki, Trzaskowski, Hołownia, `Dziemianowicz-Bąk`, Mentzen, Other, DK)
+
+polls <- unite(polls, org, remark, col="org", sep="_")
+polls$org <-as.factor(polls$org)
+
+polls$startDate <- as.Date(polls$startDate)
+polls$endDate <- as.Date(polls$endDate)
+
+polls <-
+  polls %>%
+  mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
+         midDate_int=as.integer(midDate)) %>%
+  #filter(midDate >= as.Date('2023-10-15')) %>%
+  mutate(Nawrocki = 100/((100-DK))*Nawrocki,
+         Trzaskowski = 100/((100-DK))*Trzaskowski,
+         `Dziemianowicz-Bąk` = 100/((100-DK))*`Dziemianowicz-Bąk`,
+         Hołownia = 100/((100-DK))*Hołownia,
+         Mentzen = 100/((100-DK))*Mentzen,
+         Other = 100/((100-DK))*Other,
+         time = as.integer(difftime(midDate, min(midDate), units = "days")),
+         pollster = as.integer(factor(org)))
+
+cols <- c("Nawrocki"="blue", "Trzaskowski"="orange", "Hołownia"="goldenrod", "Mentzen" = "midnightblue", "Dziemianowicz-Bąk" = "red",  "Other"="gray50")
+
+library(glue)
+library(sjlabelled)
+library(lubridate)
+
+names <- data.frame(as.factor(get_labels(polls$org)))
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
+names$house <- as.factor(names$house)
+housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+#names <- paste0(get_labels(housenames), collapse=", ")
+names <- glue_collapse(get_labels(housenames), ", ", last = " and ")
+names_PL <- glue_collapse(get_labels(housenames), ", ", last = " i ")
+polls$org <- str_replace_all(polls$org, "_", ", ")
+
+polls <-
+  polls %>%
+  mutate(time = interval(min(midDate), midDate)/years(1))
+
+polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "Dziemianowicz-Bąk", "Mentzen", "Hołownia")] <-
+  polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "Dziemianowicz-Bąk", "Mentzen", "Hołownia")] %>%
+  mutate_all(function(x) (as.numeric(str_remove(x, "%"))/100)-0.001)
+
+polls <-
+  polls %>%
+  mutate(Other = 1 - (Nawrocki + Trzaskowski + `Dziemianowicz-Bąk` + Mentzen + Hołownia))
+
+polls <- polls %>%
+  rename(
+    DB = `Dziemianowicz-Bąk`,
+    Holownia = Hołownia
+  )
+
+polls <-
+  polls %>%
+  mutate(
+    outcome = as.matrix(polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "DB", "Mentzen", "Holownia", "Other")])
+  )
+
+#####Run model#####
+library(brms)
+m1 <-
+  brm(formula = bf(outcome ~ 1 + s(time, k = 5) + (1 | pollster)),
+      family = dirichlet(link = "logit", refcat = "Other"),
+      data = polls,
+      prior =
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muNawrocki") +
+        prior(normal(0, 0.5), class = "b", dpar = "muNawrocki") +
+        prior(exponential(2), class = "sd", dpar = "muNawrocki") +
+        prior(exponential(2), class = "sds", dpar = "muNawrocki") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muTrzaskowski") +
+        prior(normal(0, 0.5), class = "b", dpar = "muTrzaskowski") +
+        prior(exponential(2), class = "sd", dpar = "muTrzaskowski") +
+        prior(exponential(2), class = "sds", dpar = "muTrzaskowski") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muDB") +
+        prior(normal(0, 0.5), class = "b", dpar = "muDB") +
+        prior(exponential(2), class = "sd", dpar = "muDB") +
+        prior(exponential(2), class = "sds", dpar = "muDB") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muHolownia") +
+        prior(normal(0, 0.5), class = "b", dpar = "muHolownia") +
+        prior(exponential(2), class = "sd", dpar = "muHolownia") +
+        prior(exponential(2), class = "sds", dpar = "muHolownia") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muMentzen") +
+        prior(normal(0, 0.5), class = "b", dpar = "muMentzen") +
+        prior(exponential(2), class = "sd", dpar = "muMentzen") +
+        prior(exponential(2), class = "sds", dpar = "muMentzen") +
+        prior(gamma(1, 0.01), class = "phi"),
+      seed = 780045,
+      iter = 5000,
+      backend="cmdstanr", threads = threading(3),
+      chains = 3, cores = 12,
+      refresh = 5,
+      control =
+        list(
+          adapt_delta = .95,
+          max_treedepth = 15
+        )
+  )
+
+#####Trend plot#####
+library(stringr)
+library(hrbrthemes)
+library(tidybayes)
+
+today <- interval(min(polls$midDate), Sys.Date())/years(1)
+
+pred_dta <-
+  tibble(
+    time = seq(0, today, length.out = nrow(polls)),
+    date = as.Date(time*365, origin = min(polls$midDate))
+  )
+
+pred_dta <-
+  add_fitted_draws(
+    model = m1,
+    newdata = pred_dta,
+    re_formula = NA
+  ) %>%
+  group_by(date, .category) %>%
+  rename(party = .category) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("Nawrocki", "Trzaskowski", "DB", "Mentzen", "Holownia", "Other"),
+        labels = c("Nawrocki", "Trzaskowski", "Dziemianowicz-Bąk", "Mentzen", "Hołownia", "Other")
+      )
+  )
+
+point_dta <-
+  polls[names(polls) %in% c("midDate", "Nawrocki", "Trzaskowski", "DB", "Mentzen", "Holownia", "Other")] %>%
+  pivot_longer(
+    cols = -midDate,
+    names_to = "party",
+    values_to = "est"
+  ) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("Nawrocki", "Trzaskowski", "DB", "Mentzen", "Holownia", "Other"),
+        labels = c("Nawrocki", "Trzaskowski", "Dziemianowicz-Bąk", "Mentzen", "Hołownia", "Other")
+      )
+  )
+
+plot_trends_pres_R1 <-
+  ggplot() +
+  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
+  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5), alpha=1/2) +
+  #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_date(date_breaks = "1 month",
+               labels = my_date_format()) +
+  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+                  ylim = c(0, .5)) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  labs(y = "", x="", title = "Polish presidential election, round 1", 
+       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (Bluesky: @benstanley.pl).") +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+  theme_plots()
+ggsave(plot_trends_pres_R1, file = "plot_trends_pres_R1.png", 
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
+
+library(ggdist)
+library(ggblend)
+
+trends_blend <- pred_dta %>%
+  ggplot(aes(x = date, color=party, fill=party)) +
+  ggdist::stat_lineribbon(
+    aes(y = .value, fill_ramp = stat(.width)),
+    .width = ppoints(100)
+  ) |> partition(vars(party)) |> blend("multiply") +
+  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  #ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
+  ggdist::scale_fill_ramp_continuous(range = c(0.5, 0), guide=FALSE) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_date(date_breaks = "1 month",
+               labels = my_date_format()) +
+  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+                  ylim = c(0, .5)) +
+  labs(y = "", x="", title = "Trends",
+       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (Bluesky: @benstanley.pl).") +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+  theme_plots()
+
+ggsave(trends_blend, file = "trends_pres_R1.png",
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white", device=png(type="cairo"))
+
+system("git add -A")
+system("git commit -m 'PTP new'")
+system("git pull")
+system("git push")
