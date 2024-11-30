@@ -212,7 +212,7 @@ trends_blend <- pred_dta %>%
                labels = my_date_format()) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
-  labs(y = "", x="", title = "Trends",
+  labs(y = "", x="", title = "Polish presidential election, round 1",
        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (Bluesky: @benstanley.pl).") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()
@@ -360,7 +360,7 @@ trends_blend <- pred_dta %>%
   scale_x_date(date_breaks = "1 month",
                labels = my_date_format()) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate))) +
-  labs(y = "", x="", title = "Trends",
+  labs(y = "", x="", title = "Polish presidential election, round 2",
        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (Bluesky: @benstanley.pl).") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()
