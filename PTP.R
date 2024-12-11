@@ -37,14 +37,19 @@ theme_plots <- function(base_size = 11, base_family = "Gill Sans MT") {
     )
 }
 
-theme_plots_map <- function() {
-  theme_minimal(base_family = "Gill Sans MT") +
+theme_plots_map <- function(base_size = 11, base_family = "Gill Sans MT") {
+  theme_minimal(base_size, base_family) +
     theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
           axis.title.y = element_blank(), axis.title.x = element_blank(),
           axis.text.x = element_blank(), axis.text.y = element_blank(),
           strip.text.x = element_text(size = 10), legend.text = element_text(size=9), 
+          title = element_text(size = rel(1), family = "Gill Sans MT", face = "bold"),
+          plot.subtitle = element_text(size = rel(0.8),
+                                       family = "Gill Sans MT", face = "plain"),
+          plot.caption = element_text(margin = margin(t = 10), size = rel(0.6),
+                                      family = "Gill Sans MT", face = "plain"),
           legend.title = element_text(face="bold"), plot.title = element_text(face="bold"),
-          plot.subtitle = element_text(size=8), aspect.ratio=1, legend.position="none")
+          aspect.ratio=1, legend.position="none")
 }
 
 my_date_format <- function()
