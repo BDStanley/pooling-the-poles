@@ -64,7 +64,7 @@ polls <-
          time = as.integer(difftime(midDate, min(midDate), units = "days")),
          pollster = as.integer(factor(org)))
 
-cols <- c("Nawrocki"="blue", "Trzaskowski"="orange", "Hołownia"="goldenrod", "Mentzen" = "midnightblue", "Dziemianowicz-Bąk" = "red",  "Other"="gray50")
+cols <- c("Nawrocki"="blue", "Trzaskowski"="orange", "Hołownia"="goldenrod", "Mentzen" = "midnightblue", "Dziemianowicz-Bąk/Biejat" = "red",  "Other"="gray50")
 
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
@@ -101,7 +101,7 @@ polls <-
   )
 
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 5) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 6) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Other"),
       data = polls,
       prior =
@@ -159,7 +159,7 @@ pred_dta <-
       party %>%
       factor(
         levels = c("Nawrocki", "Trzaskowski", "DB", "Mentzen", "Holownia", "Other"),
-        labels = c("Nawrocki", "Trzaskowski", "Dziemianowicz-Bąk", "Mentzen", "Hołownia", "Other")
+        labels = c("Nawrocki", "Trzaskowski", "Dziemianowicz-Bąk/Biejat", "Mentzen", "Hołownia", "Other")
       )
   )
 
@@ -175,7 +175,7 @@ point_dta <-
       party %>%
       factor(
         levels = c("Nawrocki", "Trzaskowski", "DB", "Mentzen", "Holownia", "Other"),
-        labels = c("Nawrocki", "Trzaskowski", "Dziemianowicz-Bąk", "Mentzen", "Hołownia", "Other")
+        labels = c("Nawrocki", "Trzaskowski", "Dziemianowicz-Bąk/Biejat", "Mentzen", "Hołownia", "Other")
       )
   )
 
@@ -193,7 +193,8 @@ plot_trends_pres_R1 <-
   labs(y = "", x="", title = "Polish presidential election, round 1", 
        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (Bluesky: @benstanley.pl).") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_plots()
+  theme_plots() +
+  theme(legend.position = "bottom")
 ggsave(plot_trends_pres_R1, file = "plot_trends_pres_R1.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
@@ -215,7 +216,8 @@ trends_blend <- pred_dta %>%
   labs(y = "", x="", title = "Polish presidential election, round 1",
        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (Bluesky: @benstanley.pl).") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_plots()
+  theme_plots() +
+  theme(legend.position = "bottom")
 ggsave(trends_blend, file = "trends_pres_R1.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white", device=png(type="cairo"))
 
@@ -342,7 +344,8 @@ plot_trends_pres_R2 <-
   labs(y = "", x="", title = "Polish presidential election, round 2", 
        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (Bluesky: @benstanley.pl).") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_plots()
+  theme_plots()+
+  theme(legend.position = "bottom")
 ggsave(plot_trends_pres_R2, file = "plot_trends_pres_R2.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
@@ -363,7 +366,8 @@ trends_blend <- pred_dta %>%
   labs(y = "", x="", title = "Polish presidential election, round 2",
        subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (Bluesky: @benstanley.pl).") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_plots()
+  theme_plots()+
+  theme(legend.position = "bottom")
 ggsave(trends_blend, file = "trends_pres_R2.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white", device=png(type="cairo"))
 
