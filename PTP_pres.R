@@ -17,12 +17,12 @@ theme_plots <- function() {
           legend.title = element_text(face = "bold"))
 }
 
-update_geom_defaults("label", 
-                     list(family = "IBM Plex Sans Condensed"))
-update_geom_defaults(ggtext::GeomRichText, 
-                     list(family = "IBM Plex Sans Condensed"))
-update_geom_defaults("label_repel", 
-                     list(family = "IBM Plex Sans Condensed"))
+# update_geom_defaults("label", 
+#                      list(family = "IBM Plex Sans Condensed"))
+# update_geom_defaults(ggtext::GeomRichText, 
+#                      list(family = "IBM Plex Sans Condensed"))
+# update_geom_defaults("label_repel", 
+#                      list(family = "IBM Plex Sans Condensed"))
 
 my_date_format <- function()
 {
