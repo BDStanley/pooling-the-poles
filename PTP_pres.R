@@ -5,8 +5,8 @@ library(sjlabelled); library(lubridate); library(stringr); library(hrbrthemes); 
 
 set.seed(780045)
 
-theme_plots <- function(base_size = 11, base_family = "Gill Sans MT", prior = FALSE) {
-  ret <- theme_bw(base_size, base_family) +
+theme_plots <- function(base_size = 11, base_family = "Gill Sans MT") {
+  theme_bw(base_size, base_family) +
     theme(panel.background = element_rect(fill = "#ffffff", colour = NA),
           title = element_text(size = rel(1), family = "Gill Sans MT", face = "bold"),
           plot.subtitle = element_text(size = rel(0.8),
@@ -33,17 +33,9 @@ theme_plots <- function(base_size = 11, base_family = "Gill Sans MT", prior = FA
           legend.margin = margin(t = -5, b = 0, l = 0, r = 0),
           strip.text = element_text(size = rel(0.9), hjust = 0,
                                     family = "Gill Sans MT", face = "bold"),
-          strip.background = element_rect(fill = "white", colour = NA))
-  
-  if (prior) {
-    ret <- ret +
-      theme(panel.grid.major = element_blank(),
-            axis.title.y = element_blank(),
-            axis.text.y = element_blank(),
-            panel.border = element_blank())
-  } else {
-    ret
-  }
+          strip.background = element_rect(fill = "white", colour = NA),
+          plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm")
+    )
 }
 
 my_date_format <- function()
