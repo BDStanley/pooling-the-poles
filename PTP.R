@@ -333,27 +333,27 @@ plot_latest_parl <-
   scale_fill_manual(values=cols, guide=FALSE) +
   scale_color_manual(name=" ", values=cols, guide=FALSE) +
   ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
-  scale_y_discrete(name="", position="right") +
+  scale_y_discrete(name="") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
-           y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
+           y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=3.5, hjust = "center", vjust=-1,
+           family="Gill Sans MT") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
-           y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
+           y="KO", x=medians$est[medians$.category=="KO"]/100, size=3.5, hjust = "center", vjust=-1,
+           family="Gill Sans MT") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Trzecia Droga"],0)),
-           y="Trzecia Droga", x=medians$est[medians$.category=="Trzecia Droga"]/100, size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
+           y="Trzecia Droga", x=medians$est[medians$.category=="Trzecia Droga"]/100, size=3.5, hjust = "center", vjust=-1,
+           family="Gill Sans MT") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
-           y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
+           y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=3.5, hjust = "center", vjust=-1,
+           family="Gill Sans MT") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
-           y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
+           y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=3.5, hjust = "center", vjust=-1,
+           family="Gill Sans MT") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
-           y="Other", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
+           y="Other", x=medians$est[medians$.category=="Other"]/100, size=3.5, hjust = "center", vjust=-1,
+           family="Gill Sans MT", fontface="plain") +
   annotate(geom = "text", label=paste("Pr(KO > PiS)  = ", PiS.KO.diff), y="KO",
-           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), family="IBM Plex Sans Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), adj=c(1), family="Gill Sans MT", fontface="plain", size=3.5) +
   scale_x_continuous(breaks=c(0, 0.05, 0.08, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Latest estimates",
@@ -381,27 +381,27 @@ plot_latest_parl_PL <-
   scale_color_manual(values=cols, guide=FALSE) +
   scale_fill_manual(values=cols, guide=FALSE) +
   ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
-  scale_y_discrete(name="", position="right") +
+  scale_y_discrete(name="") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
-           y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
+           y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=3.5, hjust = "center", vjust=-1,
+           family="Gill Sans MT") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
-           y="KO", x=medians$est[medians$.category=="KO"]/100, size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
+           y="KO", x=medians$est[medians$.category=="KO"]/100, size=3.5, hjust = "center", vjust=-1,
+           family="Gill Sans MT") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Trzecia Droga"],0)),
-           y="Trzecia Droga", x=medians$est[medians$.category=="Trzecia Droga"]/100, size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
+           y="Trzecia Droga", x=medians$est[medians$.category=="Trzecia Droga"]/100, size=3.5, hjust = "center", vjust=-1,
+           family="Gill Sans MT") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
-           y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
+           y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=3.5, hjust = "center", vjust=-1,
+           family="Gill Sans MT") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
-           y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
-           y="Inni", x=medians$est[medians$.category=="Other"]/100, size=4, hjust = "center", vjust=-1,
-           family="IBM Plex Sans Condensed Light", color="black") +
+           y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=3.5, hjust = "center", vjust=-1,
+           family="Gill Sans MT") +
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Inni"],0)),
+           y="Inni", x=medians$est[medians$.category=="Inni"]/100, size=3.5, hjust = "center", vjust=-1,
+           family="Gill Sans MT") +
   annotate(geom = "text", label=paste("Pr(KO > PiS)  = ", PiS.KO.diff), y="KO",
-           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), size=3.5, adj=c(1), family="IBM Plex Sans Condensed Light") +
+           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), adj=c(1), family="Gill Sans MT", fontface="plain", size=3.5) +
   scale_x_continuous(breaks=c(0, 0.05, 0.08, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych", color="",
@@ -1328,11 +1328,11 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
   scale_y_continuous('Number of seats', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
   scale_fill_manual(name="Party", values = cols)+
-  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
-  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
-  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
-  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="IBM Plex Sans Condensed Light")+
-  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="IBM Plex Sans Condensed Light") +
+  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans MT") +
+  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans MT") +
+  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans MT") +
+  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Gill Sans MT")+
+  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Gill Sans MT") +
   labs(x="", y="% of vote", title="Estimated share of seats",
        subtitle="Mean estimated seat share with 95% credible intervals. Sum total may not equal 460.",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
@@ -1345,14 +1345,14 @@ plot_seats_parl_PL <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) 
   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
-  scale_y_continuous('Liczba miejsc', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
+  scale_y_continuous(limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
   scale_fill_manual(name="Party", values = cols)+
-  geom_label(aes(x=2, y=231), label="Większość ustawodawcza", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
-  geom_label(aes(x=2, y=276), label="Większość pozwalająca obalić weto prezydenta", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
-  geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="IBM Plex Sans Condensed Light") +
-  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="IBM Plex Sans Condensed Light")+
-  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="IBM Plex Sans Condensed Light") +
-  labs(x="", y="", title="Rozkład mandatów w Sejmie",
+  geom_label(aes(x=2, y=231), label="Większość ustawodawcza", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans MT") +
+  geom_label(aes(x=2, y=276), label="Większość pozwalająca obalić weto prezydenta", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans MT") +
+  geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans MT") +
+  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Gill Sans MT") +
+  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Gill Sans MT") +
+  labs(x="", y="Liczba miejsc", title="Rozkład mandatów w Sejmie",
        subtitle="Średni szacowany udział miejsc z 95% przedziałami wiarygodności. Suma może nie być równa 460.",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
   theme_plots()
@@ -1510,7 +1510,7 @@ plot_latest_parl_pollster <- plot_latest_parl_pollster +
               ), 
             aes(x=est/100, y=.category, label=round(est,0)), check_overlap = TRUE,
             size=3, hjust=1.5,
-            family="IBM Plex Sans Condensed Light", color="black")
+            family="Gill Sans MT", color="black")
 
 ggsave(plot_latest_parl_pollster, file = "polls_latest_parl_pollster.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
@@ -1556,7 +1556,7 @@ plot_latest_parl_pollster_PL <- plot_latest_parl_pollster_PL +
               ), 
             aes(x=est/100, y=.category, label=round(est,0)), check_overlap=TRUE,
             size=3, hjust = 1.5,
-            family="IBM Plex Sans Condensed Light", color="black")
+            family="Gill Sans MT", color="black")
 
 ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
