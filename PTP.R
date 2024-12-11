@@ -403,7 +403,7 @@ plot_latest_parl_PL <-
            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=3.5, hjust = "center", vjust=-1,
            family="Gill Sans MT") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Inni"],0)),
-           y="Inni", x=medians$est[medians$.category=="Inni"]/100, size=3.5, hjust = "center", vjust=-1,
+           y="Other", x=medians$est[medians$.category=="Other"]/100, size=3.5, hjust = "center", vjust=-1,
            family="Gill Sans MT") +
   annotate(geom = "text", label=paste("Pr(KO > PiS)  = ", PiS.KO.diff), y="KO",
            x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), adj=c(1), family="Gill Sans MT", fontface="plain", size=3.5) +
