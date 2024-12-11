@@ -31,7 +31,7 @@ theme_plots <- function(base_size = 11, base_family = "Gill Sans MT") {
           legend.justification = "left",
           legend.margin = margin(t = -5, b = 0, l = 0, r = 0),
           strip.text = element_text(size = rel(0.9), hjust = 0,
-                                    family = "Gill Sans MT", face = "bold"),
+                                    family = "Gill Sans MT"),
           strip.background = element_rect(fill = "white", colour = NA),
           plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm")
     )
@@ -46,14 +46,6 @@ theme_plots_map <- function() {
           legend.title = element_text(face="bold"), plot.title = element_text(face="bold"),
           plot.subtitle = element_text(size=8), aspect.ratio=1, legend.position="none")
 }
-
-
-update_geom_defaults("label", 
-                     list(family = "IBM Plex Sans Condensed"))
-update_geom_defaults(ggtext::GeomRichText, 
-                     list(family = "IBM Plex Sans Condensed"))
-update_geom_defaults("label_repel", 
-                     list(family = "IBM Plex Sans Condensed"))
 
 my_date_format <- function()
 {
