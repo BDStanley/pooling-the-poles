@@ -6,7 +6,7 @@ library(sjlabelled); library(lubridate); library(stringr); library(hrbrthemes); 
 set.seed(780045)
 
 theme_plots <- function() {
-  theme_minimal(base_family = "Noto Sans") +
+  theme_minimal(base_family = "IBM Plex Sans") +
     theme(panel.grid.minor = element_blank(),
           plot.background = element_rect(fill = "white", color = NA),
           plot.title = element_text(face = "bold"),
