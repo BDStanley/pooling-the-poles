@@ -333,7 +333,7 @@ plot_latest_parl <-
   scale_fill_manual(values=cols, guide=FALSE) +
   scale_color_manual(name=" ", values=cols, guide=FALSE) +
   ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
-  scale_y_discrete(name="") +
+  scale_y_discrete(name="", position="right") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
            y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=3.5, hjust = "center", vjust=-1,
            family="Gill Sans MT") +
@@ -381,7 +381,7 @@ plot_latest_parl_PL <-
   scale_color_manual(values=cols, guide=FALSE) +
   scale_fill_manual(values=cols, guide=FALSE) +
   ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
-  scale_y_discrete(name="") +
+  scale_y_discrete(name="", position="right") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
            y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=3.5, hjust = "center", vjust=-1,
            family="Gill Sans MT") +
