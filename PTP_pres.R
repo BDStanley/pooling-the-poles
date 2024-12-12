@@ -216,7 +216,7 @@ trends_blend <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(
     aes(y = .value, fill_ramp = stat(.width)),
-    .width = ppoints(100)
+    .width = seq(0, 0.95, 0.01)
   ) |> partition(vars(party)) |> blend("multiply") +
   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
   scale_color_manual(values=cols) +
@@ -367,7 +367,7 @@ trends_blend <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(
     aes(y = .value, fill_ramp = stat(.width)),
-    .width = ppoints(100)
+    .width = seq(0, 0.95, 0.01)
   ) |> partition(vars(party)) |> blend("multiply") +
   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
   scale_color_manual(values=cols) +

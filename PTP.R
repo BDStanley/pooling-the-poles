@@ -250,7 +250,7 @@ trends_blend <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(
     aes(y = .value, fill_ramp = stat(.width)),
-    .width = ppoints(100)
+    .width = seq(0, 0.95, 0.01)
   ) |> partition(vars(party)) |> blend("multiply") +
   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
   scale_color_manual(values=cols) +
@@ -267,7 +267,7 @@ trends_blend <- pred_dta %>%
   theme_plots()
 
 ggsave(trends_blend, file = "trends_blend.png",
-        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white", device=png(type="cairo"))
+       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white", device=png(type="cairo"))
 
 Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
 plot_trends_parl_PL <-
@@ -402,8 +402,8 @@ plot_latest_parl_PL <-
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=3.5, hjust = "center", vjust=-1,
            family="Gill Sans MT") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Inni"],0)),
-           y="Other", x=medians$est[medians$.category=="Other"]/100, size=3.5, hjust = "center", vjust=-1,
+  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
+           y="Inni", x=medians$est[medians$.category=="Other"]/100, size=3.5, hjust = "center", vjust=-1,
            family="Gill Sans MT") +
   annotate(geom = "text", label=paste("Pr(KO > PiS)  = ", PiS.KO.diff), y="KO",
            x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), adj=c(1), family="Gill Sans MT", fontface="plain", size=3.5) +
