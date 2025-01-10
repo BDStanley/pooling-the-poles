@@ -4,14 +4,14 @@ library(tidyverse); library(ggrepel)
 
 set.seed(780045)
 
-theme_plots <- function(base_size = 11, base_family = "Gill Sans MT") {
+theme_plots <- function(base_size = 11, base_family = "Gill Sans") {
   theme_bw(base_size, base_family) +
     theme(panel.background = element_rect(fill = "#ffffff", colour = NA),
-          title = element_text(size = rel(1), family = "Gill Sans MT", face = "bold"),
+          title = element_text(size = rel(1), family = "Gill Sans", face = "bold"),
           plot.subtitle = element_text(size = rel(0.8),
-                                       family = "Gill Sans MT", face = "plain"),
+                                       family = "Gill Sans", face = "plain"),
           plot.caption = element_text(margin = margin(t = 10), size = rel(0.6),
-                                      family = "Gill Sans MT", face = "plain"),
+                                      family = "Gill Sans", face = "plain"),
           panel.border = element_rect(color = "grey50", fill = NA, linewidth = 0.15),
           panel.spacing = unit(1, "lines"),
           panel.grid.minor = element_blank(),
@@ -19,35 +19,35 @@ theme_plots <- function(base_size = 11, base_family = "Gill Sans MT") {
           axis.line = element_blank(),
           axis.ticks = element_blank(),
           axis.title = element_text(size = rel(0.8),
-                                    family = "Gill Sans MT", face = "bold"),
+                                    family = "Gill Sans", face = "bold"),
           axis.title.x = element_text(hjust = 0, margin = margin(t = 10)),
           axis.title.y = element_text(hjust = 1, margin = margin(r = 10)),
           legend.position = "bottom",
           legend.title = element_text(size = rel(0.8), vjust = 0.5,
-                                      family = "Gill Sans MT", face = "bold"),
+                                      family = "Gill Sans", face = "bold"),
           legend.key.size = unit(0.7, "line"),
           legend.key = element_blank(),
           legend.spacing = unit(0.1, "lines"),
           legend.justification = "left",
           legend.margin = margin(t = -5, b = 0, l = 0, r = 0),
           strip.text = element_text(size = rel(0.9), hjust = 0,
-                                    family = "Gill Sans MT"),
+                                    family = "Gill Sans"),
           strip.background = element_rect(fill = "white", colour = NA),
           plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm")
     )
 }
 
-theme_plots_map <- function(base_size = 11, base_family = "Gill Sans MT") {
+theme_plots_map <- function(base_size = 11, base_family = "Gill Sans") {
   theme_minimal(base_size, base_family) +
     theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
           axis.title.y = element_blank(), axis.title.x = element_blank(),
           axis.text.x = element_blank(), axis.text.y = element_blank(),
           strip.text.x = element_text(size = 10), legend.text = element_text(size=9), 
-          title = element_text(size = rel(1), family = "Gill Sans MT", face = "bold"),
+          title = element_text(size = rel(1), family = "Gill Sans", face = "bold"),
           plot.subtitle = element_text(size = rel(0.8),
-                                       family = "Gill Sans MT", face = "plain"),
+                                       family = "Gill Sans", face = "plain"),
           plot.caption = element_text(margin = margin(t = 10), size = rel(0.6),
-                                      family = "Gill Sans MT", face = "plain"),
+                                      family = "Gill Sans", face = "plain"),
           legend.title = element_text(face="bold"), plot.title = element_text(face="bold"),
           aspect.ratio=1, legend.position="none")
 }
@@ -341,24 +341,24 @@ plot_latest_parl <-
   scale_y_discrete(name="", position="right") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
            y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Gill Sans MT") +
+           family="Gill Sans") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
            y="KO", x=medians$est[medians$.category=="KO"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Gill Sans MT") +
+           family="Gill Sans") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Trzecia Droga"],0)),
            y="Trzecia Droga", x=medians$est[medians$.category=="Trzecia Droga"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Gill Sans MT") +
+           family="Gill Sans") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
            y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Gill Sans MT") +
+           family="Gill Sans") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Gill Sans MT") +
+           family="Gill Sans") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
            y="Other", x=medians$est[medians$.category=="Other"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Gill Sans MT", fontface="plain") +
+           family="Gill Sans", fontface="plain") +
   annotate(geom = "text", label=paste("Pr(KO > PiS)  = ", PiS.KO.diff), y="KO",
-           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), adj=c(1), family="Gill Sans MT", fontface="plain", size=3.5) +
+           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), adj=c(1), family="Gill Sans", fontface="plain", size=3.5) +
   scale_x_continuous(breaks=c(0, 0.05, 0.08, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Latest estimates",
@@ -389,24 +389,24 @@ plot_latest_parl_PL <-
   scale_y_discrete(name="", position="right") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
            y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Gill Sans MT") +
+           family="Gill Sans") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
            y="KO", x=medians$est[medians$.category=="KO"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Gill Sans MT") +
+           family="Gill Sans") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Trzecia Droga"],0)),
            y="Trzecia Droga", x=medians$est[medians$.category=="Trzecia Droga"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Gill Sans MT") +
+           family="Gill Sans") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
            y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Gill Sans MT") +
+           family="Gill Sans") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Gill Sans MT") +
+           family="Gill Sans") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
            y="Inni", x=medians$est[medians$.category=="Other"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Gill Sans MT") +
+           family="Gill Sans") +
   annotate(geom = "text", label=paste("Pr(KO > PiS)  = ", PiS.KO.diff), y="KO",
-           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), adj=c(1), family="Gill Sans MT", fontface="plain", size=3.5) +
+           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), adj=c(1), family="Gill Sans", fontface="plain", size=3.5) +
   scale_x_continuous(breaks=c(0, 0.05, 0.08, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych", color="",
@@ -1333,11 +1333,11 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
   scale_y_continuous('Number of seats', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
   scale_fill_manual(name="Party", values = cols)+
-  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans MT") +
-  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans MT") +
-  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans MT") +
-  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Gill Sans MT")+
-  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Gill Sans MT") +
+  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans") +
+  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans") +
+  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans") +
+  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Gill Sans")+
+  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Gill Sans") +
   labs(x="", y="% of vote", title="Estimated share of seats",
        subtitle="Mean estimated seat share with 95% credible intervals. Sum total may not equal 460.",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
@@ -1352,11 +1352,11 @@ plot_seats_parl_PL <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) 
   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
   scale_y_continuous(limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
   scale_fill_manual(name="Party", values = cols)+
-  geom_label(aes(x=2, y=231), label="Większość ustawodawcza", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans MT") +
-  geom_label(aes(x=2, y=276), label="Większość pozwalająca obalić weto prezydenta", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans MT") +
-  geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans MT") +
-  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Gill Sans MT") +
-  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Gill Sans MT") +
+  geom_label(aes(x=2, y=231), label="Większość ustawodawcza", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans") +
+  geom_label(aes(x=2, y=276), label="Większość pozwalająca obalić weto prezydenta", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans") +
+  geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="Gill Sans") +
+  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Gill Sans") +
+  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Gill Sans") +
   labs(x="", y="Liczba miejsc", title="Rozkład mandatów w Sejmie",
        subtitle="Średni szacowany udział miejsc z 95% przedziałami wiarygodności. Suma może nie być równa 460.",
        caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
@@ -1515,7 +1515,7 @@ plot_latest_parl_pollster <- plot_latest_parl_pollster +
               ), 
             aes(x=est/100, y=.category, label=round(est,0)), check_overlap = TRUE,
             size=3, hjust=1.5,
-            family="Gill Sans MT", color="black")
+            family="Gill Sans", color="black")
 
 ggsave(plot_latest_parl_pollster, file = "polls_latest_parl_pollster.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
@@ -1561,7 +1561,7 @@ plot_latest_parl_pollster_PL <- plot_latest_parl_pollster_PL +
               ), 
             aes(x=est/100, y=.category, label=round(est,0)), check_overlap=TRUE,
             size=3, hjust = 1.5,
-            family="Gill Sans MT", color="black")
+            family="Gill Sans", color="black")
 
 ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png", 
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
