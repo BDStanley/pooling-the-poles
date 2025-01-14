@@ -56,7 +56,7 @@ import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1YXiP38k4
 polls <- read_excel('polldata_pres_R1.xlsx')
 
 polls <- polls %>%
-  dplyr::select(startDate, endDate, org, remark, Nawrocki, Trzaskowski, Hołownia, `Dziemianowicz-Bąk`, Mentzen, Other, DK)
+  dplyr::select(startDate, endDate, org, remark, Nawrocki, Trzaskowski, Hołownia, Biejat, Mentzen, Other, DK)
 
 polls <- unite(polls, org, remark, col="org", sep="_")
 polls$org <-as.factor(polls$org)
@@ -68,24 +68,22 @@ polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
-  #filter(midDate >= as.Date('2023-10-15')) %>%
   mutate(Nawrocki = 100/((100-DK))*Nawrocki,
          Trzaskowski = 100/((100-DK))*Trzaskowski,
-         `Dziemianowicz-Bąk` = 100/((100-DK))*`Dziemianowicz-Bąk`,
+         Biejat = 100/((100-DK))*Biejat,
          Hołownia = 100/((100-DK))*Hołownia,
          Mentzen = 100/((100-DK))*Mentzen,
          Other = 100/((100-DK))*Other,
          time = as.integer(difftime(midDate, min(midDate), units = "days")),
          pollster = as.integer(factor(org)))
 
-cols <- c("Nawrocki"="blue", "Trzaskowski"="orange", "Hołownia"="goldenrod", "Mentzen" = "midnightblue", "Dziemianowicz-Bąk/Biejat" = "red",  "Other"="gray50")
+cols <- c("Nawrocki"="blue", "Trzaskowski"="orange", "Hołownia"="goldenrod", "Mentzen" = "midnightblue", "Biejat" = "red",  "Other"="gray50")
 
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
 names$house <- as.factor(names$house)
 housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
   fct_collapse(., Kantar=c("Kantar"))
-#names <- paste0(get_labels(housenames), collapse=", ")
 names <- glue_collapse(get_labels(housenames), ", ", last = " and ")
 names_PL <- glue_collapse(get_labels(housenames), ", ", last = " i ")
 polls$org <- str_replace_all(polls$org, "_", ", ")
@@ -94,24 +92,23 @@ polls <-
   polls %>%
   mutate(time = interval(min(midDate), midDate)/years(1))
 
-polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "Dziemianowicz-Bąk", "Mentzen", "Hołownia")] <-
-  polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "Dziemianowicz-Bąk", "Mentzen", "Hołownia")] %>%
+polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Hołownia")] <-
+  polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Hołownia")] %>%
   mutate_all(function(x) (as.numeric(str_remove(x, "%"))/100)-0.001)
 
 polls <-
   polls %>%
-  mutate(Other = 1 - (Nawrocki + Trzaskowski + `Dziemianowicz-Bąk` + Mentzen + Hołownia))
+  mutate(Other = 1 - (Nawrocki + Trzaskowski + Biejat + Mentzen + Hołownia))
 
 polls <- polls %>%
   rename(
-    DB = `Dziemianowicz-Bąk`,
     Holownia = Hołownia
   )
 
 polls <-
   polls %>%
   mutate(
-    outcome = as.matrix(polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "DB", "Mentzen", "Holownia", "Other")])
+    outcome = as.matrix(polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Holownia", "Other")])
   )
 
 m1 <-
@@ -127,10 +124,10 @@ m1 <-
         prior(normal(0, 0.5), class = "b", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sd", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sds", dpar = "muTrzaskowski") +
-        prior(normal(0, 1.5), class = "Intercept", dpar = "muDB") +
-        prior(normal(0, 0.5), class = "b", dpar = "muDB") +
-        prior(exponential(2), class = "sd", dpar = "muDB") +
-        prior(exponential(2), class = "sds", dpar = "muDB") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muBiejat") +
+        prior(normal(0, 0.5), class = "b", dpar = "muBiejat") +
+        prior(exponential(2), class = "sd", dpar = "muBiejat") +
+        prior(exponential(2), class = "sds", dpar = "muBiejat") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muHolownia") +
         prior(normal(0, 0.5), class = "b", dpar = "muHolownia") +
         prior(exponential(2), class = "sd", dpar = "muHolownia") +
@@ -172,13 +169,13 @@ pred_dta <-
     party =
       party %>%
       factor(
-        levels = c("Nawrocki", "Trzaskowski", "DB", "Mentzen", "Holownia", "Other"),
-        labels = c("Nawrocki", "Trzaskowski", "Dziemianowicz-Bąk/Biejat", "Mentzen", "Hołownia", "Other")
+        levels = c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Holownia", "Other"),
+        labels = c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Hołownia", "Other")
       )
   )
 
 point_dta <-
-  polls[names(polls) %in% c("midDate", "Nawrocki", "Trzaskowski", "DB", "Mentzen", "Holownia", "Other")] %>%
+  polls[names(polls) %in% c("midDate", "Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Holownia", "Other")] %>%
   pivot_longer(
     cols = -midDate,
     names_to = "party",
@@ -188,8 +185,8 @@ point_dta <-
     party =
       party %>%
       factor(
-        levels = c("Nawrocki", "Trzaskowski", "DB", "Mentzen", "Holownia", "Other"),
-        labels = c("Nawrocki", "Trzaskowski", "Dziemianowicz-Bąk/Biejat", "Mentzen", "Hołownia", "Other")
+        levels = c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Holownia", "Other"),
+        labels = c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Hołownia", "Other")
       )
   )
 
