@@ -207,7 +207,7 @@ plot_trends_pres_R1 <-
   theme_plots() +
   theme(legend.position = "bottom")
 ggsave(plot_trends_pres_R1, file = "plot_trends_pres_R1.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 600, scale = 3.2, bg="white")
 
 trends_blend <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
@@ -230,7 +230,7 @@ trends_blend <- pred_dta %>%
   theme_plots() +
   theme(legend.position = "bottom")
 ggsave(trends_blend, file = "trends_pres_R1.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white", device=png(type="cairo"))
+       width = 7, height = 5, units = "cm", dpi = 600, scale = 3.2, bg="white", device=png(type="cairo"))
 
 #####Round 2#####
 drive_deauth()
@@ -358,7 +358,7 @@ plot_trends_pres_R2 <-
   theme_plots()+
   theme(legend.position = "bottom")
 ggsave(plot_trends_pres_R2, file = "plot_trends_pres_R2.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
+       width = 7, height = 5, units = "cm", dpi = 600, scale = 3.2, bg="white")
 
 trends_blend <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
@@ -380,7 +380,7 @@ trends_blend <- pred_dta %>%
   theme_plots()+
   theme(legend.position = "bottom")
 ggsave(trends_blend, file = "trends_pres_R2.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white", device=png(type="cairo"))
+       width = 7, height = 5, units = "cm", dpi = 600, scale = 3.2, bg="white", device=png(type="cairo"))
 
 
 #####Export#####

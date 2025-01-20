@@ -4,14 +4,14 @@ library(tidyverse); library(ggrepel)
 
 set.seed(780045)
 
-theme_plots <- function(base_size = 11, base_family = "Gill Sans") {
+theme_plots <- function(base_size = 11, base_family = "Jost") {
   theme_bw(base_size, base_family) +
     theme(panel.background = element_rect(fill = "#ffffff", colour = NA),
-          title = element_text(size = rel(1), family = "Gill Sans", face = "bold"),
+          title = element_text(size = rel(1), family = "Jost", face = "bold"),
           plot.subtitle = element_text(size = rel(0.8),
-                                       family = "Gill Sans", face = "plain"),
+                                       family = "Jost", face = "plain"),
           plot.caption = element_text(margin = margin(t = 10), size = rel(0.6),
-                                      family = "Gill Sans", face = "plain"),
+                                      family = "Jost", face = "plain"),
           panel.border = element_rect(color = "grey50", fill = NA, linewidth = 0.15),
           panel.spacing = unit(1, "lines"),
           panel.grid.minor = element_blank(),
@@ -19,35 +19,35 @@ theme_plots <- function(base_size = 11, base_family = "Gill Sans") {
           axis.line = element_blank(),
           axis.ticks = element_blank(),
           axis.title = element_text(size = rel(0.8),
-                                    family = "Gill Sans", face = "bold"),
+                                    family = "Jost", face = "bold"),
           axis.title.x = element_text(hjust = 0, margin = margin(t = 10)),
           axis.title.y = element_text(hjust = 1, margin = margin(r = 10)),
           legend.position = "bottom",
           legend.title = element_text(size = rel(0.8), vjust = 0.5,
-                                      family = "Gill Sans", face = "bold"),
+                                      family = "Jost", face = "bold"),
           legend.key.size = unit(0.7, "line"),
           legend.key = element_blank(),
           legend.spacing = unit(0.1, "lines"),
           legend.justification = "left",
           legend.margin = margin(t = -5, b = 0, l = 0, r = 0),
           strip.text = element_text(size = rel(0.9), hjust = 0,
-                                    family = "Gill Sans"),
+                                    family = "Jost", face = "bold"),
           strip.background = element_rect(fill = "white", colour = NA),
           plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm")
     )
 }
 
-theme_plots_map <- function(base_size = 11, base_family = "Gill Sans") {
+theme_plots_map <- function(base_size = 11, base_family = "Jost") {
   theme_minimal(base_size, base_family) +
     theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
           axis.title.y = element_blank(), axis.title.x = element_blank(),
           axis.text.x = element_blank(), axis.text.y = element_blank(),
           strip.text.x = element_text(size = 10), legend.text = element_text(size=9), 
-          title = element_text(size = rel(1), family = "Gill Sans", face = "bold"),
+          title = element_text(size = rel(1), family = "Jost", face = "bold"),
           plot.subtitle = element_text(size = rel(0.8),
-                                       family = "Gill Sans", face = "plain"),
+                                       family = "Jost", face = "plain"),
           plot.caption = element_text(margin = margin(t = 10), size = rel(0.6),
-                                      family = "Gill Sans", face = "plain"),
+                                      family = "Jost", face = "plain"),
           legend.title = element_text(face="bold"), plot.title = element_text(face="bold"),
           aspect.ratio=1, legend.position="none")
 }
