@@ -32,7 +32,7 @@ theme_plots <- function(base_size = 11, base_family = "Jost") {
           legend.justification = "left",
           legend.margin = margin(t = -5, b = 0, l = 0, r = 0),
           strip.text = element_text(size = rel(0.9), hjust = 0,
-                                    family = "Jost", face = "bold"),
+                                    family = "Jost", face = "plain"),
           strip.background = element_rect(fill = "white", colour = NA),
           plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm")
     )
@@ -190,26 +190,26 @@ point_dta <-
       )
   )
 
-plot_trends_pres_R1 <-
-  ggplot() +
-  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.8), alpha=1/2) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "1 month",
-               labels = my_date_format()) +
-  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-                  ylim = c(0, .5)) +
-  scale_color_manual(values=cols) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  labs(y = "", x="", title = "Polish presidential election, round 1", 
-       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (Bluesky: @benstanley.pl).") +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_plots() +
-  theme(legend.position = "bottom")
-ggsave(plot_trends_pres_R1, file = "plot_trends_pres_R1.png", 
-       width = 7, height = 5, units = "cm", dpi = 600, scale = 3.2, bg="white")
+# trends_pres_R1 <-
+#   ggplot() +
+#   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
+#   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.8), alpha=1/2) +
+#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+#   scale_x_date(date_breaks = "1 month",
+#                labels = my_date_format()) +
+#   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+#                   ylim = c(0, .5)) +
+#   scale_color_manual(values=cols) +
+#   scale_fill_manual(values=cols, guide=FALSE) +
+#   labs(y = "", x="", title = "Polish presidential election, round 1", 
+#        subtitle=str_c("Data from ", names, "."), color="", caption = "") +
+#   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+#   theme_plots() +
+#   theme(legend.position = "bottom")
+# ggsave(trends_pres_R1, file = "trends_pres_R1.png", 
+#        width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white")
 
-trends_blend <- pred_dta %>%
+trends_pres_R1 <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(
     aes(y = .value, fill_ramp = stat(.width)),
@@ -225,12 +225,12 @@ trends_blend <- pred_dta %>%
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
   labs(y = "", x="", title = "Polish presidential election, round 1",
-       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (Bluesky: @benstanley.pl).") +
+       subtitle=str_c("Data from ", names, "."), color="", caption = "") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots() +
   theme(legend.position = "bottom")
-ggsave(trends_blend, file = "trends_pres_R1.png",
-       width = 7, height = 5, units = "cm", dpi = 600, scale = 3.2, bg="white", device=png(type="cairo"))
+ggsave(trends_pres_R1, file = "trends_pres_R1.png",
+       width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white", device=png(type="cairo"))
 
 #####Round 2#####
 drive_deauth()
@@ -342,7 +342,7 @@ point_dta <-
       )
   )
 
-plot_trends_pres_R2 <-
+trends_pres_R2 <-
   ggplot() +
   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.8), alpha=1/2) +
@@ -353,14 +353,14 @@ plot_trends_pres_R2 <-
   scale_color_manual(values=cols) +
   scale_fill_manual(values=cols, guide=FALSE) +
   labs(y = "", x="", title = "Polish presidential election, round 2", 
-       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (Bluesky: @benstanley.pl).") +
+       subtitle=str_c("Data from ", names, "."), color="", caption = "") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()+
   theme(legend.position = "bottom")
-ggsave(plot_trends_pres_R2, file = "plot_trends_pres_R2.png", 
-       width = 7, height = 5, units = "cm", dpi = 600, scale = 3.2, bg="white")
+ggsave(trends_pres_R2, file = "trends_pres_R2.png", 
+       width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white")
 
-trends_blend <- pred_dta %>%
+trends_pres_R2 <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(
     aes(y = .value, fill_ramp = stat(.width)),
@@ -375,16 +375,17 @@ trends_blend <- pred_dta %>%
                labels = my_date_format()) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate))) +
   labs(y = "", x="", title = "Polish presidential election, round 2",
-       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (Bluesky: @benstanley.pl).") +
+       subtitle=str_c("Data from ", names, "."), color="", caption = "") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()+
   theme(legend.position = "bottom")
-ggsave(trends_blend, file = "trends_pres_R2.png",
-       width = 7, height = 5, units = "cm", dpi = 600, scale = 3.2, bg="white", device=png(type="cairo"))
+ggsave(trends_pres_R2, file = "trends_pres_R2.png",
+       width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white", device=png(type="cairo"))
 
 
-#####Export#####
+#####Upload to Github and sync with website folder#####
 system("git add -A")
-system("git commit -m 'PTP new'")
+system("git commit -m '$(date)'")
 system("git pull")
 system("git push")
+system("rsync -av --include='*.png' --exclude='*' '/Users/benstanley/R scripts/Pooling the Poles/' '/Users/benstanley/R scripts/Website/images/'")

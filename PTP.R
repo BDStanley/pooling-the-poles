@@ -31,7 +31,7 @@ theme_plots <- function(base_size = 11, base_family = "Jost") {
           legend.justification = "left",
           legend.margin = margin(t = -5, b = 0, l = 0, r = 0),
           strip.text = element_text(size = rel(0.9), hjust = 0,
-                                    family = "Jost", face = "bold"),
+                                    family = "Jost", face = "plain"),
           strip.background = element_rect(fill = "white", colour = NA),
           plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm")
     )
@@ -1567,7 +1567,7 @@ ggsave(latest_parl_pollster, file = "latest_parl_pollster.png",
 # ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png", 
 #        width = 7, height = 5, units = "cm", dpi=600, scale = 3.2, bg="white")
 
-#####Upload to Github#####
+#####Upload to Github and sync with website folder#####
 system("git add -A")
 system("git commit -m '$(date)'")
 system("git pull")
