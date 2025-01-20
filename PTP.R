@@ -224,29 +224,30 @@ point_dta <-
       )
   )
 
-plot_trends_parl <-
-  ggplot() +
-  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "1 month",
-               labels = my_date_format()) +
-  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-                  ylim = c(0, .5)) +
-  scale_color_manual(values=cols) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  labs(y = "", x="", title = "Trends", 
-       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_plots()
-ggsave(plot_trends_parl, file = "plot_trends_parl.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
+# plot_trends_parl <-
+#   ggplot() +
+#   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
+#   #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
+#   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
+#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+#   scale_x_date(date_breaks = "1 month",
+#                labels = my_date_format()) +
+#   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+#                   ylim = c(0, .5)) +
+#   scale_color_manual(values=cols) +
+#   scale_fill_manual(values=cols, guide=FALSE) +
+#   labs(y = "", x="", title = "Party trends",
+#        subtitle=str_wrap(str_c("Data from ", paste(names, collapse=", "), "."), width = 120), 
+#        color="", caption = "") +
+#   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+#   theme_plots()
+# ggsave(plot_trends_parl, file = "trends_parl.png", 
+#        width = 7, height = 5, units = "cm", dpi=600, scale = 3, bg="white")
 
 library(ggdist)
 library(ggblend)
 
-trends_blend <- pred_dta %>%
+trends_parl <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(
     aes(y = .value, fill_ramp = stat(.width)),
@@ -261,34 +262,34 @@ trends_blend <- pred_dta %>%
                labels = my_date_format()) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
-  labs(y = "", x="", title = "Trends",
-       subtitle=str_c("Data from ", names, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+  labs(y = "", x="", title = "Party trends",
+       subtitle=str_wrap(str_c("Data from ", paste(names, collapse=", "), "."), width = 120), 
+       color="", caption = ".") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()
 
-ggsave(trends_blend, file = "trends_blend.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white", device=png(type="cairo"))
+ggsave(trends_parl, file = "trends_parl.png",
+       width = 7, height = 5, units = "cm", dpi=600, scale = 3, bg="white", device=png(type="cairo"))
 
-Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
-plot_trends_parl_PL <-
-  ggplot() +
-  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.95), alpha=1/2) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "1 month",
-               labels = my_date_format()) +
-  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-                  ylim = c(0, .5)) +
-  scale_color_manual(values=c("PiS"="blue", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "Trzecia Droga"="darkgreen", "Inni"="gray50")) +
-  scale_fill_manual(values=c("PiS"="blue", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "Trzecia Droga"="darkgreen", "Inni"="gray50"), guide=FALSE) +
-  labs(y = "", x="", title = "Trendy",
-       subtitle=str_c("Dane: ", names_PL, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-  theme_plots()
-ggsave(plot_trends_parl_PL, file = "plot_trends_parl_PL.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
-Sys.setlocale("LC_TIME", "en_GB.UTF-8")
+# Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
+# plot_trends_parl_PL <-
+#   ggplot() +
+#   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
+#   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
+#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+#   scale_x_date(date_breaks = "1 month",
+#                labels = my_date_format()) +
+#   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+#                   ylim = c(0, .5)) +
+#   scale_color_manual(values=c("PiS"="blue", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "Trzecia Droga"="darkgreen", "Inni"="gray50")) +
+#   scale_fill_manual(values=c("PiS"="blue", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "Trzecia Droga"="darkgreen", "Inni"="gray50"), guide=FALSE) +
+#   labs(y = "", x="", title = "Trendy",
+#        subtitle=str_c("Dane: ", names_PL, "."), color="", caption = "") +
+#   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+#   theme_plots()
+# ggsave(plot_trends_parl_PL, file = "trends_parl_PL.png",
+#        width = 7, height = 5, units = "cm", dpi=600, scale = 3, bg="white")
+# Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
 #####Latest plot#####
 plotdraws <- add_fitted_draws(
@@ -361,60 +362,61 @@ plot_latest_parl <-
            x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), adj=c(1), family="Jost", fontface="plain", size=3.5) +
   scale_x_continuous(breaks=c(0, 0.05, 0.08, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Latest estimates",
-       subtitle=str_c("Data from ", names,".")) +
+  labs(y = "", x="", title = "Latest estimates",
+       subtitle=str_wrap(str_c("Data from ", paste(names, collapse=", "), "."), width = 120), 
+       color="", caption = ".") +
   theme_plots()
-ggsave(plot_latest_parl, file = "polls_latest_parl.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
+ggsave(plot_latest_parl, file = "latest_parl.png", 
+       width = 7, height = 5, units = "cm", dpi=600, scale = 3, bg="white")
 
-Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
-plot_latest_parl_PL <-
-  add_fitted_draws(
-    model = m1,
-    newdata =
-      tibble(time = today),
-    re_formula = NA
-  ) %>%
-  group_by(.category) %>%
-  mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
-                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "Trzecia Droga"))) %>%
-  ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
-             x=.value, color=.category)) +
-  stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
-  partition(vars(.category)) +
-  scale_color_manual(values=cols, guide=FALSE) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
-  scale_y_discrete(name="", position="right") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
-           y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Jost") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
-           y="KO", x=medians$est[medians$.category=="KO"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Jost") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Trzecia Droga"],0)),
-           y="Trzecia Droga", x=medians$est[medians$.category=="Trzecia Droga"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Jost") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
-           y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Jost") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
-           y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Jost") +
-  annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
-           y="Inni", x=medians$est[medians$.category=="Other"]/100, size=3.5, hjust = "center", vjust=-1,
-           family="Jost") +
-  annotate(geom = "text", label=paste("Pr(KO > PiS)  = ", PiS.KO.diff), y="KO",
-           x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), adj=c(1), family="Jost", fontface="plain", size=3.5) +
-  scale_x_continuous(breaks=c(0, 0.05, 0.08, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
-  expand_limits(x = 0) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych", color="",
-       subtitle=str_c("Dane: ", names_PL,".")) +
-  theme_plots()
-ggsave(plot_latest_parl_PL, file = "polls_latest_parl_PL.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
-Sys.setlocale("LC_TIME", "en_GB.UTF-8")
+# Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
+# plot_latest_parl_PL <-
+#   add_fitted_draws(
+#     model = m1,
+#     newdata =
+#       tibble(time = today),
+#     re_formula = NA
+#   ) %>%
+#   group_by(.category) %>%
+#   mutate(.category = factor(.category,
+#                             levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
+#                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "Trzecia Droga"))) %>%
+#   ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
+#              x=.value, color=.category)) +
+#   stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
+#   partition(vars(.category)) +
+#   scale_color_manual(values=cols, guide=FALSE) +
+#   scale_fill_manual(values=cols, guide=FALSE) +
+#   ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
+#   scale_y_discrete(name="", position="right") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
+#            y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=3.5, hjust = "center", vjust=-1,
+#            family="Jost") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="KO"],0)),
+#            y="KO", x=medians$est[medians$.category=="KO"]/100, size=3.5, hjust = "center", vjust=-1,
+#            family="Jost") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Trzecia Droga"],0)),
+#            y="Trzecia Droga", x=medians$est[medians$.category=="Trzecia Droga"]/100, size=3.5, hjust = "center", vjust=-1,
+#            family="Jost") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Lewica"],0)),
+#            y="Lewica", x=medians$est[medians$.category=="Lewica"]/100, size=3.5, hjust = "center", vjust=-1,
+#            family="Jost") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Konfederacja"],0)),
+#            y="Konfederacja", x=medians$est[medians$.category=="Konfederacja"]/100, size=3.5, hjust = "center", vjust=-1,
+#            family="Jost") +
+#   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="Other"],0)),
+#            y="Inni", x=medians$est[medians$.category=="Other"]/100, size=3.5, hjust = "center", vjust=-1,
+#            family="Jost") +
+#   annotate(geom = "text", label=paste("Pr(KO > PiS)  = ", PiS.KO.diff), y="KO",
+#            x=quantile(plotdraws$.value[plotdraws$.category=="KO"], 0.005), adj=c(1), family="Jost", fontface="plain", size=3.5) +
+#   scale_x_continuous(breaks=c(0, 0.05, 0.08, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "5", "8", "10", "20", "30", "40", "50")) +
+#   expand_limits(x = 0) +
+#   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Poparcie dla partii politycznych", color="",
+#        subtitle=str_c("Dane: ", names_PL,".")) +
+#   theme_plots()
+# ggsave(plot_latest_parl_PL, file = "polls_latest_parl_PL.png",
+#        width = 7, height = 5, units = "cm", dpi=600, scale = 3.2, bg="white")
+# Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
 
 #####Seat maps#####
@@ -515,10 +517,10 @@ p_TD <- ggplot(plotdata)+
   scale_fill_gradient(name="Trzecia Droga", limits=c(min=0, max=20), low = "white", high = "darkgreen", guide="colorbar") +
   geom_label(aes(x=x, y=y, group=`Trzecia Droga`, label=`Trzecia Droga`), fill="white") +
   labs(title="Constituency-level share of seats for Trzecia Droga", subtitle="Seat distribution reflects regional levels of support at October 2023 election", 
-       caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+       caption = "") +
   theme_plots_map()
 ggsave(p_TD, file = "TD_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.2, bg="white")
+       width = 7, height = 7, units = "cm", dpi=600, scale = 3, bg="white")
 
 p_lewica <- ggplot(plotdata)+
   geom_sf(aes(fill=as.integer(Lewica)))+
@@ -526,10 +528,10 @@ p_lewica <- ggplot(plotdata)+
   geom_label(aes(x=x, y=y, group=Lewica, label=Lewica), fill="white") +
   scale_fill_gradient(name="Lewica", limits=c(min=0, max=20), low = "white", high = "red", guide="colorbar") +
   labs(title="Constituency-level share of seats for Lewica", subtitle="Seat distribution reflects regional levels of support at October 2023 election", 
-       caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+       caption = "") +
   theme_plots_map()
 ggsave(p_lewica, file = "Lewica_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.2, bg="white")
+       width = 7, height = 7, units = "cm", dpi=600, scale = 3, bg="white")
 
 p_pis <- ggplot(plotdata)+
   geom_sf(aes(fill=as.integer(PiS)))+
@@ -537,10 +539,10 @@ p_pis <- ggplot(plotdata)+
   geom_label(aes(x=x, y=y, group=PiS, label=PiS), fill="white") +
   scale_fill_gradient(name="PiS", limits=c(min=0, max=20), low = "white", high = "blue", guide="colorbar") +
   labs(title="Constituency-level share of seats for PiS", subtitle="Seat distribution reflects regional levels of support at October 2023 election", 
-       caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+       caption = "") +
   theme_plots_map()
 ggsave(p_pis, file = "PiS_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.2, bg="white")
+       width = 7, height = 7, units = "cm", dpi=600, scale = 3, bg="white")
 
 p_ko <- ggplot(plotdata)+
   geom_sf(aes(fill=as.integer(KO)))+
@@ -548,10 +550,10 @@ p_ko <- ggplot(plotdata)+
   geom_label(aes(x=x, y=y, group=KO, label=KO), fill="white") +
   scale_fill_gradient(name="KO", limits=c(min=0, max=20), low = "white", high = "orange", guide="colorbar") +
   labs(title="Constituency-level share of seats for Koalicja Obywatelska", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
-       caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+       caption = "") +
   theme_plots_map()
 ggsave(p_ko, file = "KO_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.2, bg="white")
+       width = 7, height = 7, units = "cm", dpi=600, scale = 3, bg="white")
 
 p_konf <- ggplot(plotdata)+
   geom_sf(aes(fill=as.integer(Konfederacja)))+
@@ -559,21 +561,20 @@ p_konf <- ggplot(plotdata)+
   geom_label(aes(x=x, y=y, group=Konfederacja, label=Konfederacja), fill="white") +
   scale_fill_gradient(name="Konfederacja", limits=c(min=0, max=20), low = "white", high = "midnightblue", guide="colorbar") +
   labs(title="Constituency-level share of seats for Konfederacja", subtitle="Seat distribution reflects regional levels of support at October 2019 election", 
-       caption = "Ben Stanley (@BDStanley; benstanley.pl).")+
+       caption = "")+
   theme_plots_map()
 ggsave(p_konf, file = "Konf_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.2, bg="white")
+       width = 7, height = 7, units = "cm", dpi=600, scale = 3, bg="white")
 
 p_pis_ko <- ggplot(plotdata)+
   geom_sf(aes(fill=as.integer(PiSmKO)))+
   theme(aspect.ratio=1) +
-  #geom_label(aes(x=x, y=y, group=PiSmKO, label=PiSmKO), fill="white") +
   scale_fill_gradient2(name="PiSKO", limits=c(min=-20, max=20), low = "orange", mid="white", high = "blue", midpoint=0, guide="colorbar") +
   labs(title="Constituency-level differences in share of seats for PiS and Koalicja Obywatelska", subtitle="Constituencies in shades of blue have more PiS MPs; constituencies in orange have more KO MPs;\nconstituencies in white have equal numbers of PiS and KO MPs", 
-       caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+       caption = "") +
   theme_plots_map()
 ggsave(p_pis_ko, file = "PiSKO_seats.png", 
-       width = 7, height = 7, units = "cm", dpi = 320, scale = 3.2, bg="white")
+       width = 7, height = 7, units = "cm", dpi=600, scale = 3, bg="white")
 
 
 #####Seats plot#####
@@ -1326,7 +1327,7 @@ frame2$party <- reorder(frame2$party, -frame2$y)
 frame$y <- frame2$y
 frame$party <- reorder(frame$party, -frame$y)
 
-plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
+seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   geom_bar(stat="identity", width=.75, show.legend = F) +
   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
@@ -1340,29 +1341,29 @@ plot_seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Jost") +
   labs(x="", y="% of vote", title="Estimated share of seats",
        subtitle="Mean estimated seat share with 95% credible intervals. Sum total may not equal 460.",
-       caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
+       caption = "") +
   theme_plots()
-ggsave(plot_seats_parl, file = "plot_seats_parl.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
+ggsave(seats_parl, file = "seats_parl.png",
+       width = 7, height = 5, units = "cm", dpi=600, scale = 3, bg="white")
 
-plot_seats_parl_PL <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
-  geom_bar(stat="identity", width=.75, show.legend = F) +
-  geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
-  geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
-  geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
-  scale_y_continuous(limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
-  scale_fill_manual(name="Party", values = cols)+
-  geom_label(aes(x=2, y=231), label="Większość ustawodawcza", size=3, adj=c(0), label.size=NA, fill="grey95", family="Jost") +
-  geom_label(aes(x=2, y=276), label="Większość pozwalająca obalić weto prezydenta", size=3, adj=c(0), label.size=NA, fill="grey95", family="Jost") +
-  geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="Jost") +
-  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Jost") +
-  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Jost") +
-  labs(x="", y="Liczba miejsc", title="Rozkład mandatów w Sejmie",
-       subtitle="Średni szacowany udział miejsc z 95% przedziałami wiarygodności. Suma może nie być równa 460.",
-       caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  theme_plots()
-ggsave(plot_seats_parl_PL, file = "plot_seats_parl_PL.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
+# plot_seats_parl_PL <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
+#   geom_bar(stat="identity", width=.75, show.legend = F) +
+#   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
+#   geom_abline(intercept=276, slope=0, colour="gray10", linetype=3) +
+#   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
+#   scale_y_continuous(limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
+#   scale_fill_manual(name="Party", values = cols)+
+#   geom_label(aes(x=2, y=231), label="Większość ustawodawcza", size=3, adj=c(0), label.size=NA, fill="grey95", family="Jost") +
+#   geom_label(aes(x=2, y=276), label="Większość pozwalająca obalić weto prezydenta", size=3, adj=c(0), label.size=NA, fill="grey95", family="Jost") +
+#   geom_label(aes(x=2, y=307), label="Konstytucyjna większość", size=3, adj=c(0), label.size=NA, fill="grey95", family="Jost") +
+#   annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Jost") +
+#   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Jost") +
+#   labs(x="", y="Liczba miejsc", title="Rozkład mandatów w Sejmie",
+#        subtitle="Średni szacowany udział miejsc z 95% przedziałami wiarygodności. Suma może nie być równa 460.",
+#        caption = "") +
+#   theme_plots()
+# ggsave(plot_seats_parl_PL, file = "plot_seats_parl_PL.png",
+#        width = 7, height = 5, units = "cm", dpi=600, scale = 3.2, bg="white")
 
 
 #####By pollster#####
@@ -1420,47 +1421,47 @@ point_dta <- polls %>%
   )
 
 
-plot_trends_pollster <-
-  ggplot() +
-  geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "3 month",
-               labels = my_date_format()) +
-  facet_wrap(~org, nrow=3) +
-  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-                  ylim = c(0, .5)) +
-  scale_color_manual(values=cols) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  labs(y = "% of vote", x="", title = "Trends by pollster",
-       subtitle="Only pollsters with at least five polls are included.", color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  theme_plots() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) 
-ggsave(plot_trends_pollster , file = "plot_trends_pollster.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
+# trends_pollster <-
+#   ggplot() +
+#   geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
+#   #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+#   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
+#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+#   scale_x_date(date_breaks = "3 month",
+#                labels = my_date_format()) +
+#   facet_wrap(~org, nrow=3) +
+#   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+#                   ylim = c(0, .5)) +
+#   scale_color_manual(values=cols) +
+#   scale_fill_manual(values=cols, guide=FALSE) +
+#   labs(y = "% of vote", x="", title = "Trends by pollster",
+#        subtitle="Only pollsters with at least five polls are included.", color="", caption = "") +
+#   theme_plots() +
+#   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) 
+# ggsave(trends_pollster , file = "trends_pollster.png",
+#        width = 7, height = 5, units = "cm", dpi=600, scale = 3, bg="white")
 
-Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
-plot_trends_pollster_PL <-
-  ggplot() +
-  geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
-  #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
-  stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_date(date_breaks = "3 month",
-               labels = my_date_format()) +
-  facet_wrap(~org, nrow=3) +
-  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-                  ylim = c(0, .5)) +
-  scale_color_manual(values=c("PiS"="blue", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "Trzecia Droga"="darkgreen", "Inni"="gray50")) +
-  scale_fill_manual(values=c("PiS"="blue", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "Trzecia Droga"="darkgreen", "Inni"="gray50"), guide=FALSE) +
-  labs(y = "", x="", title = "Trendy według ośrodku badawczego",
-       subtitle=str_c("Dane: ", names_PL, "."), color="", caption = "Ben Stanley (@BDStanley; benstanley.pl).") +
-  theme_plots() +
-  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA)))
-ggsave(plot_trends_pollster_PL , file = "plot_trends_pollster_PL.png",
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
-Sys.setlocale("LC_TIME", "en_GB.UTF-8")
+# Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
+# plot_trends_pollster_PL <-
+#   ggplot() +
+#   geom_point(data=point_dta, aes(x = midDate, y = est, colour=party, fill=party), alpha = .5, size = 1, show.legend=FALSE) +
+#   #stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.5, 0.66, 0.95), alpha=1/4) +
+#   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0)) +
+#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+#   scale_x_date(date_breaks = "3 month",
+#                labels = my_date_format()) +
+#   facet_wrap(~org, nrow=3) +
+#   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+#                   ylim = c(0, .5)) +
+#   scale_color_manual(values=c("PiS"="blue", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "Trzecia Droga"="darkgreen", "Inni"="gray50")) +
+#   scale_fill_manual(values=c("PiS"="blue", "KO"="orange", "Lewica" = "red", "Konfederacja" = "midnightblue", "Trzecia Droga"="darkgreen", "Inni"="gray50"), guide=FALSE) +
+#   labs(y = "", x="", title = "Trendy według ośrodku badawczego",
+#        subtitle=str_c("Dane: ", names_PL, "."), color="", caption = "") +
+#   theme_plots() +
+#   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA)))
+# ggsave(plot_trends_pollster_PL , file = "plot_trends_pollster_PL.png",
+#        width = 7, height = 5, units = "cm", dpi=600, scale = 3.2, bg="white")
+# Sys.setlocale("LC_TIME", "en_GB.UTF-8")
 
 
 plotdraws <- polls %>%  
@@ -1476,7 +1477,7 @@ names <- separate(names, as.factor.get_labels.polls.org.., sep=",", into=c('org'
 orgnames <- glue_collapse(get_labels(sort(names$org)), ", ", last = " and ")
 orgnames_PL <- glue_collapse(get_labels(sort(names$org)), ", ", last = " i ")
 
-plot_latest_parl_pollster <- polls %>%  
+latest_parl_pollster <- polls %>%  
   modelr::data_grid(time = today, pollster = factor(pollster)) %>%
   add_fitted_draws(m1) %>%
   group_by(.category, pollster) %>%
@@ -1500,11 +1501,11 @@ plot_latest_parl_pollster <- polls %>%
   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
   expand_limits(x = 0) +
   facet_wrap(vars(pollster), ) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Latest estimates by pollster",
+  labs(caption="", x="", title="Latest estimates by pollster",
        subtitle=str_c("Data from ", orgnames,"."), color="") +
   theme_plots()
 
-plot_latest_parl_pollster <- plot_latest_parl_pollster +
+latest_parl_pollster <- latest_parl_pollster +
   geom_text(data=medians %>%
               mutate(.category = factor(.category,
                                         levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
@@ -1514,61 +1515,61 @@ plot_latest_parl_pollster <- plot_latest_parl_pollster +
                                        labels = get_labels(factor(polls$org)))
               ), 
             aes(x=est/100, y=.category, label=round(est,0)), check_overlap = TRUE,
-            size=3, hjust=1.5,
-            family="Jost", color="black")
+            size=2,
+            family="Jost Medium", color="black")
 
-ggsave(plot_latest_parl_pollster, file = "polls_latest_parl_pollster.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
+ggsave(latest_parl_pollster, file = "latest_parl_pollster.png", 
+       width = 7, height = 5, units = "cm", dpi=600, scale = 3, bg="white")
 
-
-plot_latest_parl_pollster_PL <- polls %>%  
-  modelr::data_grid(time = today, pollster = factor(pollster)) %>%
-  add_fitted_draws(m1) %>%
-  group_by(.category, pollster) %>%
-  mutate(.category = factor(.category,
-                            levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
-                            labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "Trzecia Droga")),
-         pollster = factor(pollster,
-                           levels = get_labels(factor(polls$pollster)),
-                           labels = get_labels(factor(polls$org)))
-  ) %>%
-  #filter(., pollster=="Kantar, CAPI" | pollster=="CBOS, Mixed") %>%
-  ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
-             x=.value, color=.category)) +
-  geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
-  stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
-  partition(vars(.category)) +
-  scale_color_manual(values=cols, guide=FALSE) +
-  scale_fill_manual(values=cols, guide=FALSE) +
-  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
-  scale_y_discrete(name="", position="right") +
-  scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
-  expand_limits(x = 0) +
-  facet_wrap(vars(pollster), ) +
-  labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki według ośrodku badawczego",
-       #subtitle=str_to_upper(str_c("Dane: ", orgnames_PL,"."), color="")
-  ) +
-  theme_plots()
-
-plot_latest_parl_pollster_PL <- plot_latest_parl_pollster_PL +
-  geom_text(data=medians %>%
-              mutate(.category = factor(.category,
-                                        levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
-                                        labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "Trzecia Droga")),
-                     pollster = factor(pollster,
-                                       levels = get_labels(factor(polls$pollster)),
-                                       labels = get_labels(factor(polls$org)))
-              ), 
-            aes(x=est/100, y=.category, label=round(est,0)), check_overlap=TRUE,
-            size=3, hjust = 1.5,
-            family="Jost", color="black")
-
-ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png", 
-       width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
+# 
+# plot_latest_parl_pollster_PL <- polls %>%  
+#   modelr::data_grid(time = today, pollster = factor(pollster)) %>%
+#   add_fitted_draws(m1) %>%
+#   group_by(.category, pollster) %>%
+#   mutate(.category = factor(.category,
+#                             levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
+#                             labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "Trzecia Droga")),
+#          pollster = factor(pollster,
+#                            levels = get_labels(factor(polls$pollster)),
+#                            labels = get_labels(factor(polls$org)))
+#   ) %>%
+#   #filter(., pollster=="Kantar, CAPI" | pollster=="CBOS, Mixed") %>%
+#   ggplot(aes(y=reorder(.category, dplyr::desc(-.value)), 
+#              x=.value, color=.category)) +
+#   geom_vline(aes(xintercept=0.05), colour="gray40", linetype="dotted") +
+#   stat_interval(aes(x=.value, color_ramp = stat(.width)), .width = ppoints(100)) %>%
+#   partition(vars(.category)) +
+#   scale_color_manual(values=cols, guide=FALSE) +
+#   scale_fill_manual(values=cols, guide=FALSE) +
+#   ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
+#   scale_y_discrete(name="", position="right") +
+#   scale_x_continuous(breaks=c(0, 0.1, 0.2, 0.3, 0.4, 0.5), labels=c("0", "10", "20", "30", "40", "50")) +
+#   expand_limits(x = 0) +
+#   facet_wrap(vars(pollster), ) +
+#   labs(caption="Ben Stanley (@BDStanley; benstanley.pl).", x="", title="Szacunkowe wyniki według ośrodku badawczego",
+#        #subtitle=str_to_upper(str_c("Dane: ", orgnames_PL,"."), color="")
+#   ) +
+#   theme_plots()
+# 
+# plot_latest_parl_pollster_PL <- plot_latest_parl_pollster_PL +
+#   geom_text(data=medians %>%
+#               mutate(.category = factor(.category,
+#                                         levels = c("PiS", "KO", "Lewica", "Konfederacja", "Other", "TD"),
+#                                         labels = c("PiS", "KO", "Lewica", "Konfederacja", "Inni", "Trzecia Droga")),
+#                      pollster = factor(pollster,
+#                                        levels = get_labels(factor(polls$pollster)),
+#                                        labels = get_labels(factor(polls$org)))
+#               ), 
+#             aes(x=est/100, y=.category, label=round(est,0)), check_overlap=TRUE,
+#             size=3, hjust = 1.5,
+#             family="Jost", color="black")
+# 
+# ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png", 
+#        width = 7, height = 5, units = "cm", dpi=600, scale = 3.2, bg="white")
 
 #####Upload to Github#####
 system("git add -A")
-system("git commit -m 'PTP new'")
+system("git commit -m '$(date)'")
 system("git pull")
 system("git push")
 system("rsync -av --include='*.png' --exclude='*' '/Users/benstanley/R scripts/Pooling the Poles/' '/Users/benstanley/R scripts/Website/images/'")
