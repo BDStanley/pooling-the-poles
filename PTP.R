@@ -1567,9 +1567,8 @@ ggsave(plot_latest_parl_pollster_PL, file = "polls_latest_parl_pollster_PL.png",
        width = 7, height = 5, units = "cm", dpi = 320, scale = 3.2, bg="white")
 
 #####Upload to Github#####
-library(rmarkdown)
-render('index.Rmd')
 system("git add -A")
 system("git commit -m 'PTP new'")
 system("git pull")
 system("git push")
+system("rsync -av --include='*.png' --exclude='*' '/Users/benstanley/R scripts/Pooling the Poles/' '/Users/benstanley/R scripts/Website/images/'")
