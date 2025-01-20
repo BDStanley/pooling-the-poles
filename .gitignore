@@ -36,3 +36,5 @@ seat_table.tex
 wyniki_gl_na_kand_po_gminach_utf8.csv
 wyniki_gl_na_kand_po_powiatach_proc_utf8.csv
 .DS_Store
+
+/.quarto/
