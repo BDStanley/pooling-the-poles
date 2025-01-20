@@ -321,7 +321,7 @@ trzecia_droga_thresh <- plotdraws %>%
   pull(`Trzecia Droga`) %>%
   last(.)
 
-plot_latest_parl <-
+latest_parl <-
   add_fitted_draws(
     model = m1,
     newdata =
@@ -339,7 +339,7 @@ plot_latest_parl <-
   scale_fill_manual(values=cols, guide=FALSE) +
   scale_color_manual(name=" ", values=cols, guide=FALSE) +
   ggdist::scale_color_ramp_continuous(range = c(1, 0), guide=FALSE) +
-  scale_y_discrete(name="", position="right") +
+  scale_y_discrete(name="") +
   annotate(geom = "text", label=paste(round(medians$est[medians$.category=="PiS"],0)),
            y="PiS", x=medians$est[medians$.category=="PiS"]/100, size=3.5, hjust = "center", vjust=-1,
            family="Jost") +
@@ -366,7 +366,7 @@ plot_latest_parl <-
        subtitle=str_wrap(str_c("Data from ", paste(names, collapse=", "), "."), width = 120), 
        color="", caption = ".") +
   theme_plots()
-ggsave(plot_latest_parl, file = "latest_parl.png", 
+ggsave(latest_parl, file = "latest_parl.png", 
        width = 7, height = 5, units = "cm", dpi=600, scale = 3, bg="white")
 
 # Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
@@ -1337,8 +1337,8 @@ seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Jost") +
   geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Jost") +
   geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Jost") +
-  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=4, family="Jost")+
-  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=3, family="Jost") +
+  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=3, family="Jost")+
+  annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=2, family="Jost") +
   labs(x="", y="% of vote", title="Estimated share of seats",
        subtitle="Mean estimated seat share with 95% credible intervals. Sum total may not equal 460.",
        caption = "") +
