@@ -1477,7 +1477,7 @@ names <- separate(names, as.factor.get_labels.polls.org.., sep=",", into=c('org'
 orgnames <- glue_collapse(get_labels(sort(names$org)), ", ", last = " and ")
 orgnames_PL <- glue_collapse(get_labels(sort(names$org)), ", ", last = " i ")
 
-latest_parl_pollster <- polls %>%  
+latest_parl_pollster <- polls %>%
   modelr::data_grid(time = today, pollster = factor(pollster)) %>%
   add_fitted_draws(m1) %>%
   group_by(.category, pollster) %>%
