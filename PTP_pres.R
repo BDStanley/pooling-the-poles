@@ -384,8 +384,8 @@ ggsave(trends_pres_R2, file = "trends_pres_R2.png",
 
 
 #####Upload to Github and sync with website folder#####
-system("git add -A")
-system("git commit -m '$(date)'")
 system("git pull")
+system("git add -A")
+system('git commit -m "Update $(date +"%Y-%m-%d %H:%M:%S")"')
 system("git push")
 system("rsync -av --include='*.png' --exclude='*' '/Users/benstanley/R scripts/Pooling the Poles/' '/Users/benstanley/R scripts/Website/images/'")

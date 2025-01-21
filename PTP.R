@@ -1568,8 +1568,9 @@ ggsave(latest_parl_pollster, file = "latest_parl_pollster.png",
 #        width = 7, height = 5, units = "cm", dpi=600, scale = 3.2, bg="white")
 
 #####Upload to Github and sync with website folder#####
-system("git add -A")
-system("git commit -m '$(date)'")
+#####Save to Github#####
 system("git pull")
+system("git add -A")
+system('git commit -m "Update $(date +"%Y-%m-%d %H:%M:%S")"')
 system("git push")
 system("rsync -av --include='*.png' --exclude='*' '/Users/benstanley/R scripts/Pooling the Poles/' '/Users/benstanley/R scripts/Website/images/'")
