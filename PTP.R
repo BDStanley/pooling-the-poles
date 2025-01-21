@@ -262,7 +262,7 @@ trends_parl <- pred_dta %>%
                labels = my_date_format()) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
-  labs(y = "", x="", title = "Party trends",
+  labs(y = "", x="", title = "Trends",
        subtitle=str_wrap(str_c("Data from ", paste(names, collapse=", "), "."), width = 120), 
        color="", caption = ".") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
