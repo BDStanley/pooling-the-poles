@@ -257,7 +257,7 @@ polls <-
          time = as.integer(difftime(midDate, min(midDate), units = "days")),
          pollster = as.integer(factor(org)))
 
-cols <- c("Nawrocki"="blue", "Trzaskowski"="orange", "Don't know"="grey")
+cols <- c("Nawrocki"="blue", "Trzaskowski"="orange", "Don't know"="grey40")
 
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
