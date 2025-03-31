@@ -274,6 +274,8 @@ cols <- c("Nawrocki"="blue", "Trzaskowski"="orange", "Don't know"="grey40")
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
 names$house <- as.factor(names$house)
+housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
 names <- glue_collapse(get_labels(housenames), ", ", last = " and ")
 names_PL <- glue_collapse(get_labels(housenames), ", ", last = " i ")
 polls$org <- str_replace_all(polls$org, "_", ", ")
@@ -441,6 +443,8 @@ cols <- c("Mentzen"="midnightblue", "Trzaskowski"="orange", "Don't know"="grey40
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
 names$house <- as.factor(names$house)
+housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
 names <- glue_collapse(get_labels(housenames), ", ", last = " and ")
 names_PL <- glue_collapse(get_labels(housenames), ", ", last = " i ")
 polls$org <- str_replace_all(polls$org, "_", ", ")
