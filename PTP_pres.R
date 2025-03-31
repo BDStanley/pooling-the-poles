@@ -190,6 +190,13 @@ point_dta <-
       )
   )
 
+naw.sec <- pred_dta %>%
+  pivot_wider(names_from=party, values_from=.value) %>%
+  mutate(., naw.sec = sum((Nawrocki > Mentzen) / length(Nawrocki)),
+         naw.sec = round(naw.sec, 2)) %>%
+  pull(naw.sec) %>%
+  last(.)
+
 # trends_pres_R1 <-
 #   ggplot() +
 #   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
@@ -197,16 +204,18 @@ point_dta <-
 #   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
 #   scale_x_date(date_breaks = "1 month",
 #                labels = my_date_format()) +
+#   annotate(geom = "text", label=paste("Probability Nawrocki comes second = ",naw.sec*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Nawrocki"], 0.99), adj=c(1), x=max(pred_dta$date),
+#            family="Jost", fontface="plain", size=2.5) +
 #   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
 #                   ylim = c(0, .5)) +
 #   scale_color_manual(values=cols) +
 #   scale_fill_manual(values=cols, guide=FALSE) +
-#   labs(y = "", x="", title = "Polish presidential election, round 1", 
+#   labs(y = "", x="", title = "Polish presidential election, round 1",
 #        subtitle=str_c("Data from ", names, "."), color="", caption = "") +
 #   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
 #   theme_plots() +
 #   theme(legend.position = "bottom")
-# ggsave(trends_pres_R1, file = "trends_pres_R1.png", 
+# ggsave(trends_pres_R1, file = "trends_pres_R1.png",
 #        width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white")
 
 trends_pres_R1 <- pred_dta %>%
@@ -222,6 +231,8 @@ trends_pres_R1 <- pred_dta %>%
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_date(date_breaks = "1 month",
                labels = my_date_format()) +
+  annotate(geom = "text", label=paste("Probability Nawrocki comes second = ",naw.sec*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Nawrocki"], 0.99), adj=c(1), x=max(pred_dta$date),
+           family="Jost", fontface="plain", size=2.5) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
   labs(y = "", x="", title = "Polish presidential election, round 1",
@@ -231,6 +242,7 @@ trends_pres_R1 <- pred_dta %>%
   theme(legend.position = "bottom")
 ggsave(trends_pres_R1, file = "trends_pres_R1.png",
        width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white", device=png(type="cairo"))
+
 
 #####Round 2#####
 drive_deauth()
@@ -390,12 +402,159 @@ trends_pres_R2 <- pred_dta %>%
   annotate(geom = "text", label=paste("Probability of Trzaskowski win = ",trz.win*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Trzaskowski"], 0.99), adj=c(1), x=max(pred_dta$date),
            family="Jost", fontface="plain", size=2.5) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate))) +
-  labs(y = "", x="", title = "Polish presidential election, round 2",
+  labs(y = "", x="", title = "Polish presidential election, round 2 (Nawrocki vs. Trzaskowski)",
        subtitle=str_c("Data from ", names, "."), color="", caption = "") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()+
   theme(legend.position = "bottom")
 ggsave(trends_pres_R2, file = "trends_pres_R2.png",
+       width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white", device=png(type="cairo"))
+
+
+#####Round 2 Mentzen#####
+drive_deauth()
+import <- drive_download(as_id("https://docs.google.com/spreadsheets/d/1VQyAOeia5NzBKYjc7ViqIAFon_Su1WARxuU7-iM7-6g/edit?usp=sharing"), overwrite=TRUE)
+polls <- read_excel('polldata_pres_R2_mentzen.xlsx')
+
+polls <- polls %>%
+  dplyr::select(startDate, endDate, org, remark, Mentzen, Trzaskowski, DK)
+
+polls <- unite(polls, org, remark, col="org", sep="_")
+polls$org <-as.factor(polls$org)
+
+polls$startDate <- as.Date(polls$startDate)
+polls$endDate <- as.Date(polls$endDate)
+
+polls <-
+  polls %>%
+  mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
+         midDate_int=as.integer(midDate)) %>%
+  #filter(midDate >= as.Date('2023-10-15')) %>%
+  mutate(#Nawrocki = 100/((100-DK))*Nawrocki,
+    Trzaskowski = Trzaskowski-0.1,
+    DK = DK+0.1,
+    time = as.integer(difftime(midDate, min(midDate), units = "days")),
+    pollster = as.integer(factor(org)))
+
+cols <- c("Mentzen"="midnightblue", "Trzaskowski"="orange", "Don't know"="grey40")
+
+names <- data.frame(as.factor(get_labels(polls$org)))
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
+names$house <- as.factor(names$house)
+names <- glue_collapse(get_labels(housenames), ", ", last = " and ")
+names_PL <- glue_collapse(get_labels(housenames), ", ", last = " i ")
+polls$org <- str_replace_all(polls$org, "_", ", ")
+
+polls <-
+  polls %>%
+  mutate(time = interval(min(midDate), midDate)/years(1))
+
+polls[names(polls) %in% c("Mentzen", "Trzaskowski", "DK")] <-
+  polls[names(polls) %in% c("Mentzen", "Trzaskowski", "DK")] %>%
+  mutate_all(function(x) (as.numeric(str_remove(x, "%"))/100))
+
+polls <-
+  polls %>%
+  mutate(
+    outcome = as.matrix(polls[names(polls) %in% c("Mentzen", "Trzaskowski", "DK")])
+  )
+
+m1 <-
+  brm(formula = bf(outcome ~ 1 + s(time, k = 5) + (1 | pollster)),
+      family = dirichlet(link = "logit", refcat = "Mentzen"),
+      data = polls,
+      prior =
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muTrzaskowski") +
+        prior(normal(0, 0.5), class = "b", dpar = "muTrzaskowski") +
+        prior(exponential(2), class = "sd", dpar = "muTrzaskowski") +
+        prior(exponential(2), class = "sds", dpar = "muTrzaskowski") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muDK") +
+        prior(normal(0, 0.5), class = "b", dpar = "muDK") +
+        prior(exponential(2), class = "sd", dpar = "muDK") +
+        prior(exponential(2), class = "sds", dpar = "muDK") +
+        prior(gamma(1, 0.01), class = "phi"),
+      seed = 780045,
+      iter = 5000,
+      backend="cmdstanr", threads = threading(3),
+      chains = 3, cores = 12,
+      refresh = 5,
+      control =
+        list(
+          adapt_delta = .95,
+          max_treedepth = 15
+        )
+  )
+
+today <- interval(min(polls$midDate), Sys.Date())/years(1)
+
+pred_dta <-
+  tibble(
+    time = seq(0, today, length.out = nrow(polls)),
+    date = as.Date(time*365, origin = min(polls$midDate))
+  )
+
+pred_dta <-
+  add_fitted_draws(
+    model = m1,
+    newdata = pred_dta,
+    re_formula = NA
+  ) %>%
+  group_by(date, .category) %>%
+  rename(party = .category) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("Mentzen", "Trzaskowski", "DK"),
+        labels = c("Mentzen", "Trzaskowski", "Don't know")
+      )
+  )
+
+point_dta <-
+  polls[names(polls) %in% c("midDate", "Mentzen", "Trzaskowski", "DK")] %>%
+  pivot_longer(
+    cols = -midDate,
+    names_to = "party",
+    values_to = "est"
+  ) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("Mentzen", "Trzaskowski", "DK"),
+        labels = c("Mentzen", "Trzaskowski", "Don't know")
+      )
+  )
+
+trz.win <- pred_dta %>%
+  pivot_wider(names_from=party, values_from=.value) %>%
+  mutate(., trz.win = sum((Trzaskowski > 0.5) / length(Trzaskowski)),
+         trz.win = round(trz.win, 2)) %>%
+  pull(trz.win) %>%
+  last(.)
+
+trends_pres_R2_mentzen <- pred_dta %>%
+  ggplot(aes(x = date, color=party, fill=party)) +
+  ggdist::stat_lineribbon(
+    aes(y = .value, fill_ramp = stat(.width)),
+    .width = seq(0, 0.95, 0.01)
+  ) |> partition(vars(party)) |> blend("multiply") +
+  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_date(date_breaks = "1 month",
+               labels = my_date_format()) +
+  annotate(geom = "text", label=paste("Probability of Trzaskowski win = ",trz.win*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Trzaskowski"], 0.99), adj=c(1), x=max(pred_dta$date),
+           family="Jost", fontface="plain", size=2.5) +
+  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate))) +
+  labs(y = "", x="", title = "Polish presidential election, round 2 (Mentzen vs. Trzaskowski)",
+       subtitle=str_c("Data from ", names, "."), color="", caption = "") +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+  theme_plots()+
+  theme(legend.position = "bottom")
+ggsave(trends_pres_R2_mentzen, file = "trends_pres_R2_mentzen.png",
        width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white", device=png(type="cairo"))
 
 
