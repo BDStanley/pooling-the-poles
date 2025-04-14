@@ -263,13 +263,12 @@ polls <-
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
   #filter(midDate >= as.Date('2023-10-15')) %>%
-  mutate(#Nawrocki = 100/((100-DK))*Nawrocki,
-         Trzaskowski = Trzaskowski-0.1,
-         DK = DK+0.1,
+  mutate(Nawrocki = 100/((100-DK))*Nawrocki,
+         Trzaskowski = 100/((100-DK))*Trzaskowski,
          time = as.integer(difftime(midDate, min(midDate), units = "days")),
          pollster = as.integer(factor(org)))
 
-cols <- c("Nawrocki"="blue", "Trzaskowski"="orange", "Don't know"="grey40")
+cols <- c("Nawrocki"="blue", "Trzaskowski"="orange")
 
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
@@ -284,14 +283,14 @@ polls <-
   polls %>%
   mutate(time = interval(min(midDate), midDate)/years(1))
 
-polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "DK")] <-
-  polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "DK")] %>%
+polls[names(polls) %in% c("Nawrocki", "Trzaskowski")] <-
+  polls[names(polls) %in% c("Nawrocki", "Trzaskowski")] %>%
   mutate_all(function(x) (as.numeric(str_remove(x, "%"))/100))
 
 polls <-
   polls %>%
   mutate(
-    outcome = as.matrix(polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "DK")])
+    outcome = as.matrix(polls[names(polls) %in% c("Nawrocki", "Trzaskowski")])
   )
 
 m1 <-
@@ -303,10 +302,6 @@ m1 <-
         prior(normal(0, 0.5), class = "b", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sd", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sds", dpar = "muTrzaskowski") +
-        prior(normal(0, 1.5), class = "Intercept", dpar = "muDK") +
-        prior(normal(0, 0.5), class = "b", dpar = "muDK") +
-        prior(exponential(2), class = "sd", dpar = "muDK") +
-        prior(exponential(2), class = "sds", dpar = "muDK") +
         prior(gamma(1, 0.01), class = "phi"),
       seed = 780045,
       iter = 5000,
@@ -340,13 +335,13 @@ pred_dta <-
     party =
       party %>%
       factor(
-        levels = c("Nawrocki", "Trzaskowski", "DK"),
-        labels = c("Nawrocki", "Trzaskowski", "Don't know")
+        levels = c("Nawrocki", "Trzaskowski"),
+        labels = c("Nawrocki", "Trzaskowski")
       )
   )
 
 point_dta <-
-  polls[names(polls) %in% c("midDate", "Nawrocki", "Trzaskowski", "DK")] %>%
+  polls[names(polls) %in% c("midDate", "Nawrocki", "Trzaskowski")] %>%
   pivot_longer(
     cols = -midDate,
     names_to = "party",
@@ -356,8 +351,8 @@ point_dta <-
     party =
       party %>%
       factor(
-        levels = c("Nawrocki", "Trzaskowski", "DK"),
-        labels = c("Nawrocki", "Trzaskowski", "Don't know")
+        levels = c("Nawrocki", "Trzaskowski"),
+        labels = c("Nawrocki", "Trzaskowski")
       )
   )
 
@@ -432,13 +427,12 @@ polls <-
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
   #filter(midDate >= as.Date('2023-10-15')) %>%
-  mutate(#Nawrocki = 100/((100-DK))*Nawrocki,
-    Trzaskowski = Trzaskowski-0.1,
-    DK = DK+0.1,
+  mutate(Mentzen = 100/((100-DK))*Mentzen,
+         Trzaskowski = 100/((100-DK))*Trzaskowski,
     time = as.integer(difftime(midDate, min(midDate), units = "days")),
     pollster = as.integer(factor(org)))
 
-cols <- c("Mentzen"="midnightblue", "Trzaskowski"="orange", "Don't know"="grey40")
+cols <- c("Mentzen"="midnightblue", "Trzaskowski"="orange")
 
 names <- data.frame(as.factor(get_labels(polls$org)))
 names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
@@ -453,14 +447,14 @@ polls <-
   polls %>%
   mutate(time = interval(min(midDate), midDate)/years(1))
 
-polls[names(polls) %in% c("Mentzen", "Trzaskowski", "DK")] <-
-  polls[names(polls) %in% c("Mentzen", "Trzaskowski", "DK")] %>%
+polls[names(polls) %in% c("Mentzen", "Trzaskowski")] <-
+  polls[names(polls) %in% c("Mentzen", "Trzaskowski")] %>%
   mutate_all(function(x) (as.numeric(str_remove(x, "%"))/100))
 
 polls <-
   polls %>%
   mutate(
-    outcome = as.matrix(polls[names(polls) %in% c("Mentzen", "Trzaskowski", "DK")])
+    outcome = as.matrix(polls[names(polls) %in% c("Mentzen", "Trzaskowski")])
   )
 
 m1 <-
@@ -472,10 +466,6 @@ m1 <-
         prior(normal(0, 0.5), class = "b", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sd", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sds", dpar = "muTrzaskowski") +
-        prior(normal(0, 1.5), class = "Intercept", dpar = "muDK") +
-        prior(normal(0, 0.5), class = "b", dpar = "muDK") +
-        prior(exponential(2), class = "sd", dpar = "muDK") +
-        prior(exponential(2), class = "sds", dpar = "muDK") +
         prior(gamma(1, 0.01), class = "phi"),
       seed = 780045,
       iter = 5000,
@@ -509,13 +499,13 @@ pred_dta <-
     party =
       party %>%
       factor(
-        levels = c("Mentzen", "Trzaskowski", "DK"),
-        labels = c("Mentzen", "Trzaskowski", "Don't know")
+        levels = c("Mentzen", "Trzaskowski"),
+        labels = c("Mentzen", "Trzaskowski")
       )
   )
 
 point_dta <-
-  polls[names(polls) %in% c("midDate", "Mentzen", "Trzaskowski", "DK")] %>%
+  polls[names(polls) %in% c("midDate", "Mentzen", "Trzaskowski")] %>%
   pivot_longer(
     cols = -midDate,
     names_to = "party",
@@ -525,8 +515,8 @@ point_dta <-
     party =
       party %>%
       factor(
-        levels = c("Mentzen", "Trzaskowski", "DK"),
-        labels = c("Mentzen", "Trzaskowski", "Don't know")
+        levels = c("Mentzen", "Trzaskowski"),
+        labels = c("Mentzen", "Trzaskowski")
       )
   )
 
