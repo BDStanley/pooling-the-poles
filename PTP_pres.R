@@ -190,11 +190,11 @@ point_dta <-
       )
   )
 
-naw.sec <- pred_dta %>%
+trz.first <- pred_dta %>%
   pivot_wider(names_from=party, values_from=.value) %>%
-  mutate(., naw.sec = sum((Nawrocki > Mentzen) / length(Nawrocki)),
-         naw.sec = round(naw.sec, 2)) %>%
-  pull(naw.sec) %>%
+  mutate(., trz.first = sum((Trzaskowski > Nawrocki) / length(Trzaskowski)),
+         trz.first = round(trz.first, 2)) %>%
+  pull(trz.first) %>%
   last(.)
 
 # trends_pres_R1 <-
@@ -231,7 +231,7 @@ trends_pres_R1 <- pred_dta %>%
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_date(date_breaks = "1 month",
                labels = my_date_format()) +
-  annotate(geom = "text", label=paste("Probability Nawrocki comes second = ",naw.sec*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Nawrocki"], 0.99), adj=c(1), x=max(pred_dta$date),
+  annotate(geom = "text", label=paste("Probability Trzaskowski comes first = ",trz.first*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Trzaskowski"], 0.01), adj=c(1), x=max(pred_dta$date),
            family="Jost", fontface="plain", size=2.5) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
@@ -331,11 +331,11 @@ point_dta <-
       )
   )
 
-naw.sec <- pred_dta %>%
+trz.first <- pred_dta %>%
   pivot_wider(names_from=party, values_from=.value) %>%
-  mutate(., naw.sec = sum((Nawrocki > Mentzen) / length(Nawrocki)),
-         naw.sec = round(naw.sec, 2)) %>%
-  pull(naw.sec) %>%
+  mutate(., trz.first = sum((Trzaskowski > Nawrocki) / length(Trzaskowski)),
+         trz.first = round(trz.first, 2)) %>%
+  pull(trz.first) %>%
   last(.)
 
 trends_pres_R1_noCAWI <- pred_dta %>%
@@ -351,7 +351,7 @@ trends_pres_R1_noCAWI <- pred_dta %>%
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_date(date_breaks = "1 month",
                labels = my_date_format()) +
-  annotate(geom = "text", label=paste("Probability Nawrocki comes second = ",naw.sec*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Nawrocki"], 0.95), adj=c(1), x=max(pred_dta$date),
+  annotate(geom = "text", label=paste("Probability Trzaskowski comes first = ",trz.first*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Trzaskowski"], 0.05), adj=c(1), x=max(pred_dta$date),
            family="Jost", fontface="plain", size=2.5) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
                   ylim = c(0, .5)) +
