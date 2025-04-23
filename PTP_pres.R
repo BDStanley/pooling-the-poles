@@ -112,7 +112,7 @@ polls <-
   ) 
 
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 6) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 10) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Other"),
       data = polls,
       prior =
@@ -253,7 +253,7 @@ polls <-
   filter(!grepl("CAWI", org))
 
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 6) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 10) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Other"),
       data = polls,
       prior =
@@ -414,7 +414,7 @@ polls <-
   )
 
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 5) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 10) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Nawrocki"),
       data = polls,
       prior =
@@ -578,7 +578,7 @@ polls <-
   )
 
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 5) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 10) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Mentzen"),
       data = polls,
       prior =
