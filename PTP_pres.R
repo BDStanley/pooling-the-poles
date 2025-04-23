@@ -109,7 +109,7 @@ polls <-
   polls %>%
   mutate(
     outcome = as.matrix(polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Holownia", "Other")])
-  )
+  ) 
 
 m1 <-
   brm(formula = bf(outcome ~ 1 + s(time, k = 6) + (1 | pollster)),
@@ -241,6 +241,126 @@ trends_pres_R1 <- pred_dta %>%
   theme_plots() +
   theme(legend.position = "bottom")
 ggsave(trends_pres_R1, file = "trends_pres_R1.png",
+       width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white", device=png(type="cairo"))
+
+
+#####Round 1 without CAWI#####
+polls <-
+  polls %>%
+  mutate(
+    outcome = as.matrix(polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Holownia", "Other")])
+  ) %>%
+  filter(!grepl("CAWI", org))
+
+m1 <-
+  brm(formula = bf(outcome ~ 1 + s(time, k = 6) + (1 | pollster)),
+      family = dirichlet(link = "logit", refcat = "Other"),
+      data = polls,
+      prior =
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muNawrocki") +
+        prior(normal(0, 0.5), class = "b", dpar = "muNawrocki") +
+        prior(exponential(2), class = "sd", dpar = "muNawrocki") +
+        prior(exponential(2), class = "sds", dpar = "muNawrocki") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muTrzaskowski") +
+        prior(normal(0, 0.5), class = "b", dpar = "muTrzaskowski") +
+        prior(exponential(2), class = "sd", dpar = "muTrzaskowski") +
+        prior(exponential(2), class = "sds", dpar = "muTrzaskowski") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muBiejat") +
+        prior(normal(0, 0.5), class = "b", dpar = "muBiejat") +
+        prior(exponential(2), class = "sd", dpar = "muBiejat") +
+        prior(exponential(2), class = "sds", dpar = "muBiejat") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muHolownia") +
+        prior(normal(0, 0.5), class = "b", dpar = "muHolownia") +
+        prior(exponential(2), class = "sd", dpar = "muHolownia") +
+        prior(exponential(2), class = "sds", dpar = "muHolownia") +
+        prior(normal(0, 1.5), class = "Intercept", dpar = "muMentzen") +
+        prior(normal(0, 0.5), class = "b", dpar = "muMentzen") +
+        prior(exponential(2), class = "sd", dpar = "muMentzen") +
+        prior(exponential(2), class = "sds", dpar = "muMentzen") +
+        prior(gamma(1, 0.01), class = "phi"),
+      seed = 780045,
+      iter = 5000,
+      backend="cmdstanr", threads = threading(3),
+      chains = 3, cores = 12,
+      refresh = 5,
+      control =
+        list(
+          adapt_delta = .95,
+          max_treedepth = 15
+        )
+  )
+
+today <- interval(min(polls$midDate), Sys.Date())/years(1)
+
+pred_dta <-
+  tibble(
+    time = seq(0, today, length.out = nrow(polls)),
+    date = as.Date(time*365, origin = min(polls$midDate))
+  )
+
+pred_dta <-
+  add_fitted_draws(
+    model = m1,
+    newdata = pred_dta,
+    re_formula = NA
+  ) %>%
+  group_by(date, .category) %>%
+  rename(party = .category) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Holownia", "Other"),
+        labels = c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Hołownia", "Other")
+      )
+  )
+
+point_dta <-
+  polls[names(polls) %in% c("midDate", "Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Holownia", "Other")] %>%
+  pivot_longer(
+    cols = -midDate,
+    names_to = "party",
+    values_to = "est"
+  ) %>%
+  mutate(
+    party =
+      party %>%
+      factor(
+        levels = c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Holownia", "Other"),
+        labels = c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Hołownia", "Other")
+      )
+  )
+
+naw.sec <- pred_dta %>%
+  pivot_wider(names_from=party, values_from=.value) %>%
+  mutate(., naw.sec = sum((Nawrocki > Mentzen) / length(Nawrocki)),
+         naw.sec = round(naw.sec, 2)) %>%
+  pull(naw.sec) %>%
+  last(.)
+
+trends_pres_R1_noCAWI <- pred_dta %>%
+  ggplot(aes(x = date, color=party, fill=party)) +
+  ggdist::stat_lineribbon(
+    aes(y = .value, fill_ramp = stat(.width)),
+    .width = seq(0, 0.95, 0.01)
+  ) |> partition(vars(party)) |> blend("multiply") +
+  geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
+  scale_color_manual(values=cols) +
+  scale_fill_manual(values=cols, guide=FALSE) +
+  ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide=FALSE) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_date(date_breaks = "1 month",
+               labels = my_date_format()) +
+  annotate(geom = "text", label=paste("Probability Nawrocki comes second = ",naw.sec*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Nawrocki"], 0.99), adj=c(1), x=max(pred_dta$date),
+           family="Jost", fontface="plain", size=2.5) +
+  coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
+                  ylim = c(0, .5)) +
+  labs(y = "", x="", title = "Polish presidential election, round 1",
+       subtitle=str_c("Data from ", names, "."), color="", caption = "") +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
+  theme_plots() +
+  theme(legend.position = "bottom")
+ggsave(trends_pres_R1_noCAWI, file = "trends_pres_R1_noCAWI.png",
        width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white", device=png(type="cairo"))
 
 
