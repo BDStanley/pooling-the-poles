@@ -111,35 +111,30 @@ polls <-
     outcome = as.matrix(polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Holownia", "Other")])
   ) 
 
-m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 10) + (1 | pollster)),
+m1 <- 
+  brm(formula = bf(outcome ~ 1 + s(time, k = 10, bs = "cs", m = 2) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Other"),
       data = polls,
       prior =
         prior(normal(0, 1.5), class = "Intercept", dpar = "muNawrocki") +
-        prior(normal(0, 0.5), class = "b", dpar = "muNawrocki") +
         prior(exponential(2), class = "sd", dpar = "muNawrocki") +
         prior(exponential(2), class = "sds", dpar = "muNawrocki") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muTrzaskowski") +
-        prior(normal(0, 0.5), class = "b", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sd", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sds", dpar = "muTrzaskowski") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muBiejat") +
-        prior(normal(0, 0.5), class = "b", dpar = "muBiejat") +
         prior(exponential(2), class = "sd", dpar = "muBiejat") +
         prior(exponential(2), class = "sds", dpar = "muBiejat") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muHolownia") +
-        prior(normal(0, 0.5), class = "b", dpar = "muHolownia") +
         prior(exponential(2), class = "sd", dpar = "muHolownia") +
         prior(exponential(2), class = "sds", dpar = "muHolownia") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muMentzen") +
-        prior(normal(0, 0.5), class = "b", dpar = "muMentzen") +
         prior(exponential(2), class = "sd", dpar = "muMentzen") +
         prior(exponential(2), class = "sds", dpar = "muMentzen") +
         prior(gamma(1, 0.01), class = "phi"),
       seed = 780045,
       iter = 5000,
-      backend="cmdstanr", threads = threading(3),
+      backend = "cmdstanr", threads = threading(3),
       chains = 3, cores = 12,
       refresh = 5,
       control =
@@ -252,35 +247,30 @@ polls <-
   ) %>%
   filter(!grepl("CAWI", org))
 
-m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 10) + (1 | pollster)),
+m1 <- 
+  brm(formula = bf(outcome ~ 1 + s(time, k = 10, bs = "cs", m = 2) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Other"),
       data = polls,
       prior =
         prior(normal(0, 1.5), class = "Intercept", dpar = "muNawrocki") +
-        prior(normal(0, 0.5), class = "b", dpar = "muNawrocki") +
         prior(exponential(2), class = "sd", dpar = "muNawrocki") +
         prior(exponential(2), class = "sds", dpar = "muNawrocki") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muTrzaskowski") +
-        prior(normal(0, 0.5), class = "b", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sd", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sds", dpar = "muTrzaskowski") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muBiejat") +
-        prior(normal(0, 0.5), class = "b", dpar = "muBiejat") +
         prior(exponential(2), class = "sd", dpar = "muBiejat") +
         prior(exponential(2), class = "sds", dpar = "muBiejat") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muHolownia") +
-        prior(normal(0, 0.5), class = "b", dpar = "muHolownia") +
         prior(exponential(2), class = "sd", dpar = "muHolownia") +
         prior(exponential(2), class = "sds", dpar = "muHolownia") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muMentzen") +
-        prior(normal(0, 0.5), class = "b", dpar = "muMentzen") +
         prior(exponential(2), class = "sd", dpar = "muMentzen") +
         prior(exponential(2), class = "sds", dpar = "muMentzen") +
         prior(gamma(1, 0.01), class = "phi"),
       seed = 780045,
       iter = 5000,
-      backend="cmdstanr", threads = threading(3),
+      backend = "cmdstanr", threads = threading(3),
       chains = 3, cores = 12,
       refresh = 5,
       control =
@@ -414,18 +404,17 @@ polls <-
   )
 
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 10) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 10, bs = "cs", m = 2) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Nawrocki"),
       data = polls,
       prior =
         prior(normal(0, 1.5), class = "Intercept", dpar = "muTrzaskowski") +
-        prior(normal(0, 0.5), class = "b", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sd", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sds", dpar = "muTrzaskowski") +
         prior(gamma(1, 0.01), class = "phi"),
       seed = 780045,
       iter = 5000,
-      backend="cmdstanr", threads = threading(3),
+      backend = "cmdstanr", threads = threading(3),
       chains = 3, cores = 12,
       refresh = 5,
       control =
@@ -578,18 +567,17 @@ polls <-
   )
 
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 10) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 10, bs = "cs", m = 2) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Mentzen"),
       data = polls,
       prior =
         prior(normal(0, 1.5), class = "Intercept", dpar = "muTrzaskowski") +
-        prior(normal(0, 0.5), class = "b", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sd", dpar = "muTrzaskowski") +
         prior(exponential(2), class = "sds", dpar = "muTrzaskowski") +
         prior(gamma(1, 0.01), class = "phi"),
       seed = 780045,
       iter = 5000,
-      backend="cmdstanr", threads = threading(3),
+      backend = "cmdstanr", threads = threading(3),
       chains = 3, cores = 12,
       refresh = 5,
       control =
