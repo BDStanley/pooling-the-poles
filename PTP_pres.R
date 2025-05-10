@@ -404,7 +404,7 @@ polls <-
   )
 
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 10, bs = "cs", m = 2) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 12, bs = "cs", m = 2) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Nawrocki"),
       data = polls,
       prior =

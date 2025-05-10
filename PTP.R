@@ -140,27 +140,22 @@ polls <-
 #####Run model#####
 library(brms)
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 10) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 10, bs = "cs", m = 2) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Other"),
       prior =
         prior(normal(0, 1.5), class = "Intercept", dpar = "muPiS") +
-        prior(normal(0, 0.5), class = "b", dpar = "muPiS") +
         prior(exponential(2), class = "sd", dpar = "muPiS") +
         prior(exponential(2), class = "sds", dpar = "muPiS") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muKO") +
-        prior(normal(0, 0.5), class = "b", dpar = "muKO") +
         prior(exponential(2), class = "sd", dpar = "muKO") +
         prior(exponential(2), class = "sds", dpar = "muKO") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muLewica") +
-        prior(normal(0, 0.5), class = "b", dpar = "muLewica") +
         prior(exponential(2), class = "sd", dpar = "muLewica") +
         prior(exponential(2), class = "sds", dpar = "muLewica") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muTD") +
-        prior(normal(0, 0.5), class = "b", dpar = "muTD") +
         prior(exponential(2), class = "sd", dpar = "muTD") +
         prior(exponential(2), class = "sds", dpar = "muTD") +
         prior(normal(0, 1.5), class = "Intercept", dpar = "muKonfederacja") +
-        prior(normal(0, 0.5), class = "b", dpar = "muKonfederacja") +
         prior(exponential(2), class = "sd", dpar = "muKonfederacja") +
         prior(exponential(2), class = "sds", dpar = "muKonfederacja") +
         prior(gamma(1, 0.01), class = "phi"),
