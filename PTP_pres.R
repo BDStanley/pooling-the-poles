@@ -112,7 +112,7 @@ polls <-
   ) 
 
 m1 <- 
-  brm(formula = bf(outcome ~ 1 + s(time, k = 10, bs = "cs", m = 2) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 12, bs = "cs", m = 2) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Other"),
       data = polls,
       prior =
@@ -192,27 +192,6 @@ trz.first <- pred_dta %>%
   pull(trz.first) %>%
   last(.)
 
-# trends_pres_R1 <-
-#   ggplot() +
-#   geom_point(data=point_dta, aes(x = midDate, y = est, colour = party, fill=party), size = 1, show.legend=FALSE) +
-#   stat_lineribbon(data=pred_dta, aes(x = date, y = .value, color=party, fill=party), .width=c(0.8), alpha=1/2) +
-#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-#   scale_x_date(date_breaks = "1 month",
-#                labels = my_date_format()) +
-#   annotate(geom = "text", label=paste("Probability Nawrocki comes second = ",naw.sec*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Nawrocki"], 0.99), adj=c(1), x=max(pred_dta$date),
-#            family="Jost", fontface="plain", size=2.5) +
-#   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate)),
-#                   ylim = c(0, .5)) +
-#   scale_color_manual(values=cols) +
-#   scale_fill_manual(values=cols, guide=FALSE) +
-#   labs(y = "", x="", title = "Polish presidential election, round 1",
-#        subtitle=str_c("Data from ", names, "."), color="", caption = "") +
-#   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
-#   theme_plots() +
-#   theme(legend.position = "bottom")
-# ggsave(trends_pres_R1, file = "trends_pres_R1.png",
-#        width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white")
-
 trends_pres_R1 <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(
@@ -248,7 +227,7 @@ polls <-
   filter(!grepl("CAWI", org))
 
 m1 <- 
-  brm(formula = bf(outcome ~ 1 + s(time, k = 10, bs = "cs", m = 2) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 12, bs = "cs", m = 2) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Other"),
       data = polls,
       prior =
@@ -567,7 +546,7 @@ polls <-
   )
 
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 10, bs = "cs", m = 2) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 12, bs = "cs", m = 2) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Mentzen"),
       data = polls,
       prior =
