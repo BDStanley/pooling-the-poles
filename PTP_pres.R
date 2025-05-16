@@ -217,7 +217,6 @@ trends_pres_R1 <- pred_dta %>%
 ggsave(trends_pres_R1, file = "trends_pres_R1.png",
        width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white", device=png(type="cairo"))
 
-
 #####Round 1 without CAWI#####
 polls <-
   polls %>%
@@ -225,6 +224,15 @@ polls <-
     outcome = as.matrix(polls[names(polls) %in% c("Nawrocki", "Trzaskowski", "Biejat", "Mentzen", "Holownia", "Other")])
   ) %>%
   filter(!grepl("CAWI", org))
+
+names <- data.frame(as.factor(get_labels(polls$org)))
+names <- separate(names, as.factor.get_labels.polls.org.., c("house", "method"), sep="_")
+names$house <- as.factor(names$house)
+housenames <- fct_recode(names$house, "Kantar" = "Kantar") %>%
+  fct_collapse(., Kantar=c("Kantar"))
+names <- glue_collapse(get_labels(housenames), ", ", last = " and ")
+names_PL <- glue_collapse(get_labels(housenames), ", ", last = " i ")
+polls$org <- str_replace_all(polls$org, "_", ", ")
 
 m1 <- 
   brm(formula = bf(outcome ~ 1 + s(time, k = 12, bs = "cs", m = 2) + (1 | pollster)),
