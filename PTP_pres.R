@@ -484,8 +484,14 @@ trends_pres_R2 <- pred_dta %>%
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()+
   theme(legend.position = "bottom")
-ggsave(trends_pres_R2, file = "trends_pres_R2.png",
-       width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white", device=png(type="cairo"))
+
+print(trends_pres_R2)
+png(filename = "trends_pres_R2.png", 
+    width = 7*3, height = 5*3, 
+    units = "cm", res = 600, 
+    bg = "white", type = "cairo")
+print(trends_pres_R2)
+dev.off()
 
 
 #####R2 Don't knows#####
@@ -615,7 +621,7 @@ point_dta <-
 
 # Removed Trzaskowski win probability calculation
 
-trends_pres_R2 <- pred_dta %>%
+trends_pres_R2_DK <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(
     aes(y = .value, fill_ramp = stat(.width)),
@@ -638,8 +644,15 @@ trends_pres_R2 <- pred_dta %>%
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()+
   theme(legend.position = "bottom")
-ggsave(trends_pres_R2, file = "trends_pres_R2_with_DK.png",
-       width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white", device=png(type="cairo"))
+
+print(trends_pres_R2_DK)
+png(filename = "trends_pres_R2_with_DK.png", 
+    width = 7*3, height = 5*3, 
+    units = "cm", res = 600, 
+    bg = "white", type = "cairo")
+print(trends_pres_R2_DK)
+dev.off()
+
 
 #####R2 Trzaskowski advantage#####
 polls <- read_excel('polldata_pres_R2.xlsx')
@@ -785,8 +798,14 @@ trends_pres_R2_trz <- pred_dta %>%
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()+
   theme(legend.position = "bottom")
-ggsave(trends_pres_R2_trz, file = "trends_pres_R2_trz.png",
-       width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white", device=png(type="cairo"))
+
+print(trends_pres_R2_trz)
+png(filename = "trends_pres_R2_trz.png", 
+    width = 7*3, height = 5*3, 
+    units = "cm", res = 600, 
+    bg = "white", type = "cairo")
+print(trends_pres_R2_trz)
+dev.off()
 
 
 #####R2 Nawrocki advantage#####
@@ -933,8 +952,14 @@ trends_pres_R2_naw <- pred_dta %>%
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()+
   theme(legend.position = "bottom")
-ggsave(trends_pres_R2_naw, file = "trends_pres_R2_naw.png",
-       width = 7, height = 5, units = "cm", dpi = 600, scale = 3, bg="white", device=png(type="cairo"))
+
+print(trends_pres_R2_naw)
+png(filename = "trends_pres_R2_naw.png", 
+    width = 7*3, height = 5*3, 
+    units = "cm", res = 600, 
+    bg = "white", type = "cairo")
+print(trends_pres_R2_naw)
+dev.off()
 
 
 #####Upload to Github and sync with website folder#####
