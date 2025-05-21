@@ -619,8 +619,6 @@ point_dta <-
       )
   )
 
-# Removed Trzaskowski win probability calculation
-
 trends_pres_R2_DK <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(
@@ -637,7 +635,6 @@ trends_pres_R2_DK <- pred_dta %>%
   ) +  
   scale_x_date(date_breaks = "1 month",
                labels = my_date_format()) +
-  # Removed annotation for Trzaskowski win probability
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate))) +
   labs(y = "", x="", title = "Polish presidential election, round 2",
        subtitle=str_c("Data from ", names, "."), color="", caption = "") +
@@ -646,7 +643,7 @@ trends_pres_R2_DK <- pred_dta %>%
   theme(legend.position = "bottom")
 
 print(trends_pres_R2_DK)
-png(filename = "trends_pres_R2_with_DK.png", 
+png(filename = "trends_pres_R2_DK.png", 
     width = 7*3, height = 5*3, 
     units = "cm", res = 600, 
     bg = "white", type = "cairo")
