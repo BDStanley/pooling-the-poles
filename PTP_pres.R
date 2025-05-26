@@ -360,7 +360,7 @@ polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
-  #filter(midDate >= as.Date('2023-10-15')) %>%
+  filter(midDate >= as.Date('2025-03-01')) %>%
   mutate(Nawrocki = 100/((100-DK))*Nawrocki,
          Trzaskowski = 100/((100-DK))*Trzaskowski,
          time = as.integer(difftime(midDate, min(midDate), units = "days")),
@@ -510,7 +510,7 @@ polls <-
   polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int=as.integer(midDate)) %>%
-  #filter(midDate >= as.Date('2023-10-15')) %>%
+  filter(midDate >= as.Date('2025-03-01')) %>%
   # Convert to proportions and handle zeros by adding small constant
   mutate(
     # Add a small constant (0.01) to ensure no zeros
@@ -554,7 +554,7 @@ polls <-
 
 # Update model to include DK
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 12, bs = "cs", m = 2) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 20, bs = "cs", m = 2) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Nawrocki"),
       data = polls,
       prior =
@@ -666,6 +666,7 @@ polls$endDate <- as.Date(polls$endDate)
 polls <- polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int = as.integer(midDate)) %>%
+  filter(midDate >= as.Date('2025-03-01')) %>%
   mutate(
     Nawrocki = Nawrocki + (1/3 * DK),
     Trzaskowski = Trzaskowski + (2/3 * DK),
@@ -790,7 +791,7 @@ trends_pres_R2_trz <- pred_dta %>%
   annotate(geom = "text", label=paste("Probability of Trzaskowski win = ",trz.win*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Trzaskowski"], 0.99), adj=c(1), x=max(pred_dta$date),
            family="Jost", fontface="plain", size=2.5) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate))) +
-  labs(y = "", x="", title = "Polish presidential election, round 2 (if Trzaskowski gets 2/3 of Don't Knows)",
+  labs(y = "", x="", title = "Polish presidential election, round 2 (if Trzaskowski gets 2/3 of undecideds)",
        subtitle=str_c("Data from ", names, "."), color="", caption = "") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()+
@@ -820,6 +821,7 @@ polls$endDate <- as.Date(polls$endDate)
 polls <- polls %>%
   mutate(midDate = as.Date(startDate + (difftime(endDate, startDate, units="days")/2)),
          midDate_int = as.integer(midDate)) %>%
+  filter(midDate >= as.Date('2025-03-01')) %>%
   mutate(
     Nawrocki = Nawrocki + (2/3 * DK),
     Trzaskowski = Trzaskowski + (1/3 * DK),
@@ -944,7 +946,7 @@ trends_pres_R2_naw <- pred_dta %>%
   annotate(geom = "text", label=paste("Probability of Trzaskowski win = ",trz.win*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Trzaskowski"], 0.99), adj=c(1), x=max(pred_dta$date),
            family="Jost", fontface="plain", size=2.5) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate))) +
-  labs(y = "", x="", title = "Polish presidential election, round 2 (if Nawrocki gets 2/3 of Don't Knows)",
+  labs(y = "", x="", title = "Polish presidential election, round 2 (if Nawrocki gets 2/3 of undecideds)",
        subtitle=str_c("Data from ", names, "."), color="", caption = "") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()+
