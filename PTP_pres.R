@@ -479,7 +479,7 @@ trends_pres_R2 <- pred_dta %>%
   annotate(geom = "text", label=paste("Probability of Trzaskowski win = ",trz.win*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Trzaskowski"], 0.99), adj=c(1), x=max(pred_dta$date),
            family="Jost", fontface="plain", size=2.5) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate))) +
-  labs(y = "", x="", title = "Polish presidential election, round 2 (Don't Knows distributed proportionally)",
+  labs(y = "", x="", title = "Polish presidential election, round 2 (Undecideds distributed proportionally)",
        subtitle=str_c("Data from ", names, "."), color="", caption = "") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()+
@@ -943,7 +943,7 @@ trends_pres_R2_naw <- pred_dta %>%
   ) +
   scale_x_date(date_breaks = "1 month",
                labels = my_date_format()) +
-  annotate(geom = "text", label=paste("Probability of Trzaskowski win = ",trz.win*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Trzaskowski"], 0.99), adj=c(1), x=max(pred_dta$date),
+  annotate(geom = "text", label=paste("Probability of Nawrocki win = ",100-(trz.win*100),"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Trzaskowski"], 0.99), adj=c(1), x=max(pred_dta$date),
            family="Jost", fontface="plain", size=2.5) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate))) +
   labs(y = "", x="", title = "Polish presidential election, round 2 (if Nawrocki gets 2/3 of undecideds)",
