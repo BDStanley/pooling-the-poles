@@ -412,11 +412,11 @@ m1 <-
         )
   )
 
-today <- interval(min(polls$midDate), Sys.Date())/years(1)
+most_recent_poll <- interval(min(polls$midDate), max(polls$midDate))/years(1)
 
 pred_dta <-
   tibble(
-    time = seq(0, today, length.out = nrow(polls)),
+    time = seq(0, most_recent_poll, length.out = nrow(polls)),
     date = as.Date(time*365, origin = min(polls$midDate))
   )
 
@@ -577,11 +577,11 @@ m1 <-
         )
   )
 
-today <- interval(min(polls$midDate), Sys.Date())/years(1)
+most_recent_poll <- interval(min(polls$midDate), max(polls$midDate))/years(1)
 
 pred_dta <-
   tibble(
-    time = seq(0, today, length.out = nrow(polls)),
+    time = seq(0, most_recent_poll, length.out = nrow(polls)),
     date = as.Date(time*365, origin = min(polls$midDate))
   )
 
@@ -724,11 +724,11 @@ m1 <-
         )
   )
 
-today <- interval(min(polls$midDate), Sys.Date())/years(1)
+most_recent_poll <- interval(min(polls$midDate), max(polls$midDate))/years(1)
 
 pred_dta <-
   tibble(
-    time = seq(0, today, length.out = nrow(polls)),
+    time = seq(0, most_recent_poll, length.out = nrow(polls)),
     date = as.Date(time*365, origin = min(polls$midDate))
   )
 
@@ -879,11 +879,11 @@ m1 <-
         )
   )
 
-today <- interval(min(polls$midDate), Sys.Date())/years(1)
+most_recent_poll <- interval(min(polls$midDate), max(polls$midDate))/years(1)
 
 pred_dta <-
   tibble(
-    time = seq(0, today, length.out = nrow(polls)),
+    time = seq(0, most_recent_poll, length.out = nrow(polls)),
     date = as.Date(time*365, origin = min(polls$midDate))
   )
 
