@@ -460,6 +460,10 @@ trz.win <- pred_dta %>%
   pull(trz.win) %>%
   last(.)
 
+medians <- pred_dta %>%
+  summarise(est = median(.value)*100, .groups = "drop") %>%
+  slice_tail(n=2)
+
 trends_pres_R2 <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(
@@ -668,8 +672,8 @@ polls <- polls %>%
          midDate_int = as.integer(midDate)) %>%
   filter(midDate >= as.Date('2025-03-01')) %>%
   mutate(
-    Nawrocki = Nawrocki + (1/3 * DK),
-    Trzaskowski = Trzaskowski + (2/3 * DK),
+    Nawrocki = Nawrocki + (0.4 * DK),
+    Trzaskowski = Trzaskowski + (0.6 * DK),
     total = Nawrocki + Trzaskowski,
     Nawrocki = (Nawrocki / total) * 100,
     Trzaskowski = (Trzaskowski / total) * 100,
@@ -772,6 +776,10 @@ trz.win <- pred_dta %>%
   pull(trz.win) %>%
   last(.)
 
+medians <- pred_dta %>%
+  summarise(est = median(.value)*100, .groups = "drop") %>%
+  slice_tail(n=2)
+
 trends_pres_R2_trz <- pred_dta %>%
   ggplot(aes(x = date, color=party, fill=party)) +
   ggdist::stat_lineribbon(
@@ -788,17 +796,21 @@ trends_pres_R2_trz <- pred_dta %>%
   ) +
   scale_x_date(date_breaks = "1 month",
                labels = my_date_format()) +
-  annotate(geom = "text", label=paste("Probability of Trzaskowski win = ",trz.win*100,"%", sep=""), y=quantile(pred_dta$.value[pred_dta$party=="Trzaskowski"], 0.99), adj=c(1), x=max(pred_dta$date),
-           family="Jost", fontface="plain", size=2.5) +
+  annotate(geom = "text", label=paste(round(medians$est[medians$party=="Trzaskowski"],2),"%", sep=""), y=0.53, x=max(pred_dta$date),
+           family="Jost", fontface="plain", size=3) +
+  annotate(geom = "text", label=paste(round(medians$est[medians$party=="Nawrocki"],2),"%", sep=""), y=0.47, x=max(pred_dta$date),
+           family="Jost", fontface="plain", size=3) +
+  annotate(geom = "text", label=paste("Probability of Trzaskowski win = ",trz.win*100,"%", sep=""), y=0.65, adj=c(1), x=max(pred_dta$date),
+           family="Jost", fontface="plain", size=3) +
   coord_cartesian(xlim = c(min(polls$midDate), max(polls$midDate))) +
-  labs(y = "", x="", title = "Polish presidential election, round 2 (if Trzaskowski gets 2/3 of undecideds)",
-       subtitle=str_c("Data from ", names, "."), color="", caption = "") +
+  labs(y = "", x="", title = "Polish presidential election, round 2: final prediction",
+       subtitle=str_c("Data from ", names, "."), color="", caption = "Assumes >70% turnout and 60% of undecided voters opting for Trzaskowski.") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()+
   theme(legend.position = "bottom")
 
 print(trends_pres_R2_trz)
-png(filename = "trends_pres_R2_trz.png", 
+png(filename = "pres_R2_final.png", 
     width = 7*3, height = 5*3, 
     units = "cm", res = 600, 
     bg = "white", type = "cairo")
