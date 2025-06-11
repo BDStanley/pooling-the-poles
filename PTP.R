@@ -140,7 +140,7 @@ polls <-
 #####Run model#####
 library(brms)
 m1 <-
-  brm(formula = bf(outcome ~ 1 + s(time, k = 10, bs = "cs", m = 2) + (1 | pollster)),
+  brm(formula = bf(outcome ~ 1 + s(time, k = 12, bs = "cs", m = 2) + (1 | pollster)),
       family = dirichlet(link = "logit", refcat = "Other"),
       prior =
         prior(normal(0, 1.5), class = "Intercept", dpar = "muPiS") +
@@ -262,7 +262,7 @@ trends_parl <- pred_dta %>%
        color="", caption = ".") +
   guides(colour = guide_legend(override.aes = list(alpha = 1, fill=NA))) +
   theme_plots()
-
+# 
 ggsave(trends_parl, file = "trends_parl.png",
        width = 7, height = 5, units = "cm", dpi=600, scale = 3, bg="white", device=png(type="cairo"))
 
@@ -361,7 +361,8 @@ latest_parl <-
        subtitle=str_wrap(str_c("Data from ", paste(names, collapse=", "), "."), width = 120), 
        color="", caption = ".") +
   theme_plots()
-ggsave(latest_parl, file = "latest_parl.png", 
+
+ggsave(latest_parl, file = "latest_parl.png",
        width = 7, height = 5, units = "cm", dpi=600, scale = 3, bg="white")
 
 # Sys.setlocale("LC_TIME", "pl_PL.UTF-8")
