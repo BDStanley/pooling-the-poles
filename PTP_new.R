@@ -66,6 +66,8 @@ my_date_format <- function()
 options(mc.cores = parallel::detectCores())
 
 #####Read in, adjust and subset data#####
+source("scrape poll data.R")
+
 polls <- polls %>%
   select(startDate, endDate, org, PiS, KO, Lewica, TD, Konfederacja, Other, DK)
 
