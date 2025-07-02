@@ -1,4 +1,4 @@
-pacman::p_load(dplyr, lubridate, stringr)
+pacman::p_load(dplyr, lubridate, stringr, rvest)
 
 url <- "https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_Polish_parliamentary_election"
 page <- read_html(url)
