@@ -1113,7 +1113,6 @@ ggsave(seats_parl, file = "seats_parl.png",
 
 
 #####Save to Github#####
-system("git pull")
 system("git add -A")
 system('git commit -m "Update $(date +"%Y-%m-%d %H:%M:%S")"')
 system("git push")
