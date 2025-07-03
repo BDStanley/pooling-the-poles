@@ -95,7 +95,7 @@ polls <-
          time = as.integer(difftime(midDate, min(midDate), units = "days")),
          pollster = as.integer(factor(org)))
 
-cols <- c("PiS"="blue", "KO"="orange", "Polska 2050"="goldenrod", "PSL"="green", 
+cols <- c("PiS"="blue", "KO"="orange", "Polska 2050"="goldenrod", "PSL"="darkgreen", 
           "Konfederacja" = "midnightblue", "Lewica" = "red", "Razem" = "purple", 
           "MN" = "yellow", "Other"="gray50")
 
