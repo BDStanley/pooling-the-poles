@@ -125,6 +125,7 @@ polls <-
   )
 
 party_cols <- c("PiS", "KO", "Lewica", "Razem", "Polska2050", "PSL", "Konfederacja", "Other")
+outcome_matrix <- as.matrix(polls[, party_cols])
 cat("Current zeros in outcome_matrix:", sum(outcome_matrix == 0), "\n")
 
 # Apply fix: Add small constant to all values and renormalize
