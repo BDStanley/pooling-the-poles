@@ -964,21 +964,21 @@ PiS_seats <- poldHondt %>%
 
 frame <- poldHondt %>%
   group_by(party) %>%
-  summarise(mean_qi(seats)) %>%
+  summarise(median_qi(seats, .width=0.8)) %>%
   mutate(., y = round(y, 0),
          ymin = round(ymin, 0),
          ymax = round(ymax, 0))
 
-frame$in2019[frame$party=="KO"] <- 157
-frame$in2019[frame$party=="PiS"] <- 194
-frame$in2019[frame$party=="Lewica"] <- 19  # Split from original 49
-frame$in2019[frame$party=="Razem"] <- 7   # Split from original 49
-frame$in2019[frame$party=="MN"] <- 0
-frame$in2019[frame$party=="Konfederacja"] <- 18
-frame$in2019[frame$party=="Polska 2050"] <- 33  # 60% of original 30
-frame$in2019[frame$party=="PSL"] <- 32          # 40% of original 30
+frame$in2023[frame$party=="KO"] <- 157
+frame$in2023[frame$party=="PiS"] <- 194
+frame$in2023[frame$party=="Lewica"] <- 19  
+frame$in2023[frame$party=="Razem"] <- 7  
+frame$in2023[frame$party=="MN"] <- 0
+frame$in2023[frame$party=="Konfederacja"] <- 18
+frame$in2023[frame$party=="Polska 2050"] <- 33  
+frame$in2023[frame$party=="PSL"] <- 32          
 frame$party <- factor(frame$party, levels=c("PiS", "KO", "Lewica", "Razem", "Konfederacja", "Polska 2050", "PSL", "MN"))
-frame$diffPres <- sprintf("%+d", (frame$y - frame$in2019))
+frame$diffPres <- sprintf("%+d", (frame$y - frame$in2023))
 frame$diffPres <- sprintf("(%s)", frame$diffPres)
 frame$party <- reorder(frame$party, -frame$y)
 
@@ -1018,6 +1018,17 @@ plotdraws <- plotdraws %>%
          PSL = ifelse(median_PSL<5, 0, PSL)
   )
 
+coalition_pis_konf <- frame$y[frame$party=="PiS"] + frame$y[frame$party=="Konfederacja"]
+coalition_opposition <- frame$y[frame$party=="KO"] + frame$y[frame$party=="Lewica"] + 
+  frame$y[frame$party=="Polska 2050"] + frame$y[frame$party=="PSL"]
+
+pis_konf_status <- ifelse(coalition_pis_konf >= 231, "MAJORITY", "NO MAJORITY")
+opposition_status <- ifelse(coalition_opposition >= 231, "MAJORITY", "NO MAJORITY")
+
+pis_konf_text <- paste0("PiS + Konfederacja: ", coalition_pis_konf, " seats\n", pis_konf_status)
+opposition_text <- paste0("KO + Lewica + Polska 2050 + PSL: ", coalition_opposition, " seats\n", opposition_status)
+
+
 seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   geom_bar(stat="identity", width=.75, show.legend = F) +
   geom_abline(intercept=231, slope=0, colour="gray10", linetype=3) +
@@ -1025,14 +1036,22 @@ seats_parl <- ggplot(data=frame, mapping=aes(x=party, y=y, fill=party)) +
   geom_abline(intercept=307, slope=0, colour="gray10", linetype=3) +
   scale_y_continuous('Number of seats', limits=c(0,320), breaks=c(0, 50, 100, 150, 200, 231, 276, 307)) +
   scale_fill_manual(name="Party", values = cols)+
-  geom_label(aes(x=2, y=231), label="Legislative majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Jost") +
-  geom_label(aes(x=2, y=276), label="Overturn presidential veto", size=3, adj=c(0), label.size=NA, fill="grey95", family="Jost") +
-  geom_label(aes(x=2, y=307), label="Constitutional majority", size=3, adj=c(0), label.size=NA, fill="grey95", family="Jost") +
-  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=3, family="Jost")+
+  annotate("label", x=2, y=231, label="Legislative majority", size=2.5, hjust=0, label.size=NA, fill="grey95", family="Jost") +
+  annotate("label", x=2, y=276, label="Overturn presidential veto", size=2.5, hjust=0, label.size=NA, fill="grey95", family="Jost") +
+  annotate("label", x=2, y=307, label="Constitutional majority", size=2.5, hjust=0, label.size=NA, fill="grey95", family="Jost") +
+  # Coalition annotations
+  annotate("label", x=5, y=280, label=pis_konf_text, size=2.5, hjust=0, 
+           label.size=0.5, fill=ifelse(coalition_pis_konf >= 231, "lightgreen", "lightcoral"), 
+           family="Jost") +
+  annotate("label", x=5, y=250, label=opposition_text, size=2.5, hjust=0, 
+           label.size=0.5, fill=ifelse(coalition_opposition >= 231, "lightgreen", "lightcoral"), 
+           family="Jost") +
+  annotate("text", x=frame$party, y=c(frame$y+18), label=frame$y, size=3, family="Jost", hjust=0.5)+
+  annotate("text", x=as.numeric(frame$party)+0.1, y=c(frame$y+18), label=frame$diffPres, size=2.5, family="Jost", fontface="italic", hjust=0) +
   annotate("text", x=frame$party, y=c(frame$y+8), label=paste("(",round(frame$ymin,0), "\u2013",round(frame$ymax,0),")", sep=""), size=2, family="Jost") +
   labs(x="", y="Number of seats", title="Estimated share of seats",
-       subtitle="Mean estimated seat share with 95% credible intervals. Sum total may not equal 460.",
-       caption = "") +
+       subtitle="Median estimated seat share with 80% credible intervals. Sum total may not equal 460.",
+       caption = "Figures in brackets show change from 2023 share of seats.") +
   theme_plots()
 ggsave(seats_parl, file = "seats_parl.png",
        width = 7, height = 5, units = "cm", dpi=600, scale = 3, bg="white")
