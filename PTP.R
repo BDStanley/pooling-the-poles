@@ -49,7 +49,8 @@ theme_plots_map <- function(base_size = 11, base_family = "Jost Regular") {
                                        family = "Jost Regular", face = "plain"),
           plot.caption = element_text(margin = margin(t = 10), size = rel(0.6),
                                       family = "Jost Regular", face = "plain"),
-          legend.title = element_text(family = "Jost Medium", face = "plain"), plot.title = element_text(family = "Jost Medium", face = "plain"),
+          legend.title = element_text(family = "Jost Medium", face = "plain"), 
+          plot.title = element_text(family = "Jost Bold", face = "plain"),
           aspect.ratio=1, legend.position="none")
 }
 
