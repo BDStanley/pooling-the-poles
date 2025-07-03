@@ -526,14 +526,27 @@ plotdraws <- plotdraws %>%
 
 plotdraws$MN <- rnorm(1000, mean=0.079, sd=0.00001)
 
+party_medians <- plotdraws %>%
+  ungroup() %>%
+  summarise(
+    PiS_med = median(PiS),
+    KO_med = median(KO),
+    Lewica_med = median(Lewica),
+    Razem_med = median(Razem),
+    Konfederacja_med = median(Konfederacja),
+    Polska2050_med = median(`Polska 2050`),
+    PSL_med = median(PSL)
+  )
+
 plotdraws <- plotdraws %>%
-  mutate(., PiS = ifelse(PiS<0.05, 0, PiS),
-         KO = ifelse(KO<0.05, 0, KO),
-         Konfederacja = ifelse(Konfederacja<0.05, 0, Konfederacja),
-         Lewica = ifelse(Lewica<0.05, 0, Lewica),
-         Razem = ifelse(Razem<0.05, 0, Razem),
-         `Polska 2050` = ifelse(`Polska 2050`<0.05, 0, `Polska 2050`),
-         PSL = ifelse(PSL<0.05, 0, PSL)
+  mutate(
+    PiS = ifelse(party_medians$PiS_med < 0.05, 0, PiS),
+    KO = ifelse(party_medians$KO_med < 0.05, 0, KO),
+    Lewica = ifelse(party_medians$Lewica_med < 0.05, 0, Lewica),
+    Razem = ifelse(party_medians$Razem_med < 0.05, 0, Razem),
+    Konfederacja = ifelse(party_medians$Konfederacja_med < 0.05, 0, Konfederacja),
+    `Polska 2050` = ifelse(party_medians$Polska2050_med < 0.05, 0, `Polska 2050`),
+    PSL = ifelse(party_medians$PSL_med < 0.05, 0, PSL)
   )
 
 consts <- uncount(tibble(plotdraws), 41, .id="okreg")
