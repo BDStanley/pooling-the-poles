@@ -9,42 +9,31 @@ polls <- tables[[4]]
 
 # Function to parse fieldwork dates and create start and end dates
 parse_fieldwork_dates <- function(date_string) {
-  # Clean the date string
   date_string <- str_trim(date_string)
-  date_string <- str_replace_all(date_string, "\"", "")  # Remove quotes
+  date_string <- str_replace_all(date_string, "\"", "")
   
-  # Handle different date formats
-  if (grepl("–", date_string)) {
-    # Date range with en-dash
-    parts <- str_split(date_string, "–")[[1]]
+  # Split en dash, em dash, hyphen
+  if (str_detect(date_string, "(–|-|—)")) {
+    parts <- unlist(str_split(date_string, "(–|-|—)"))
     start_part <- str_trim(parts[1])
     end_part <- str_trim(parts[2])
     
-    # Parse the end date first (it usually has the full format)
-    if (grepl("\\d+ \\w+", end_part)) {
-      # End part has day and month
-      end_date <- dmy(paste(end_part, "2025"))
-      
-      # Parse start part
-      if (grepl("\\d+ \\w+", start_part)) {
-        # Start part also has day and month
-        start_date <- dmy(paste(start_part, "2025"))
-      } else {
-        # Start part only has day, use end date's month and year
-        start_day <- as.numeric(start_part)
-        start_date <- dmy(paste(start_day, format(end_date, "%B"), year(end_date)))
-      }
-    } else {
-      # Try other formats
-      return(list(start_date = NA, end_date = NA))
-    }
+    # Try to extract month from end_part
+    # e.g., "4–6 Aug" → end: "6 Aug", start: "4"
+    month <- str_extract(end_part, "[A-Za-zżółćęśąźń]+")
+    year <- "2025"
+    # For abbreviated months, force title case to avoid "aug" vs "Aug"
+    month <- str_to_title(month)
+    end_day <- str_extract(end_part, "\\d+")
+    start_day <- str_extract(start_part, "\\d+")
+    
+    start_date <- dmy(paste(start_day, month, year))
+    end_date <- dmy(paste(end_day, month, year))
   } else {
     # Single date
-    single_date <- dmy(paste(date_string, "2025"))
-    start_date <- single_date
-    end_date <- single_date
+    start_date <- dmy(paste(date_string, "2025"))
+    end_date <- start_date
   }
-  
   return(list(start_date = start_date, end_date = end_date))
 }
 
