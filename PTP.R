@@ -70,6 +70,8 @@ options(mc.cores = parallel::detectCores())
 #####Read in, adjust and subset data#####
 source("poll data scraper.R")
 
+polls <- polls_cleaned
+
 polls <- polls %>%
   select(startDate, endDate, org, PiS, KO, Lewica, Razem, Polska2050, PSL, Konfederacja, Other, DK)
 
