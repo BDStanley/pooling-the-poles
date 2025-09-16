@@ -96,10 +96,10 @@ clean_polish_poll_data <- function(polls) {
     select(
       pollster_raw = `Polling firm/Link`,
       fieldwork_date = Fieldworkdate,
-      united_right = `United Right`,
+      law_and_justice = `Law and Justice`,
       civic_coalition = `Civic Coalition`,
       poland_2050 = `Poland 2050`,
-      polish_peoples_party = `Polish People's Party`,
+      polish_peoples_party = `Polish Coalition`,
       the_left = `The Left`,
       together = Together,
       confederation = Confederation,
@@ -112,7 +112,7 @@ clean_polish_poll_data <- function(polls) {
     ) %>%
     select(-pollster_raw) %>%
     mutate(
-      united_right = as.numeric(united_right),
+      law_and_justice = as.numeric(law_and_justice),
       civic_coalition = as.numeric(civic_coalition),
       poland_2050 = as.numeric(poland_2050),
       polish_peoples_party = as.numeric(polish_peoples_party),
@@ -155,7 +155,7 @@ clean_polish_poll_data <- function(polls) {
                                    confederation)
     ) %>%
     mutate(
-      total_parties = united_right + civic_coalition + polska_2050_split + psl_split +
+      total_parties = law_and_justice + civic_coalition + polska_2050_split + psl_split +
         lewica_separate + razem_separate + confederation_clean + dont_know,
       Other = pmax(0, 100 - total_parties)
     ) %>%
@@ -163,7 +163,7 @@ clean_polish_poll_data <- function(polls) {
       org = pollster,
       startDate = start_date,
       endDate = end_date,
-      PiS = united_right,
+      PiS = law_and_justice,
       KO = civic_coalition,
       Polska2050 = polska_2050_split,
       PSL = psl_split,
