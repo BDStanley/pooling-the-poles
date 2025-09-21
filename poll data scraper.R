@@ -99,7 +99,7 @@ clean_polish_poll_data <- function(polls) {
       law_and_justice = `Law and Justice`,
       civic_coalition = `Civic Coalition`,
       poland_2050 = `Poland 2050`,
-      polish_peoples_party = `Polish Coalition`,
+      polish_peoples_party = `Polish People's Party`,
       the_left = `The Left`,
       together = Together,
       confederation = Confederation,
