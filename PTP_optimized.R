@@ -747,7 +747,7 @@ seats <- seats %>%
 
 # Generate label points
 label_points <- const %>%
-  st_point_on_surface() %>%
+  st_centroid() %>%
   st_coordinates() %>%
   as_tibble() %>%
   bind_cols(const %>% st_drop_geometry() %>% select(id)) %>%
