@@ -451,7 +451,7 @@ point_dta <- polls %>%
 trends_parl <- pred_dta %>%
   ggplot(aes(x = date, color = party, fill = party)) +
   ggdist::stat_lineribbon(
-    aes(y = .epred, fill_ramp = stat(.width)),
+    aes(y = .epred, fill_ramp = after_stat(.width)),
     .width = seq(0, 0.95, 0.01)
   ) |>
     partition(vars(party)) |>
@@ -463,8 +463,8 @@ trends_parl <- pred_dta %>%
     show.legend = FALSE
   ) +
   scale_color_manual(values = PARTY_COLORS) +
-  scale_fill_manual(values = PARTY_COLORS, guide = FALSE) +
-  ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide = FALSE) +
+  scale_fill_manual(values = PARTY_COLORS, guide = "none") +
+  ggdist::scale_fill_ramp_continuous(range = c(1, 0), guide = "none") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_date(date_breaks = "1 month", labels = my_date_format()) +
   coord_cartesian(
@@ -582,13 +582,13 @@ latest_parl <- plotdraws %>%
     linewidth = 0.5
   ) +
   stat_interval(
-    aes(x = .epred, color_ramp = stat(.width)),
+    aes(x = .epred, color_ramp = after_stat(.width)),
     .width = ppoints(100)
   ) %>%
     partition(vars(.category)) +
-  scale_fill_manual(values = PARTY_COLORS, guide = FALSE) +
-  scale_color_manual(name = " ", values = PARTY_COLORS, guide = FALSE) +
-  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide = FALSE) +
+  scale_fill_manual(values = PARTY_COLORS, guide = "none") +
+  scale_color_manual(name = " ", values = PARTY_COLORS, guide = "none") +
+  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide = "none") +
   scale_y_discrete(name = "") +
   geom_text(
     data = medians,
@@ -1124,5 +1124,5 @@ system("git add -A")
 system('git commit -m "Update $(date +"%Y-%m-%d %H:%M:%S")"')
 system("git push")
 system(
-  "rsync -av --include='*.png' --exclude='*' '/Users/benstanley/Positron/Pooling the Poles/pooling-the-poles/' '/Users/benstanley/Positron/Website/BDStanley.github.io/docs/images/'"
+  "rsync -av --include='*.png' --exclude='*' '/Users/benstanley/Positron/pooling-the-poles/' '/Users/benstanley/Positron/BDStanley.github.io/docs/images/'"
 )
