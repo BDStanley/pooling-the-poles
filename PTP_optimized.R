@@ -140,6 +140,12 @@ my_date_format <- function() {
 
 options(mc.cores = parallel::detectCores())
 
+# Optimize threading/cores for brms
+total_cores <- parallel::detectCores()
+n_chains <- 4
+cores_per_chain <- max(1, floor(total_cores / n_chains))
+threads_per_chain <- max(1, floor(total_cores / n_chains))
+
 #####Helper functions#####
 # Apply threshold and normalize
 apply_threshold_and_normalize <- function(df, party_cols, threshold = 0.05) {
@@ -368,11 +374,11 @@ m1 <- brm(
     prior(gamma(1, 0.01), class = "phi"),
   data = polls,
   seed = 780045,
-  iter = 5000,
+  iter = 2000,
   backend = "cmdstanr",
-  threads = threading(3),
-  chains = 3,
-  cores = 12,
+  threads = threading(threads_per_chain),
+  chains = n_chains,
+  cores = n_chains,
   refresh = 5,
   control = list(adapt_delta = .95, max_treedepth = 15)
 )
@@ -384,7 +390,7 @@ pred_dta <- tibble(
   time = seq(0, today, length.out = nrow(polls)),
   date = as.Date(time * 365, origin = min(polls$midDate))
 ) %>%
-  add_fitted_draws(model = m1, newdata = ., re_formula = NA) %>%
+  add_epred_draws(object = m1, newdata = ., re_formula = NA) %>%
   group_by(date, .category) %>%
   rename(party = .category) %>%
   mutate(
@@ -445,7 +451,7 @@ point_dta <- polls %>%
 trends_parl <- pred_dta %>%
   ggplot(aes(x = date, color = party, fill = party)) +
   ggdist::stat_lineribbon(
-    aes(y = .value, fill_ramp = stat(.width)),
+    aes(y = .epred, fill_ramp = stat(.width)),
     .width = seq(0, 0.95, 0.01)
   ) |>
     partition(vars(party)) |>
@@ -492,8 +498,8 @@ ggsave(
 )
 
 #####Latest plot#####
-plotdraws <- add_fitted_draws(
-  model = m1,
+plotdraws <- add_epred_draws(
+  object = m1,
   newdata = tibble(time = today),
   re_formula = NA
 ) %>%
@@ -525,11 +531,11 @@ plotdraws <- add_fitted_draws(
   )
 
 medians <- plotdraws %>%
-  summarise(est = median(.value) * 100, .groups = "drop")
+  summarise(est = median(.epred) * 100, .groups = "drop")
 
 # Calculate dynamic probability comparison
 comparison_data <- plotdraws %>%
-  pivot_wider(names_from = .category, values_from = .value) %>%
+  pivot_wider(names_from = .category, values_from = .epred) %>%
   mutate(
     PiS_leading = PiS > KO,
     KO_leading = KO > PiS
@@ -552,10 +558,10 @@ if (pis_median > ko_median) {
 threshold_probs <- plotdraws %>%
   group_by(.category) %>%
   summarise(
-    median = median(.value),
-    lower_95 = quantile(.value, 0.025),
-    upper_95 = quantile(.value, 0.975),
-    prob_above_5 = mean(.value >= 0.05),
+    median = median(.epred),
+    lower_95 = quantile(.epred, 0.025),
+    upper_95 = quantile(.epred, 0.975),
+    prob_above_5 = mean(.epred >= 0.05),
     .groups = "drop"
   ) %>%
   filter(
@@ -565,8 +571,8 @@ threshold_probs <- plotdraws %>%
 
 latest_parl <- plotdraws %>%
   ggplot(aes(
-    y = reorder(.category, dplyr::desc(-.value)),
-    x = .value,
+    y = reorder(.category, dplyr::desc(-.epred)),
+    x = .epred,
     color = .category
   )) +
   geom_vline(
@@ -576,7 +582,7 @@ latest_parl <- plotdraws %>%
     linewidth = 0.5
   ) +
   stat_interval(
-    aes(x = .value, color_ramp = stat(.width)),
+    aes(x = .epred, color_ramp = stat(.width)),
     .width = ppoints(100)
   ) %>%
     partition(vars(.category)) +
@@ -597,7 +603,7 @@ latest_parl <- plotdraws %>%
     geom = "text",
     label = lead_text,
     y = lead_party,
-    x = quantile(plotdraws$.value[plotdraws$.category == lead_party], 0.005),
+    x = quantile(plotdraws$.epred[plotdraws$.category == lead_party], 0.005),
     adj = c(1),
     family = "Jost",
     fontface = "plain",
@@ -610,7 +616,7 @@ latest_parl <- plotdraws %>%
         party_name <- threshold_probs$.category[i]
         threshold_text <- threshold_probs$threshold_text[i]
         x_pos <- quantile(
-          plotdraws$.value[plotdraws$.category == party_name],
+          plotdraws$.epred[plotdraws$.category == party_name],
           0.995
         )
 
@@ -812,11 +818,11 @@ ggsave(
 )
 
 #####Seats plot#####
-plotdraws_seats <- add_fitted_draws(
-  model = m1,
+plotdraws_seats <- add_epred_draws(
+  object = m1,
   newdata = tibble(time = today),
   re_formula = NA,
-  n = 1000
+  ndraws = 1000
 ) %>%
   mutate(.draw = row_number()) %>%
   group_by(.category, .draw) %>%
@@ -850,11 +856,11 @@ plotdraws_seats <- add_fitted_draws(
 party_medians <- plotdraws_seats %>%
   ungroup() %>%
   group_by(.category) %>%
-  summarise(median_value = median(.value), .groups = "drop")
+  summarise(median_value = median(.epred), .groups = "drop")
 
 # Apply 5% threshold based on medians
 plotdraws_wide <- plotdraws_seats %>%
-  pivot_wider(names_from = .category, values_from = .value) %>%
+  pivot_wider(names_from = .category, values_from = .epred) %>%
   mutate(MN = rnorm(n(), mean = 0.079, sd = 0.00001))
 
 # Apply threshold - set parties below 5% to zero
