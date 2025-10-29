@@ -142,9 +142,10 @@ clean_polish_poll_data <- function(polls) {
   final_data <- cleaned_data %>%
     mutate(
       june_17_2025 = as.Date("2025-06-17"),
+      june_10_2025 = as.Date("2025-06-10"),
       march_10_2025 = as.Date("2025-03-10"),
-      trzecia_droga_combined = ifelse(end_date > june_17_2025, 
-                                      poland_2050 + polish_peoples_party, 
+      trzecia_droga_combined = ifelse(end_date > june_17_2025,
+                                      poland_2050 + polish_peoples_party,
                                       poland_2050),
       polska_2050_split = trzecia_droga_combined * 0.6,
       psl_split = trzecia_droga_combined * 0.4,
@@ -152,12 +153,19 @@ clean_polish_poll_data <- function(polls) {
       razem_separate = together,
       confederation_clean = ifelse(end_date <= march_10_2025,
                                    confederation,
-                                   confederation)
+                                   confederation),
+      # KKP handling: separate column from June 10, 2025 onwards
+      kkp_separate = ifelse(end_date >= june_10_2025,
+                           confederation_crown,
+                           0),
+      kkp_to_other = ifelse(end_date < june_10_2025,
+                           confederation_crown,
+                           0)
     ) %>%
     mutate(
       total_parties = law_and_justice + civic_coalition + polska_2050_split + psl_split +
-        lewica_separate + razem_separate + confederation_clean + dont_know,
-      Other = pmax(0, 100 - total_parties)
+        lewica_separate + razem_separate + confederation_clean + kkp_separate + dont_know,
+      Other = pmax(0, 100 - total_parties + kkp_to_other)
     ) %>%
     select(
       org = pollster,
@@ -170,6 +178,7 @@ clean_polish_poll_data <- function(polls) {
       Lewica = lewica_separate,
       Razem = razem_separate,
       Konfederacja = confederation_clean,
+      KKP = kkp_separate,
       DK = dont_know,
       Other
     ) %>%
@@ -186,7 +195,7 @@ cat("Total polls:", nrow(polls_cleaned), "\n")
 cat("Date range:", as.character(min(polls_cleaned$startDate)), "to", as.character(max(polls_cleaned$endDate)), "\n")
 cat("Missing 'DK' values:", sum(is.na(polls_cleaned$DK)), "\n\n")
 
-numeric_cols <- c("PiS", "KO", "Polska2050", "PSL", "Lewica", "Razem", "Konfederacja", "DK", "Other")
+numeric_cols <- c("PiS", "KO", "Polska2050", "PSL", "Lewica", "Razem", "Konfederacja", "KKP", "DK", "Other")
 cat("Column ranges:\n")
 for (col in numeric_cols) {
   values <- polls_cleaned[[col]]

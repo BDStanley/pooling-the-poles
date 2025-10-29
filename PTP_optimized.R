@@ -28,6 +28,7 @@ PARTY_COLS <- c(
   "Polska2050",
   "PSL",
   "Konfederacja",
+  "KKP",
   "Other"
 )
 PARTY_COLORS <- c(
@@ -36,6 +37,7 @@ PARTY_COLORS <- c(
   "Polska 2050" = "goldenrod",
   "PSL" = "darkgreen",
   "Konfederacja" = "midnightblue",
+  "KKP" = "brown",
   "Lewica" = "red",
   "Razem" = "purple",
   "MN" = "yellow",
@@ -187,7 +189,7 @@ calculate_constituency_seats <- function(data, weights, party_cols_list) {
       party %in% c("PiS") ~ "PiScoef",
       party %in% c("KO") ~ "KOcoef",
       party %in% c("Lewica", "Razem") ~ "Lewicacoef",
-      party %in% c("Konfederacja") ~ "Konfcoef",
+      party %in% c("Konfederacja", "KKP") ~ "Konfcoef",
       party %in% c("Polska 2050", "PSL") ~ "TDcoef",
       TRUE ~ NA_character_
     )
@@ -291,7 +293,7 @@ generate_seat_map <- function(
 source("poll data scraper.R")
 
 polls <- polls_cleaned %>%
-  select(startDate, endDate, org, all_of(PARTY_COLS[1:7]), Other, DK) %>%
+  select(startDate, endDate, org, all_of(PARTY_COLS[1:8]), Other, DK) %>%
   mutate(
     org = as.factor(org),
     startDate = as.Date(startDate),
@@ -305,7 +307,7 @@ polls <- polls_cleaned %>%
 
 # Adjust for "Don't Know" responses
 polls <- polls %>%
-  mutate(across(all_of(PARTY_COLS[1:7]), ~ 100 / ((100 - DK)) * .x))
+  mutate(across(all_of(PARTY_COLS[1:8]), ~ 100 / ((100 - DK)) * .x))
 
 # Calculate time variables
 polls <- polls %>%
@@ -318,14 +320,14 @@ polls <- polls %>%
 # Convert percentages to proportions
 polls <- polls %>%
   mutate(across(
-    all_of(PARTY_COLS[1:7]),
+    all_of(PARTY_COLS[1:8]),
     ~ as.numeric(str_remove(as.character(.x), "%")) / 100
   ))
 
 # Calculate Other and check totals
 polls <- polls %>%
   mutate(
-    Other = 1 - rowSums(across(all_of(PARTY_COLS[1:7]))),
+    Other = 1 - rowSums(across(all_of(PARTY_COLS[1:8]))),
     check = rowSums(across(all_of(PARTY_COLS)))
   ) %>%
   filter(Other > 0)
@@ -371,6 +373,9 @@ m1 <- brm(
     prior(normal(0, 1.5), class = "Intercept", dpar = "muKonfederacja") +
     prior(exponential(2), class = "sd", dpar = "muKonfederacja") +
     prior(exponential(2), class = "sds", dpar = "muKonfederacja") +
+    prior(normal(0, 1.5), class = "Intercept", dpar = "muKKP") +
+    prior(exponential(2), class = "sd", dpar = "muKKP") +
+    prior(exponential(2), class = "sds", dpar = "muKKP") +
     prior(gamma(1, 0.01), class = "phi"),
   data = polls,
   seed = 780045,
@@ -425,6 +430,7 @@ pollster_effects <- expand_grid(
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Other"
       ),
       labels = c(
@@ -435,6 +441,7 @@ pollster_effects <- expand_grid(
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Other"
       )
     )
@@ -472,6 +479,7 @@ house_effects_data <- pollster_effects_draws %>%
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Other"
       ),
       labels = c(
@@ -482,6 +490,7 @@ house_effects_data <- pollster_effects_draws %>%
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Other"
       )
     )
@@ -575,6 +584,7 @@ pred_dta <- tibble(
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Other"
       ),
       labels = c(
@@ -585,10 +595,12 @@ pred_dta <- tibble(
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Other"
       )
     )
-  )
+  ) %>%
+  filter(party != "Other")  # Exclude "Other" from plot
 
 point_dta <- polls %>%
   select(midDate, all_of(PARTY_COLS)) %>%
@@ -604,6 +616,7 @@ point_dta <- polls %>%
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Other"
       ),
       labels = c(
@@ -614,10 +627,12 @@ point_dta <- polls %>%
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Other"
       )
     )
-  )
+  ) %>%
+  filter(party != "Other")  # Exclude "Other" from plot
 
 trends_parl <- pred_dta %>%
   ggplot(aes(x = date, color = party, fill = party)) +
@@ -684,6 +699,7 @@ plotdraws <- add_epred_draws(
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Other",
         "PSL",
         "Polska2050"
@@ -694,12 +710,14 @@ plotdraws <- add_epred_draws(
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Other",
         "PSL",
         "Polska 2050"
       )
     )
-  )
+  ) %>%
+  filter(.category != "Other")  # Exclude "Other" from plot
 
 medians <- plotdraws %>%
   summarise(est = median(.epred) * 100, .groups = "drop")
@@ -862,6 +880,11 @@ median_Konfederacja <- ifelse(
   medians$est[medians$.category == "Konfederacja"],
   0
 )
+median_KKP <- ifelse(
+  medians$est[medians$.category == "KKP"] >= 5,
+  medians$est[medians$.category == "KKP"],
+  0
+)
 median_Polska2050 <- ifelse(
   medians$est[medians$.category == "Polska 2050"] >= 5,
   medians$est[medians$.category == "Polska 2050"],
@@ -878,6 +901,7 @@ KOpct <- round(weights$KOcoef * median_KO, digits = 2)
 Lewicapct <- round(weights$Lewicacoef * median_Lewica, digits = 2)
 Razempct <- round(weights$Lewicacoef * median_Razem, digits = 2) # Using same coef as Lewica
 Konfederacjapct <- round(weights$Konfcoef * median_Konfederacja, digits = 2)
+KKPpct <- round(weights$Konfcoef * median_KKP, digits = 2) # Using same coef as Konfederacja
 Polska2050pct <- round(weights$TDcoef * median_Polska2050, digits = 2)
 PSLpct <- round(weights$TDcoef * median_PSL, digits = 2)
 MNpct <- c(
@@ -930,6 +954,7 @@ PiSest <- (weights$validvotes / 100) * PiSpct
 Lewicaest <- (weights$validvotes / 100) * Lewicapct
 Razemest <- (weights$validvotes / 100) * Razempct
 Konfederacjaest <- (weights$validvotes / 100) * Konfederacjapct
+KKPest <- (weights$validvotes / 100) * KKPpct
 Polska2050est <- (weights$validvotes / 100) * Polska2050pct
 PSLest <- (weights$validvotes / 100) * PSLpct
 MNest <- (weights$validvotes / 100) * MNpct
@@ -937,6 +962,7 @@ MNest <- (weights$validvotes / 100) * MNpct
 poldHondt <- data.frame(
   KO = rep(1, 42),
   Konfederacja = rep(1, 42),
+  KKP = rep(1, 42),
   Lewica = rep(1, 42),
   Razem = rep(1, 42),
   MN = rep(1, 42),
@@ -950,6 +976,7 @@ for (i in 1:42) {
     v = c(
       KOest[i],
       Konfederacjaest[i],
+      KKPest[i],
       Lewicaest[i],
       Razemest[i],
       MNest[i],
@@ -1298,6 +1325,7 @@ plotdraws_seats <- add_epred_draws(
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Other",
         "PSL",
         "Polska2050"
@@ -1308,6 +1336,7 @@ plotdraws_seats <- add_epred_draws(
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Other",
         "PSL",
         "Polska 2050"
@@ -1336,6 +1365,7 @@ plotdraws_wide <- plotdraws_wide %>%
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Polska 2050",
         "PSL"
       )),
@@ -1358,7 +1388,7 @@ consts <- plotdraws_wide %>%
   uncount(41, .id = "okreg") %>%
   calculate_constituency_seats(
     weights %>% filter(okreg != 0),
-    c("PiS", "KO", "Lewica", "Razem", "Konfederacja", "Polska 2050", "PSL")
+    c("PiS", "KO", "Lewica", "Razem", "Konfederacja", "KKP", "Polska 2050", "PSL")
   )
 
 # Handle MN special case (only okreg 21)
@@ -1371,7 +1401,7 @@ poldHondt_sim <- consts %>%
   mutate(
     seats = list(
       giveseats(
-        v = c(KO, Konfederacja, Lewica, Razem, MN, PiS, `Polska 2050`, PSL),
+        v = c(KO, Konfederacja, KKP, Lewica, Razem, MN, PiS, `Polska 2050`, PSL),
         ns = magnitude,
         method = "dh",
         thresh = 0
@@ -1382,18 +1412,20 @@ poldHondt_sim <- consts %>%
   mutate(
     KO_seats = map_dbl(seats, ~ .x[1]),
     Konfederacja_seats = map_dbl(seats, ~ .x[2]),
-    Lewica_seats = map_dbl(seats, ~ .x[3]),
-    Razem_seats = map_dbl(seats, ~ .x[4]),
-    MN_seats = map_dbl(seats, ~ .x[5]),
-    PiS_seats = map_dbl(seats, ~ .x[6]),
-    Polska2050_seats = map_dbl(seats, ~ .x[7]),
-    PSL_seats = map_dbl(seats, ~ .x[8])
+    KKP_seats = map_dbl(seats, ~ .x[3]),
+    Lewica_seats = map_dbl(seats, ~ .x[4]),
+    Razem_seats = map_dbl(seats, ~ .x[5]),
+    MN_seats = map_dbl(seats, ~ .x[6]),
+    PiS_seats = map_dbl(seats, ~ .x[7]),
+    Polska2050_seats = map_dbl(seats, ~ .x[8]),
+    PSL_seats = map_dbl(seats, ~ .x[9])
   ) %>%
   group_by(.draw) %>%
   summarise(
     KO = sum(KO_seats),
     PiS = sum(PiS_seats),
     Konfederacja = sum(Konfederacja_seats),
+    KKP = sum(KKP_seats),
     `Polska 2050` = sum(Polska2050_seats),
     PSL = sum(PSL_seats),
     MN = sum(MN_seats),
@@ -1405,6 +1437,7 @@ poldHondt_sim <- consts %>%
     cols = c(
       "KO",
       "Konfederacja",
+      "KKP",
       "Lewica",
       "Razem",
       "MN",
@@ -1430,6 +1463,7 @@ seats_2023 <- c(
   Razem = 7,
   MN = 0,
   Konfederacja = 18,
+  KKP = 0,
   `Polska 2050` = 33,
   PSL = 32
 )
@@ -1445,6 +1479,7 @@ frame <- frame %>%
         "Lewica",
         "Razem",
         "Konfederacja",
+        "KKP",
         "Polska 2050",
         "PSL",
         "MN"
