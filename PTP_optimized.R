@@ -383,6 +383,177 @@ m1 <- brm(
   control = list(adapt_delta = .95, max_treedepth = 15)
 )
 
+#####House effects#####
+# Calculate house effects by comparing pollster-specific predictions to average trend
+# Get the average trend (no random effects)
+today <- interval(min(polls$midDate), Sys.Date()) / years(1)
+
+avg_trend <- add_epred_draws(
+  object = m1,
+  newdata = tibble(time = today),
+  re_formula = NA
+) %>%
+  group_by(.category) %>%
+  summarise(avg_support = median(.epred), .groups = "drop")
+
+# Get pollster names mapping
+pollster_names <- polls %>%
+  distinct(pollster, org) %>%
+  arrange(pollster)
+
+# Get predictions for each pollster (with random effects)
+pollster_effects <- expand_grid(
+  time = today,
+  pollster = unique(polls$pollster)
+) %>%
+  add_epred_draws(object = m1, newdata = ., re_formula = NULL) %>%
+  group_by(pollster, .category) %>%
+  summarise(
+    pollster_support = median(.epred),
+    .groups = "drop"
+  ) %>%
+  left_join(avg_trend, by = ".category") %>%
+  mutate(
+    house_effect_pp = (pollster_support - avg_support) * 100,
+    .category = factor(
+      .category,
+      levels = c(
+        "PiS",
+        "KO",
+        "Polska2050",
+        "PSL",
+        "Lewica",
+        "Razem",
+        "Konfederacja",
+        "Other"
+      ),
+      labels = c(
+        "PiS",
+        "KO",
+        "Polska 2050",
+        "PSL",
+        "Lewica",
+        "Razem",
+        "Konfederacja",
+        "Other"
+      )
+    )
+  ) %>%
+  left_join(pollster_names, by = "pollster") %>%
+  filter(.category != "Other")  # Exclude "Other" category
+
+# Get full posterior draws for house effects
+pollster_effects_draws <- expand_grid(
+  time = today,
+  pollster = unique(polls$pollster)
+) %>%
+  add_epred_draws(object = m1, newdata = ., re_formula = NULL)
+
+# Get average trend draws (without pollster effects)
+avg_trend_draws <- add_epred_draws(
+  object = m1,
+  newdata = tibble(time = today),
+  re_formula = NA
+) %>%
+  select(.draw, .category, avg_epred = .epred)
+
+# Calculate house effects as difference
+house_effects_data <- pollster_effects_draws %>%
+  left_join(avg_trend_draws, by = c(".draw", ".category")) %>%
+  mutate(
+    house_effect_pp = (.epred - avg_epred) * 100,
+    .category = factor(
+      .category,
+      levels = c(
+        "PiS",
+        "KO",
+        "Polska2050",
+        "PSL",
+        "Lewica",
+        "Razem",
+        "Konfederacja",
+        "Other"
+      ),
+      labels = c(
+        "PiS",
+        "KO",
+        "Polska 2050",
+        "PSL",
+        "Lewica",
+        "Razem",
+        "Konfederacja",
+        "Other"
+      )
+    )
+  ) %>%
+  left_join(pollster_names, by = "pollster") %>%
+  filter(.category != "Other")
+
+# Calculate medians for ordering
+medians_house <- house_effects_data %>%
+  group_by(org, .category) %>%
+  summarise(median_effect = median(house_effect_pp), .groups = "drop")
+
+# Create house effects plot
+house_effects_plot <- house_effects_data %>%
+  mutate(org = factor(org, levels = sort(unique(org)))) %>%
+  ggplot(aes(
+    y = org,
+    x = house_effect_pp,
+    color = .category
+  )) +
+  geom_vline(
+    xintercept = 0,
+    color = "grey60",
+    linetype = "dashed",
+    linewidth = 0.5
+  ) +
+  stat_interval(
+    aes(x = house_effect_pp, color_ramp = after_stat(.width)),
+    .width = ppoints(100)
+  ) %>%
+    partition(vars(.category)) +
+  scale_fill_manual(values = PARTY_COLORS, guide = "none") +
+  scale_color_manual(name = " ", values = PARTY_COLORS, guide = "none") +
+  ggdist::scale_color_ramp_continuous(range = c(1, 0), guide = "none") +
+  scale_y_discrete(name = "", expand = expansion(add = c(0.6, 1)), limits = rev) +
+  geom_text(
+    data = medians_house %>%
+      mutate(org = factor(org, levels = sort(unique(org)))),
+    aes(y = org, x = median_effect, label = round(median_effect, 1)),
+    size = 3,
+    hjust = 0.5,
+    vjust = -1,
+    family = "Jost",
+    inherit.aes = FALSE
+  ) +
+  coord_cartesian(clip = "off") +
+  facet_wrap(~.category, ncol = 2, scales = "free_x") +
+  labs(
+    x = "House effect (percentage points)",
+    y = "",
+    title = "Polling house effects by party",
+    subtitle = "Systematic deviations from the average trend for each pollster",
+    caption = "Positive values indicate the pollster tends to show higher support for that party"
+  ) +
+  theme_plots() +
+  theme(
+    strip.text = element_text(face = "bold", size = rel(1)),
+    panel.spacing = unit(1.5, "lines"),
+    plot.margin = unit(c(1, 0.5, 0.5, 0.5), "cm")
+  )
+
+ggsave(
+  house_effects_plot,
+  file = "house_effects.png",
+  width = 8,
+  height = 12,
+  units = "cm",
+  dpi = 600,
+  scale = 3,
+  bg = "white"
+)
+
 #####Trend plot#####
 today <- interval(min(polls$midDate), Sys.Date()) / years(1)
 
@@ -666,134 +837,426 @@ ggsave(
 #####Seat maps#####
 library(seatdist)
 
-# Calculate median estimates with threshold
-median_estimates <- medians %>%
-  mutate(est_threshold = ifelse(est >= 5, est, 0)) %>%
-  select(.category, est_threshold)
-
-# Calculate vote shares for each party by constituency
-party_shares <- list(
-  PiS = weights$PiScoef *
-    median_estimates$est_threshold[median_estimates$.category == "PiS"],
-  KO = weights$KOcoef *
-    median_estimates$est_threshold[median_estimates$.category == "KO"],
-  Lewica = weights$Lewicacoef *
-    median_estimates$est_threshold[median_estimates$.category == "Lewica"],
-  Razem = weights$Lewicacoef *
-    median_estimates$est_threshold[median_estimates$.category == "Razem"],
-  Konfederacja = weights$Konfcoef *
-    median_estimates$est_threshold[
-      median_estimates$.category == "Konfederacja"
-    ],
-  Polska2050 = weights$TDcoef *
-    median_estimates$est_threshold[median_estimates$.category == "Polska 2050"],
-  PSL = weights$TDcoef *
-    median_estimates$est_threshold[median_estimates$.category == "PSL"],
-  MN = c(
-    0.12,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    5.37,
-    rep(0, 20)
-  )
+median_PiS <- ifelse(
+  medians$est[medians$.category == "PiS"] >= 5,
+  medians$est[medians$.category == "PiS"],
+  0
+)
+median_KO <- ifelse(
+  medians$est[medians$.category == "KO"] >= 5,
+  medians$est[medians$.category == "KO"],
+  0
+)
+median_Lewica <- ifelse(
+  medians$est[medians$.category == "Lewica"] >= 5,
+  medians$est[medians$.category == "Lewica"],
+  0
+)
+median_Razem <- ifelse(
+  medians$est[medians$.category == "Razem"] >= 5,
+  medians$est[medians$.category == "Razem"],
+  0
+)
+median_Konfederacja <- ifelse(
+  medians$est[medians$.category == "Konfederacja"] >= 5,
+  medians$est[medians$.category == "Konfederacja"],
+  0
+)
+median_Polska2050 <- ifelse(
+  medians$est[medians$.category == "Polska 2050"] >= 5,
+  medians$est[medians$.category == "Polska 2050"],
+  0
+)
+median_PSL <- ifelse(
+  medians$est[medians$.category == "PSL"] >= 5,
+  medians$est[medians$.category == "PSL"],
+  0
 )
 
-# Vectorized seat calculation
-poldHondt <- map_dfr(1:42, function(i) {
-  votes <- map_dbl(party_shares, ~ (weights$validvotes[i] / 100) * .x[i])
-  seats <- giveseats(
-    v = votes,
+PiSpct <- round(weights$PiScoef * median_PiS, digits = 2)
+KOpct <- round(weights$KOcoef * median_KO, digits = 2)
+Lewicapct <- round(weights$Lewicacoef * median_Lewica, digits = 2)
+Razempct <- round(weights$Lewicacoef * median_Razem, digits = 2) # Using same coef as Lewica
+Konfederacjapct <- round(weights$Konfcoef * median_Konfederacja, digits = 2)
+Polska2050pct <- round(weights$TDcoef * median_Polska2050, digits = 2)
+PSLpct <- round(weights$TDcoef * median_PSL, digits = 2)
+MNpct <- c(
+  0.12,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  5.37,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+)
+
+KOest <- (weights$validvotes / 100) * KOpct
+PiSest <- (weights$validvotes / 100) * PiSpct
+Lewicaest <- (weights$validvotes / 100) * Lewicapct
+Razemest <- (weights$validvotes / 100) * Razempct
+Konfederacjaest <- (weights$validvotes / 100) * Konfederacjapct
+Polska2050est <- (weights$validvotes / 100) * Polska2050pct
+PSLest <- (weights$validvotes / 100) * PSLpct
+MNest <- (weights$validvotes / 100) * MNpct
+
+poldHondt <- data.frame(
+  KO = rep(1, 42),
+  Konfederacja = rep(1, 42),
+  Lewica = rep(1, 42),
+  Razem = rep(1, 42),
+  MN = rep(1, 42),
+  PiS = rep(1, 42),
+  Polska2050 = rep(1, 42),
+  PSL = rep(1, 42)
+)
+
+for (i in 1:42) {
+  poldHondt[i, ] <- c(giveseats(
+    v = c(
+      KOest[i],
+      Konfederacjaest[i],
+      Lewicaest[i],
+      Razemest[i],
+      MNest[i],
+      PiSest[i],
+      Polska2050est[i],
+      PSLest[i]
+    ),
     ns = weights$magnitude[i],
     method = "dh",
     thresh = 5
-  )$seats
-})
-
-# Process seats table
-seats <- bind_cols(
-  poldHondt[-1, ],
-  weights[-1, ] %>% select(-Lewica, -PiS, -KO, -TD, -Konf)
-) %>%
-  mutate(
-    cst = row_number(),
-    PiSKO = abs(PiS - KO),
-    PiSmKO = PiS - KO
-  )
-
-# Map constituency IDs
-const_mapping <- create_const_id_mapping()
-const <- const %>%
-  left_join(const_mapping, by = "cst")
-seats <- seats %>%
-  left_join(const_mapping, by = "cst")
-
-# Generate label points
-label_points <- const %>%
-  st_point_on_surface() %>%
-  st_coordinates() %>%
-  as_tibble() %>%
-  bind_cols(const %>% st_drop_geometry() %>% select(id)) %>%
-  rename(x = X, y = Y)
-
-plotdata <- const %>%
-  left_join(seats %>% st_drop_geometry(), by = "id") %>%
-  left_join(label_points, by = "id")
-
-# Generate all seat maps
-seat_map_configs <- list(
-  list(party = "PiS", display = "PiS", color = "blue"),
-  list(party = "KO", display = "Koalicja Obywatelska", color = "orange"),
-  list(party = "Lewica", display = "Lewica", color = "red"),
-  list(party = "Razem", display = "Razem", color = "purple"),
-  list(party = "PSL", display = "PSL", color = "darkgreen"),
-  list(
-    party = "Konfederacja",
-    display = "Konfederacja",
-    color = "midnightblue"
-  ),
-  list(party = "Polska2050", display = "Polska 2050", color = "goldenrod")
-)
-
-for (config in seat_map_configs) {
-  p <- generate_seat_map(plotdata, config$party, config$display, config$color)
-  filename <- paste0(config$party, "_seats.png")
-  ggsave(
-    p,
-    file = filename,
-    width = 7,
-    height = 7,
-    units = "cm",
-    dpi = 600,
-    scale = 3,
-    bg = "white"
-  )
+  ))$seats
 }
 
-# PiS vs KO difference map
+#seats table
+seats <- cbind(poldHondt, weights)
+row.names(seats) <- weights$name
+keep <- c(
+  "KO",
+  "Konfederacja",
+  "Lewica",
+  "Razem",
+  "MN",
+  "PiS",
+  "Polska2050",
+  "PSL"
+)
+colnames(seats) <- c(
+  "KO",
+  "Konfederacja",
+  "Lewica",
+  "Razem",
+  "MN",
+  "PiS",
+  "Polska2050",
+  "PSL"
+)
+seats <- seats[keep]
+seats <- seats[-1, ]
+seats$id <- 1:41
+seats$PiSKO <- abs(seats$PiS - seats$KO)
+seats$PiSmKO <- seats$PiS - seats$KO
+
+#regional maps
+const$id <- 0
+const$id[const$cst == 1] <- 24
+const$id[const$cst == 2] <- 27
+const$id[const$cst == 3] <- 4
+const$id[const$cst == 4] <- 7
+const$id[const$cst == 5] <- 28
+const$id[const$cst == 6] <- 34
+const$id[const$cst == 7] <- 25
+const$id[const$cst == 8] <- 26
+const$id[const$cst == 9] <- 29
+const$id[const$cst == 10] <- 36
+const$id[const$cst == 11] <- 31
+const$id[const$cst == 12] <- 33
+const$id[const$cst == 13] <- 37
+const$id[const$cst == 14] <- 40
+const$id[const$cst == 15] <- 13
+const$id[const$cst == 16] <- 12
+const$id[const$cst == 17] <- 22
+const$id[const$cst == 18] <- 1
+const$id[const$cst == 19] <- 6
+const$id[const$cst == 20] <- 14
+const$id[const$cst == 21] <- 35
+const$id[const$cst == 22] <- 21
+const$id[const$cst == 23] <- 10
+const$id[const$cst == 24] <- 38
+const$id[const$cst == 25] <- 39
+const$id[const$cst == 26] <- 16
+const$id[const$cst == 27] <- 17
+const$id[const$cst == 28] <- 30
+const$id[const$cst == 29] <- 23
+const$id[const$cst == 30] <- 18
+const$id[const$cst == 31] <- 11
+const$id[const$cst == 32] <- 32
+const$id[const$cst == 33] <- 41
+const$id[const$cst == 34] <- 15
+const$id[const$cst == 35] <- 5
+const$id[const$cst == 36] <- 19
+const$id[const$cst == 37] <- 20
+const$id[const$cst == 38] <- 2
+const$id[const$cst == 39] <- 3
+const$id[const$cst == 40] <- 8
+const$id[const$cst == 41] <- 9
+
+label_points <- st_point_on_surface(const) %>%
+  arrange(., id)
+label_points <- st_coordinates(label_points) %>%
+  as_tibble() %>%
+  mutate(id = 1:n())
+colnames(label_points) <- c("x", "y", "id")
+
+plotdata <- merge(const, seats, by = "id")
+plotdata <- merge(plotdata, label_points, by = "id")
+
+p_pis <- ggplot(plotdata) +
+  geom_sf(aes(fill = as.integer(PiS))) +
+  theme(aspect.ratio = 1) +
+  geom_label(aes(x = x, y = y, group = PiS, label = PiS), fill = "white") +
+  scale_fill_gradient(
+    name = "PiS",
+    limits = c(min = 0, max = 20),
+    low = "white",
+    high = "blue",
+    guide = "colorbar"
+  ) +
+  labs(
+    title = "Constituency-level share of seats for PiS",
+    subtitle = "Seat distribution reflects regional levels of support at October 2023 election",
+    caption = ""
+  ) +
+  theme_plots_map()
+ggsave(
+  p_pis,
+  file = "PiS_seats.png",
+  width = 7,
+  height = 7,
+  units = "cm",
+  dpi = 600,
+  scale = 3,
+  bg = "white"
+)
+
+p_ko <- ggplot(plotdata) +
+  geom_sf(aes(fill = as.integer(KO))) +
+  theme(aspect.ratio = 1) +
+  geom_label(aes(x = x, y = y, group = KO, label = KO), fill = "white") +
+  scale_fill_gradient(
+    name = "KO",
+    limits = c(min = 0, max = 20),
+    low = "white",
+    high = "orange",
+    guide = "colorbar"
+  ) +
+  labs(
+    title = "Constituency-level share of seats for Koalicja Obywatelska",
+    subtitle = "Seat distribution reflects regional levels of support at October 2023 election",
+    caption = ""
+  ) +
+  theme_plots_map()
+ggsave(
+  p_ko,
+  file = "KO_seats.png",
+  width = 7,
+  height = 7,
+  units = "cm",
+  dpi = 600,
+  scale = 3,
+  bg = "white"
+)
+
+p_lewica <- ggplot(plotdata) +
+  geom_sf(aes(fill = as.integer(Lewica))) +
+  theme(aspect.ratio = 1) +
+  geom_label(
+    aes(x = x, y = y, group = Lewica, label = Lewica),
+    fill = "white"
+  ) +
+  scale_fill_gradient(
+    name = "Lewica",
+    limits = c(min = 0, max = 20),
+    low = "white",
+    high = "red",
+    guide = "colorbar"
+  ) +
+  labs(
+    title = "Constituency-level share of seats for Lewica",
+    subtitle = "Seat distribution reflects regional levels of support at October 2023 election",
+    caption = ""
+  ) +
+  theme_plots_map()
+ggsave(
+  p_lewica,
+  file = "Lewica_seats.png",
+  width = 7,
+  height = 7,
+  units = "cm",
+  dpi = 600,
+  scale = 3,
+  bg = "white"
+)
+
+p_razem <- ggplot(plotdata) +
+  geom_sf(aes(fill = as.integer(Razem))) +
+  theme(aspect.ratio = 1) +
+  geom_label(aes(x = x, y = y, group = Razem, label = Razem), fill = "white") +
+  scale_fill_gradient(
+    name = "Razem",
+    limits = c(min = 0, max = 20),
+    low = "white",
+    high = "purple",
+    guide = "colorbar"
+  ) +
+  labs(
+    title = "Constituency-level share of seats for Razem",
+    subtitle = "Seat distribution reflects regional levels of support at October 2023 election",
+    caption = ""
+  ) +
+  theme_plots_map()
+ggsave(
+  p_razem,
+  file = "Razem_seats.png",
+  width = 7,
+  height = 7,
+  units = "cm",
+  dpi = 600,
+  scale = 3,
+  bg = "white"
+)
+
+p_PSL <- ggplot(plotdata) +
+  geom_sf(aes(fill = as.integer(PSL))) +
+  theme(aspect.ratio = 1) +
+  geom_label(aes(x = x, y = y, group = PSL, label = PSL), fill = "white") +
+  scale_fill_gradient(
+    name = "PSL",
+    limits = c(min = 0, max = 20),
+    low = "white",
+    high = "darkgreen",
+    guide = "colorbar"
+  ) +
+  labs(
+    title = "Constituency-level share of seats for PSL",
+    subtitle = "Seat distribution reflects regional levels of support at October 2023 election",
+    caption = ""
+  ) +
+  theme_plots_map()
+ggsave(
+  p_PSL,
+  file = "PSL_seats.png",
+  width = 7,
+  height = 7,
+  units = "cm",
+  dpi = 600,
+  scale = 3,
+  bg = "white"
+)
+
+p_konfederacja <- ggplot(plotdata) +
+  geom_sf(aes(fill = as.integer(Konfederacja))) +
+  theme(aspect.ratio = 1) +
+  geom_label(
+    aes(x = x, y = y, group = Konfederacja, label = Konfederacja),
+    fill = "white"
+  ) +
+  scale_fill_gradient(
+    name = "Konfederacja",
+    limits = c(min = 0, max = 20),
+    low = "white",
+    high = "midnightblue",
+    guide = "colorbar"
+  ) +
+  labs(
+    title = "Constituency-level share of seats for Konfederacja",
+    subtitle = "Seat distribution reflects regional levels of support at October 2023 election",
+    caption = ""
+  ) +
+  theme_plots_map()
+ggsave(
+  p_konfederacja,
+  file = "Konfederacja_seats.png",
+  width = 7,
+  height = 7,
+  units = "cm",
+  dpi = 600,
+  scale = 3,
+  bg = "white"
+)
+
+p_P2050 <- ggplot(plotdata) +
+  geom_sf(aes(fill = as.integer(Polska2050))) +
+  theme(aspect.ratio = 1) +
+  geom_label(
+    aes(x = x, y = y, group = Polska2050, label = Polska2050),
+    fill = "white"
+  ) +
+  scale_fill_gradient(
+    name = "Polska2050",
+    limits = c(min = 0, max = 20),
+    low = "white",
+    high = "goldenrod",
+    guide = "colorbar"
+  ) +
+  labs(
+    title = "Constituency-level share of seats for Polska 2050",
+    subtitle = "Seat distribution reflects regional levels of support at October 2023 election",
+    caption = ""
+  ) +
+  theme_plots_map()
+ggsave(
+  p_P2050,
+  file = "P2050_seats.png",
+  width = 7,
+  height = 7,
+  units = "cm",
+  dpi = 600,
+  scale = 3,
+  bg = "white"
+)
+
 p_pis_ko <- ggplot(plotdata) +
   geom_sf(aes(fill = as.integer(PiSmKO))) +
   theme(aspect.ratio = 1) +
   scale_fill_gradient2(
     name = "PiSKO",
-    limits = c(-20, 20),
+    limits = c(min = -20, max = 20),
     low = "orange",
     mid = "white",
     high = "blue",
