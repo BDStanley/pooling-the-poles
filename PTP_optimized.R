@@ -996,6 +996,7 @@ row.names(seats) <- weights$name
 keep <- c(
   "KO",
   "Konfederacja",
+  "KKP",
   "Lewica",
   "Razem",
   "MN",
@@ -1006,6 +1007,7 @@ keep <- c(
 colnames(seats) <- c(
   "KO",
   "Konfederacja",
+  "KKP",
   "Lewica",
   "Razem",
   "MN",
@@ -1496,11 +1498,11 @@ coalition_opposition <- sum(frame$y[
   frame$party %in% c("KO", "Lewica", "Polska 2050", "PSL")
 ])
 
-pis_konf_status <- ifelse(coalition_pis_konf >= 231, "MAJORITY", "NO MAJORITY")
+pis_konf_status <- ifelse(coalition_pis_konf >= 231, "Majority", "No majority")
 opposition_status <- ifelse(
   coalition_opposition >= 231,
-  "MAJORITY",
-  "NO MAJORITY"
+  "Majority",
+  "No majority"
 )
 
 pis_konf_text <- paste0(
