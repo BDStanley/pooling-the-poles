@@ -1531,55 +1531,55 @@ seats_parl <- ggplot(
     breaks = c(0, 50, 100, 150, 200, 231, 276, 307)
   ) +
   scale_fill_manual(name = "Party", values = PARTY_COLORS) +
-  annotate(
-    "label",
-    x = 2,
-    y = 231,
-    label = "Legislative majority",
-    size = 2.5,
+  geom_label(
+    data = data.frame(x = 2, y = 231, label = "Legislative majority"),
+    aes(x = x, y = y, label = label),
     hjust = 0,
+    size = 2.5,
     fill = "grey95",
-    family = "Jost"
+    linewidth = 0,
+    family = "Jost",
+    inherit.aes = FALSE
   ) +
-  annotate(
-    "label",
-    x = 2,
-    y = 276,
-    label = "Overturn presidential veto",
-    size = 2.5,
+  geom_label(
+    data = data.frame(x = 2, y = 276, label = "Overturn presidential veto"),
+    aes(x = x, y = y, label = label),
     hjust = 0,
+    size = 2.5,
     fill = "grey95",
-    family = "Jost"
+    linewidth = 0,
+    family = "Jost",
+    inherit.aes = FALSE
   ) +
-  annotate(
-    "label",
-    x = 2,
-    y = 307,
-    label = "Constitutional majority",
-    size = 2.5,
+  geom_label(
+    data = data.frame(x = 2, y = 307, label = "Constitutional majority"),
+    aes(x = x, y = y, label = label),
     hjust = 0,
+    size = 2.5,
     fill = "grey95",
-    family = "Jost"
+    linewidth = 0,
+    family = "Jost",
+    inherit.aes = FALSE
   ) +
-  annotate(
-    "label",
-    x = 5,
-    y = 280,
-    label = pis_konf_text,
-    size = 2.5,
+  geom_label(
+    data = data.frame(x = 5, y = 280, label = pis_konf_text),
+    aes(x = x, y = y, label = label),
     hjust = 0,
+    size = 2.5,
     fill = ifelse(coalition_pis_konf >= 231, "lightgreen", "lightcoral"),
-    family = "Jost"
+    linewidth = 0,
+    family = "Jost",
+    inherit.aes = FALSE
   ) +
-  annotate(
-    "label",
-    x = 5,
-    y = 250,
-    label = opposition_text,
-    size = 2.5,
+  geom_label(
+    data = data.frame(x = 5, y = 250, label = opposition_text),
+    aes(x = x, y = y, label = label),
     hjust = 0,
+    size = 2.5,
     fill = ifelse(coalition_opposition >= 231, "lightgreen", "lightcoral"),
-    family = "Jost"
+    linewidth = 0,
+    family = "Jost",
+    inherit.aes = FALSE
   ) +
   geom_text(
     aes(x = party, y = y + 18, label = y),
