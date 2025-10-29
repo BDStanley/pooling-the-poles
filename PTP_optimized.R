@@ -337,7 +337,7 @@ polls <- apply_threshold_and_normalize(polls, PARTY_COLS)
 
 # Filter to include only polls after June 10th, 2025
 #polls <- polls %>%
-  #filter(midDate > as.Date('2025-06-10'))
+#filter(midDate > as.Date('2025-06-10'))
 
 # Load weights and shapefile
 weights <- read_excel('2023_elec_percentages.xlsx')
@@ -451,7 +451,7 @@ pollster_effects <- expand_grid(
     )
   ) %>%
   left_join(pollster_names, by = "pollster") %>%
-  filter(.category != "Other")  # Exclude "Other" category
+  filter(.category != "Other") # Exclude "Other" category
 
 # Get full posterior draws for house effects
 pollster_effects_draws <- expand_grid(
@@ -529,7 +529,11 @@ house_effects_plot <- house_effects_data %>%
   scale_fill_manual(values = PARTY_COLORS, guide = "none") +
   scale_color_manual(name = " ", values = PARTY_COLORS, guide = "none") +
   ggdist::scale_color_ramp_continuous(range = c(1, 0), guide = "none") +
-  scale_y_discrete(name = "", expand = expansion(add = c(0.6, 1)), limits = rev) +
+  scale_y_discrete(
+    name = "",
+    expand = expansion(add = c(0.6, 1)),
+    limits = rev
+  ) +
   geom_text(
     data = medians_house %>%
       mutate(org = factor(org, levels = sort(unique(org)))),
@@ -604,7 +608,7 @@ pred_dta <- tibble(
       )
     )
   ) %>%
-  filter(party != "Other")  # Exclude "Other" from plot
+  filter(party != "Other") # Exclude "Other" from plot
 
 point_dta <- polls %>%
   select(midDate, all_of(PARTY_COLS)) %>%
@@ -636,7 +640,7 @@ point_dta <- polls %>%
       )
     )
   ) %>%
-  filter(party != "Other")  # Exclude "Other" from plot
+  filter(party != "Other") # Exclude "Other" from plot
 
 trends_parl <- pred_dta %>%
   ggplot(aes(x = date, color = party, fill = party)) +
@@ -721,7 +725,7 @@ plotdraws <- add_epred_draws(
       )
     )
   ) %>%
-  filter(.category != "Other")  # Exclude "Other" from plot
+  filter(.category != "Other") # Exclude "Other" from plot
 
 medians <- plotdraws %>%
   summarise(est = median(.epred) * 100, .groups = "drop")
@@ -1394,7 +1398,16 @@ consts <- plotdraws_wide %>%
   uncount(41, .id = "okreg") %>%
   calculate_constituency_seats(
     weights %>% filter(okreg != 0),
-    c("PiS", "KO", "Lewica", "Razem", "Konfederacja", "KKP", "Polska 2050", "PSL")
+    c(
+      "PiS",
+      "KO",
+      "Lewica",
+      "Razem",
+      "Konfederacja",
+      "KKP",
+      "Polska 2050",
+      "PSL"
+    )
   )
 
 # Handle MN special case (only okreg 21)
@@ -1407,7 +1420,17 @@ poldHondt_sim <- consts %>%
   mutate(
     seats = list(
       giveseats(
-        v = c(KO, Konfederacja, KKP, Lewica, Razem, MN, PiS, `Polska 2050`, PSL),
+        v = c(
+          KO,
+          Konfederacja,
+          KKP,
+          Lewica,
+          Razem,
+          MN,
+          PiS,
+          `Polska 2050`,
+          PSL
+        ),
         ns = magnitude,
         method = "dh",
         thresh = 0
