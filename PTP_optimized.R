@@ -330,10 +330,14 @@ polls <- polls %>%
     Other = 1 - rowSums(across(all_of(PARTY_COLS[1:8]))),
     check = rowSums(across(all_of(PARTY_COLS)))
   ) %>%
-  filter(Other > 0)
+  filter(!Other < 0)
 
 # Apply threshold fix and normalize
 polls <- apply_threshold_and_normalize(polls, PARTY_COLS)
+
+# Filter to include only polls after June 10th, 2025
+polls <- polls %>%
+  filter(midDate > as.Date('2025-06-10'))
 
 # Load weights and shapefile
 weights <- read_excel('2023_elec_percentages.xlsx')
