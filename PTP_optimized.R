@@ -752,6 +752,7 @@ if (pis_median > ko_median) {
 }
 
 # Calculate 5% threshold probabilities
+# Focus on parties within 2 percentage points of 5% threshold (i.e., 3% to 7%)
 threshold_probs <- plotdraws %>%
   group_by(.category) %>%
   summarise(
@@ -762,9 +763,16 @@ threshold_probs <- plotdraws %>%
     .groups = "drop"
   ) %>%
   filter(
-    (lower_95 < 0.05 & upper_95 > 0.05) | (median < 0.06 & median > 0.04)
+    median >= 0.02 & median <= 0.08
   ) %>%
-  mutate(threshold_text = paste("Pr(≥5%) = ", round(prob_above_5, 2)))
+  mutate(
+    # Display either Pr(≥5%) or Pr(<5%) depending on which side of threshold
+    threshold_text = ifelse(
+      median >= 0.05,
+      paste("Pr(≥5%) = ", round(prob_above_5, 2)),
+      paste("Pr(<5%) = ", round(1 - prob_above_5, 2))
+    )
+  )
 
 latest_parl <- plotdraws %>%
   ggplot(aes(
