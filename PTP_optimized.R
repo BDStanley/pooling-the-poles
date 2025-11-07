@@ -1533,6 +1533,10 @@ coalition_pis_konf_kkp <- frame$y[frame$party == "PiS"] +
 coalition_opposition <- sum(frame$y[
   frame$party %in% c("KO", "Lewica", "Polska 2050", "PSL")
 ])
+coalition_ko_konf <- frame$y[frame$party == "KO"] +
+  frame$y[frame$party == "Konfederacja"]
+coalition_pis_konf <- frame$y[frame$party == "PiS"] +
+  frame$y[frame$party == "Konfederacja"]
 
 pis_konf_kkp_status <- ifelse(
   coalition_pis_konf_kkp >= 231,
@@ -1544,18 +1548,36 @@ opposition_status <- ifelse(
   "Majority",
   "No majority"
 )
+ko_konf_status <- ifelse(
+  coalition_ko_konf >= 231,
+  "Majority",
+  "No majority"
+)
+pis_konf_status <- ifelse(
+  coalition_pis_konf >= 231,
+  "Majority",
+  "No majority"
+)
 
 pis_konf_kkp_text <- paste0(
   "PiS + Konfederacja + KKP: ",
   coalition_pis_konf_kkp,
-  " seats\n",
-  pis_konf_kkp_status
+  " seats"
 )
 opposition_text <- paste0(
   "KO + Lewica + Polska 2050 + PSL: ",
   coalition_opposition,
-  " seats\n",
-  opposition_status
+  " seats"
+)
+ko_konf_text <- paste0(
+  "KO + Konfederacja: ",
+  coalition_ko_konf,
+  " seats"
+)
+pis_konf_text <- paste0(
+  "PiS + Konfederacja: ",
+  coalition_pis_konf,
+  " seats"
 )
 
 # Generate seats plot
@@ -1617,6 +1639,26 @@ seats_parl <- ggplot(
     hjust = 0,
     size = 2.5,
     fill = ifelse(coalition_opposition >= 231, "lightgreen", "lightcoral"),
+    linewidth = 0,
+    family = "Jost",
+    inherit.aes = FALSE
+  ) +
+  geom_label(
+    data = data.frame(x = 5, y = 220, label = ko_konf_text),
+    aes(x = x, y = y, label = label),
+    hjust = 0,
+    size = 2.5,
+    fill = ifelse(coalition_ko_konf >= 231, "lightgreen", "lightcoral"),
+    linewidth = 0,
+    family = "Jost",
+    inherit.aes = FALSE
+  ) +
+  geom_label(
+    data = data.frame(x = 5, y = 190, label = pis_konf_text),
+    aes(x = x, y = y, label = label),
+    hjust = 0,
+    size = 2.5,
+    fill = ifelse(coalition_pis_konf >= 231, "lightgreen", "lightcoral"),
     linewidth = 0,
     family = "Jost",
     inherit.aes = FALSE
