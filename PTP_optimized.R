@@ -1664,13 +1664,13 @@ seats_parl <- ggplot(
     inherit.aes = FALSE
   ) +
   geom_text(
-    aes(x = party, y = y + 18, label = y),
+    aes(x = as.numeric(party) - 0.03, y = y + 18, label = y),
     size = 3,
     family = "Jost",
-    hjust = 0.5
+    hjust = 1
   ) +
   geom_text(
-    aes(x = as.numeric(party) + 0.1, y = y + 18, label = diffPres),
+    aes(x = as.numeric(party) + 0.03, y = y + 18, label = diffPres),
     size = 2.5,
     family = "Jost",
     fontface = "italic",
