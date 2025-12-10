@@ -41,7 +41,7 @@ PARTY_COLORS <- c(
   "Konfederacja" = "midnightblue",
   "KKP" = "brown",
   "Lewica" = "red",
-  "Lewicaplus" = "darkred",
+  "Lewicaplus" = "red",
   "Razem" = "purple",
   "MN" = "yellow",
   "Other" = "gray50"
@@ -771,7 +771,10 @@ ggsave(
   bg = "white"
 )
 
-cat("\n=== Hypothetical scenarios complete ===\n")
-cat("Plots saved:\n")
-cat("  - scenario1_KO_plus_seats.png\n")
-cat("  - scenario2_Lewica_plus_seats.png\n\n")
+#####Save to Github#####
+system("git add -A")
+system('git commit -m "Update $(date +"%Y-%m-%d %H:%M:%S")"')
+system("git push")
+system(
+  "rsync -av --include='*.png' --exclude='*' '/Users/benstanley/Positron/pooling-the-poles/' '/Users/benstanley/Positron/BDStanley.github.io/docs/images/'"
+)
