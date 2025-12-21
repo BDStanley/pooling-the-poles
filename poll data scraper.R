@@ -100,14 +100,14 @@ clean_polish_poll_data <- function(polls) {
     select(
       pollster_raw = `Polling firm/Link`,
       fieldwork_date = Fieldworkdate,
-      law_and_justice = `Law and Justice`,
-      civic_coalition = `Civic Coalition`,
-      poland_2050 = `Poland 2050`,
-      polish_peoples_party = `Polish People's Party`,
-      the_left = `The Left`,
-      together = Together,
-      confederation = Confederation,
-      confederation_crown = `Confederation of the Polish Crown`,
+      law_and_justice = `PiS`,
+      civic_coalition = `KO`,
+      poland_2050 = `Polska 2050`,
+      polish_peoples_party = `PSL`,
+      the_left = `Lewica`,
+      together = Razem,
+      confederation = Konfederacja,
+      confederation_crown = `KKP`,
       dont_know = `Don't know`
     ) %>%
     mutate(
