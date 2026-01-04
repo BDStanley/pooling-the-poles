@@ -35,8 +35,18 @@ parse_fieldwork_dates <- function(date_string, year) {
     start_day <- str_extract(start_part, "\\d+")
     end_day <- str_extract(end_part, "\\d+")
 
-    start_date <- dmy(paste(start_day, month_start, year))
+    # Parse end date first with the given year
     end_date <- dmy(paste(end_day, month_end, year))
+
+    # Parse start date - initially try with the same year
+    start_date <- dmy(paste(start_day, month_start, year))
+
+    # If start date is after end date, the start must be in the previous year
+    # This handles polls that span the year boundary (e.g., Dec 2025 - Jan 2026)
+    if (!is.na(start_date) && !is.na(end_date) && start_date > end_date) {
+      start_year <- as.character(as.numeric(year) - 1)
+      start_date <- dmy(paste(start_day, month_start, start_year))
+    }
   } else {
     # Single date case
     start_date <- dmy(paste(date_string, year))
