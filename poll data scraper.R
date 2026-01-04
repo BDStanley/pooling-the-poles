@@ -3,12 +3,13 @@ pacman::p_load(dplyr, lubridate, stringr, rvest)
 url <- "https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_Polish_parliamentary_election"
 page <- read_html(url)
 
-# Extract all tables and get the third one
+# Extract all tables and get the third (2026) and fourth (2025) ones
 tables <- page %>% html_table(fill = TRUE)
-polls <- tables[[3]]
+polls_2026 <- tables[[3]]
+polls_2025 <- tables[[4]]
 
-# Function to parse fieldwork dates and create start and end dates, fixed to handle month correctly on start date
-parse_fieldwork_dates <- function(date_string) {
+# Function to parse fieldwork dates and create start and end dates, with dynamic year
+parse_fieldwork_dates <- function(date_string, year) {
   date_string <- str_trim(date_string)
   date_string <- str_replace_all(date_string, "\"", "")
 
@@ -20,7 +21,6 @@ parse_fieldwork_dates <- function(date_string) {
 
     # Extract month from end_part
     month_end <- str_extract(end_part, "[A-Za-zżółćęśąźń]+")
-    year <- "2025"
     month_end <- str_to_title(month_end)
 
     # Extract month from start_part if present; if not, use month from end_part
@@ -39,7 +39,7 @@ parse_fieldwork_dates <- function(date_string) {
     end_date <- dmy(paste(end_day, month_end, year))
   } else {
     # Single date case
-    start_date <- dmy(paste(date_string, "2025"))
+    start_date <- dmy(paste(date_string, year))
     end_date <- start_date
   }
 
@@ -82,7 +82,7 @@ standardize_pollster_name <- function(pollster_name) {
 }
 
 # Main cleaning process
-clean_polish_poll_data <- function(polls) {
+clean_polish_poll_data <- function(polls, year) {
   polls_clean_cols <- polls[, 1:14]
 
   cleaned_data <- polls_clean_cols %>%
@@ -143,7 +143,9 @@ clean_polish_poll_data <- function(polls) {
       dont_know = ifelse(is.na(dont_know), 0, dont_know)
     )
 
-  date_results <- lapply(cleaned_data$fieldwork_date, parse_fieldwork_dates)
+  date_results <- lapply(cleaned_data$fieldwork_date, function(date_string) {
+    parse_fieldwork_dates(date_string, year)
+  })
 
   cleaned_data$start_date <- sapply(date_results, function(x) {
     as.character(x$start_date)
@@ -211,7 +213,13 @@ clean_polish_poll_data <- function(polls) {
   return(final_data)
 }
 
-polls_cleaned <- clean_polish_poll_data(polls)
+# Process both 2026 and 2025 polls separately
+polls_cleaned_2026 <- clean_polish_poll_data(polls_2026, "2026")
+polls_cleaned_2025 <- clean_polish_poll_data(polls_2025, "2025")
+
+# Merge both datasets
+polls_cleaned <- bind_rows(polls_cleaned_2026, polls_cleaned_2025) %>%
+  arrange(desc(endDate))
 
 cat("Cleaned Polish polling data summary:\n")
 cat("Total polls:", nrow(polls_cleaned), "\n")
