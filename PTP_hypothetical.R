@@ -770,11 +770,3 @@ ggsave(
   scale = 3,
   bg = "white"
 )
-
-#####Save to Github#####
-system("git add -A")
-system('git commit -m "Update $(date +"%Y-%m-%d %H:%M:%S")"')
-system("git push")
-system(
-  "rsync -av --include='*.png' --exclude='*' '/Users/benstanley/Positron/pooling-the-poles/' '/Users/benstanley/Positron/BDStanley.github.io/docs/images/'"
-)
