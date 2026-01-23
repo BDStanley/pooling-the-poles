@@ -1708,5 +1708,5 @@ system("git add -A")
 system('git commit -m "Update $(date +"%Y-%m-%d %H:%M:%S")"')
 system("git push")
 system(
-  "rsync -av --include='*.png' --exclude='*' '/Users/benstanley/Positron/Polls/' '/Users/benstanley/Positron/BDStanley.github.io/docs/images/'"
+  "rsync -av --include='*.png' --exclude='*' '/Users/benstanley/Positron/Polls/' '/Users/benstanley/Positron/BDStanley.github.io/PTP images/'"
 )
