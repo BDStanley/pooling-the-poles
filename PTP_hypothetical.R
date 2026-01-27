@@ -54,7 +54,11 @@ theme_plots <- function(base_size = 11, base_family = "Jost") {
   theme_bw(base_size, base_family) +
     theme(
       panel.background = element_rect(fill = "#ffffff", colour = NA),
-      title = element_text(size = rel(1), family = "Jost", face = "bold"),
+      title = element_text(
+        size = rel(1),
+        family = "Jost Medium",
+        face = "plain"
+      ),
       plot.subtitle = element_text(
         size = rel(0.8),
         family = "Jost",
@@ -87,8 +91,8 @@ theme_plots <- function(base_size = 11, base_family = "Jost") {
       legend.title = element_text(
         size = rel(0.8),
         vjust = 0.5,
-        family = "Jost",
-        face = "bold"
+        family = "Jost Medium",
+        face = "plain"
       ),
       legend.key.size = unit(0.7, "line"),
       legend.key = element_blank(),
@@ -117,7 +121,11 @@ theme_plots_map <- function(base_size = 11, base_family = "Jost") {
       axis.text.y = element_blank(),
       strip.text.x = element_text(size = 10, family = "Jost", face = "plain"),
       legend.text = element_text(size = 9, family = "Jost", face = "plain"),
-      title = element_text(size = rel(1), family = "Jost", face = "bold"),
+      title = element_text(
+        size = rel(1),
+        family = "Jost Medium",
+        face = "plain"
+      ),
       plot.subtitle = element_text(
         size = rel(0.8),
         family = "Jost",
@@ -130,7 +138,7 @@ theme_plots_map <- function(base_size = 11, base_family = "Jost") {
         face = "plain"
       ),
       legend.title = element_text(family = "Jost", face = "plain"),
-      plot.title = element_text(family = "Jost", face = "bold"),
+      plot.title = element_text(family = "Jost Medium", face = "plain"),
       aspect.ratio = 1,
       legend.position = "none"
     )
